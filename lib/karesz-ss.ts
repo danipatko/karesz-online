@@ -231,10 +231,17 @@ class karesz extends map {
     Kilépek_e_a_pályáról = ():boolean => this.inBounds(this.forward());
 }
 
+import { tryrun } from './karesz-dotnet';
+
+// INIT
+tryrun();
+
 // Called on run - execute array of instructions
 export const run = (instructions:Array<instruction>):any => {
+
+    console.log('CALLED');
     
-    const k = new karesz({ x:0, y:0 }, rotation.up, (e:any) => {
+    /*const k = new karesz({ x:0, y:0 }, rotation.up, (e:any) => {
         console.log(e);
     }, 10, 20);
 
@@ -248,8 +255,8 @@ export const run = (instructions:Array<instruction>):any => {
     for (let index = 0; index < 10; index++) 
         k.step();
 
-    console.log(k.steps);
-    
+    console.log(k.steps);*/
+
     return undefined;
 };
 
