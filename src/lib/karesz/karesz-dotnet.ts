@@ -53,7 +53,7 @@ export const run = (filename:string=P, datahandler:Function, errorhandler:any) =
 export const tryrun = async() => {
     // prepare .cs file for compilation and execution
     const contents = fs.readFileSync(P).toString();
-    fs.writeFileSync(P, replaceKareszFunctions(contents) || contents);
+    fs.writeFileSync(P, replaceKareszFunctions(contents) || 'Bruh');
 
     await compile(P).catch((err:any) => {
         console.log(`An error occured while compiling: ${err}\nCommand: 'mcs ${P}'`);
@@ -96,12 +96,17 @@ namespace Karesz
 }
 `;
 
-
 const test = `
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
+using System.IO;
+using System.Threading;
 
 namespace Karesz
 {
@@ -126,26 +131,16 @@ namespace Karesz
             return (!Van_e_előttem_fal() && !Kilépek_e_a_pályáról());
         }
 
-        void valami()
-        {
-            while (!Kilépek_e_a_pályáról())
-            {
-                Fordulj_jobbra();
-                while (!Tudok_e_lépni())
-                {
-                    Fordulj_balra();
-                }
-                Lépj();
-            }
-        }
-        
         void FELADAT()
         {
-            menj_a_falig();
             Fordulj(jobbra);
-            menj_a_falig();
+            while(Tudok_e_lépni()) {
+                Lépj();
+            }
             Fordulj_meg();
-            valami();
+            while(Tudok_e_lépni()) {
+                Lépj();
+            }
         }
     }
 }
@@ -217,10 +212,10 @@ export const replaceKareszFunctions = (str:string):string => {
         'stdout("turn "+:x:)':{ x: /Fordulj\s*\(.*\)/gm, s:sel }, 
         '\t\tstatic :x:':{ x:/.*[a-zA-Z]+\s+[a-zA-Z\_\u00C0-\u00ff]+\s*\(.*\)[\n\r\s]*\{/gm, s:/.*/gms },
         'void Main(string[] args)':/void\s+FELADAT\s*\(\s*\)/gm,
+        '':/^\s*using(?!.*(Linq|Collections|System\;|Text|Threading).*).+/gm,
     }, str); 
 
     const match = /public\s+class\s+Program[\n\r\s]+\{/gm.exec(str);
-    // console.log(match);
     // Unable to locate Program
     if(! match)
         return;
@@ -249,13 +244,13 @@ const write = (mono:any, data:string) => {
  * Create a base karesz object and prepare a dotnet script and try to execute it 
  */
 export const createSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}) => {
-    const k = new karesz(startingPoint, startRotation, (e:any) => {
-        console.log(`Karesz feedback: '${e}'`);
-    }, sizeX, sizeY);
+    const k = new karesz(startingPoint, startRotation, sizeX, sizeY);
 
+    let steps = 0;
     await run(filename, (mono:any, input:string) => {
         // input may be one or more lines
         const lines = input.split('\n');
+        if(steps > 10) return;
 
         var line:Array<string>;
         var result:number|boolean;
@@ -263,10 +258,19 @@ export const createSession = async(filename:string, { sizeY=10, sizeX=10, starti
             // console.log(`Received: '${lines[i]}'`);   // DEBUG
             // Split line to 'out:' or 'in:' and value
             line = lines[i].split(':');
+            // if(!line[0].startsWith('out:') || !line[0].startsWith('in:')) continue;
             // parse command and update karesz 
             result = parseCommand(line[1], k);
 
-            console.log(`Result of parseCommand: ${result}`);   // DEBUG
+            console.log(`parseCommand (${line[1]}) --> ${result}`);   // DEBUG
+            steps++;
+            k.status();
+
+            if(result !== undefined && result['error']){
+                console.log(`Karesz warning: '${result['error']}'`);
+                k.steps.push({ command:'ERROR', value:result['error'] });
+                break;
+            }
 
             if(line[0] == 'in' && result !== undefined) {
                 console.log('Writing...');

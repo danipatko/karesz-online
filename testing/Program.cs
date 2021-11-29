@@ -1,8 +1,14 @@
 
 using System;
 using System.Collections.Generic;
+
+
+
 using System.Linq;
 using System.Text;
+
+
+using System.Threading;
 
 namespace Karesz
 {
@@ -31,26 +37,16 @@ namespace Karesz
             return (!stdin("wallahead","true") && !stdin("outofbounds","true"));
         }
 
-		static void valami()
-        {
-            while (!stdin("outofbounds","true"))
-            {
-                stdout("turn 1");
-                while (!Tudok_e_lépni())
-                {
-                    stdout("turn -1");
-                }
-                stdout("step");
-            }
-        }
-        
 		static void Main(string[] args)
         {
-            menj_a_falig();
              stdout("turn 1");
-            menj_a_falig();
+            while(Tudok_e_lépni()) {
+                stdout("step");
+            }
             Fordulj_meg();
-            valami();
+            while(Tudok_e_lépni()) {
+                stdout("step");
+            }
         }
     }
 }

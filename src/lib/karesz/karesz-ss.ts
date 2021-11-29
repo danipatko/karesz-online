@@ -66,7 +66,7 @@ class map {
         // iter vertically
         for (let y = 0; y < this.matrix.length; y++) 
             // one line
-            console.log(y + ': ' + this.matrix[y].map((v, x) => kp && x == kp.x && y == kp.y ? 'K' : v ).join(' ') + '\n');
+            console.log(y + 'y: ' + this.matrix[y].map((v, x) => kp && x == kp.x && y == kp.y ? 'K' : v ).join(' ') + '\n');
         console.log('-----------------------');
     }
 
@@ -91,12 +91,11 @@ export class karesz extends map {
     steps:Array<instruction> = [];
 
     // Initialization: starting position and rotation
-    constructor(startPosition:point={x:0, y:0}, startRotation:rotation=rotation.up, errorCallback:Function=(e:any) => console.log(e), sizeX:number=10, sizeY:number=10){
+    constructor(startPosition:point={x:0, y:0}, startRotation:rotation=rotation.up, sizeX:number=10, sizeY:number=10){
         super(sizeX, sizeY);
         this.position = startPosition;
         this.rotation = startRotation;
         this.stats = { numColor:0, numCrashes:0, numPickups:0, numSteps:0, numTurns:0, numWallchecks:0, rocksCollected:0, rocksPlaced:0 };
-        this.errorCallback = errorCallback;
         this.matrix = Array(sizeX).fill(field.empty).map(() => Array(sizeY).fill(field.empty));
     }
 
@@ -116,7 +115,7 @@ export class karesz extends map {
     private isFieldClear = (p:point):boolean => 
         this.inBounds(p) && (this.matrix[p.x][p.y] == field.empty || this.isRock(this.matrix[p.x][p.y]));
 
-    private forward = (size:number=1):point => {
+    private _forward = (size:number=1):point => {
         switch(this.rotation) {
             case rotation.up:
                 return { x:this.position.x, y: this.position.y - size };
@@ -128,18 +127,19 @@ export class karesz extends map {
                 return { x:this.position.x - size, y: this.position.y }
         }
     }
-    
-    err = (msg:string) => {
-        this.steps.push({ command:'ERROR', value:msg });
-        this.errorCallback(msg);
-    }
 
+    private forward = (size:number=1):point => {
+        const p = this._forward();
+        console.log(`FORWARD: x:${p.x} y:${p.y}`);
+        return p;
+    }
+    
     /**
      * Take n steps forward
      */
-    step = (n:number=1):void => {
+    step = (n:number=1):void|object => {
         const targ = this.forward(n);
-        if(! this.isFieldClear(targ)) { this.err('Cannot step forward'); return; }
+        if(! this.isFieldClear(targ)) { return { error:'Cannot step forward' }; }
         
         this.position = targ;
         this.steps.push({ command:'step', value:this.position });
@@ -169,11 +169,9 @@ export class karesz extends map {
     /**
      * If any, pick up rock from player position
      */
-    pickUpRock = ():void => {
-        if(! this.isRockUnder()){
-            this.err('No rock was below');
-            return;
-        }
+    pickUpRock = ():void|object => {
+        if(! this.isRockUnder())
+            return { error:'No rock was below' };
 
         this.matrix[this.position.x][this.position.y] = field.empty;
         this.steps.push({ command:'pickup', value: this.position });
@@ -181,12 +179,10 @@ export class karesz extends map {
     }
 
     //TODO: color
-    placeRock = (color?:field):void => {
-        if(this.isRockUnder()){
-            this.err('Cannot place rock');
-            return;
-        }
-        
+    placeRock = (color?:field):void|object => {
+        if(this.isRockUnder())
+            return { error: 'Cannot place rock' };
+                
         this.matrix[this.position.x][this.position.y] = color || field.rock_black;
         this.steps.push({ command:'place', value: { position: this.position, color: color || field.rock_black }});
         this.stats.rocksPlaced++;
@@ -197,6 +193,8 @@ export class karesz extends map {
      */
     whatIsInFront = ():field => {
         const { x, y } = this.forward();
+        if(! this.inBounds({x:x,y:y}))
+            return -1;
         return this.matrix[x][y];
     }
 
@@ -209,16 +207,16 @@ export class karesz extends map {
         front: ${this.whatIsInFront()}
         stats: ${JSON.stringify(this.stats)}
         `);
-        this.print();
+        this._print(this.position);
     }
 
     // -------- "Util" functions to match Molnár's karesz --------
 
-    Lépj = ():void => this.step();
+    Lépj = ():void|object => this.step();
     Fordulj_jobbra = ():void => this.turn(direction.right);
     Fordulj_balra = ():void => this.turn(direction.left);
-    Vegyél_fel_egy_kavicsot = ():void => this.pickUpRock();
-    Tegyél_le_egy_kavicsot = (color?:field):void => this.placeRock(color);
+    Vegyél_fel_egy_kavicsot = ():void|object => this.pickUpRock();
+    Tegyél_le_egy_kavicsot = (color?:field):void|object => this.placeRock(color);
     Északra_néz = ():boolean => this.rotation == rotation.up;
     Délre_néz = ():boolean => this.rotation == rotation.down;
     Keletre_néz = ():boolean => this.rotation == rotation.left;

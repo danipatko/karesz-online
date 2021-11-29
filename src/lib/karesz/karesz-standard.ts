@@ -25,7 +25,7 @@ export const parseCommand = (L:string, k:karesz):number|boolean => {
 
     const [command, value] = L.split(' ');
 
-    console.log(`Parsing command: ${command} - ${value}`);
+    // console.log(`Parsing command: ${command} - ${value}`); //DEBUG
 
     switch(command.trim().toLocaleLowerCase()) {
         case 'step': 
