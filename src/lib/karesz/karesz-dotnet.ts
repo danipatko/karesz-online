@@ -1,11 +1,15 @@
 import { spawn } from 'child_process';
+import { group_outros, xlink_attr } from 'svelte/internal';
+import fs from 'fs';
 
+const P = '/home/dapa/Projects/karesz-online/testing/Program.cs';
+const _P = '/home/dapa/Projects/karesz-online/testing/Program.exe';
 
 /**
  * Use mcs to compile .NET file
  * DEBUG NOTE: using WSL, root is /mnt/c/...
  */
-export const compile = (filename:string='/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.cs'):Promise<any> => {
+export const compile = (filename:string=P):Promise<any> => {
     return new Promise<any>((res, rej) => {
         const c = spawn('mcs', [filename]);
         c.on('error', (err:any) => rej(err));
@@ -13,7 +17,7 @@ export const compile = (filename:string='/mnt/c/Users/Dani/home/Projects/karesz-
     });
 }
 
-export const precompile = (filename:string='/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.exe') => {
+export const precompile = (filename:string=P) => {
     return new Promise<any>((res, rej) => {
         const c = spawn('mono', ['--aot=full', filename]);
         c.on('error', (err:any) => rej(err));
@@ -21,25 +25,19 @@ export const precompile = (filename:string='/mnt/c/Users/Dani/home/Projects/kare
     });
 }
 
-export const run = (filename:string='/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.exe') => {
+export const run = (filename:string=P, datahandler:Function, errorhandler:any) => {
     return new Promise<any>((res, rej) => {
         // set std buffer and run with mono
         const mono = spawn('stdbuf', ['-i0', '-o0', '-e0', 'mono', filename]);
         mono.stdin.setDefaultEncoding('utf-8');
         mono.stdout.pipe(process.stdout);
 
-        mono.on('error', (err:any) => console.log(err));
+        mono.on('error', errorhandler);
+        mono.stderr.on('data', errorhandler);
+        mono.stderr.on('error', errorhandler);
 
         // C# Console.WriteLine uses this channel
-        mono.stdout.on('data', (buf:Buffer) => {
-            const data = buf.toString();
-            if(data.endsWith('in:\n') && mono.stdin.writable){
-                // these 3 commands are necessary for std inputs
-                mono.stdin.cork();
-                mono.stdin.write('a\n');
-                mono.stdin.uncork();
-            }
-        });
+        mono.stdout.on('data', (buf:Buffer) => datahandler(mono, buf.toString()));
 
         mono.once('exit', (code, signal) => res({ code:code, signal:signal }));
     });
@@ -49,7 +47,13 @@ export const tryrun = async() => {
     // const rr = await run();
     //console.log(rr);
 
-    replaceKareszFunctions(test);
+    fs.writeFileSync(P, replaceKareszFunctions(fs.readFileSync(P).toString()));
+
+    // console.log(' (sadjvbfkl) '.match(sel)[0]);
+
+    await compile(_P);
+    await precompile(_P);
+    await createSession(_P);
 
     console.log('exited');
 }
@@ -61,95 +65,41 @@ public static int stdin(string command){Console.WriteLine($"in:{command}");strin
 public static void stdout(string command){Console.WriteLine($"out:{command}");}
 `;
 
-const test = `using System;
+const test = `
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.IO;
-using System.Threading;
 
 namespace Karesz
 {
-    public partial class Form1 : Form
+    public class Program
     {
-        bool Tudok_e_menni()
+        static void Main(string[] args)
         {
-            return !Van_e_előttem_fal() && !Kilépek_e_a_pályáról();
-        }
-        void MenyjAmígTudsz_ésKavics()
-        { 
-            while(Tudok_e_menni())
-            {
-                Lépj();
-                if(Van_e_itt_kavics())
-                {
-                    Vegyél_fel_egy_kavicsot();
-                    kavicsok++;
-                }
-            }
-        }
-        void goRightUp()
-        {
-            MenyjAmígTudsz_ésKavics();
-            Fordulj_balra();
-            MenyjAmígTudsz_ésKavics();
-            Fordulj(2);
-        }
-        int kavicsok = 0;
-        void FELADAT()
-        {
-            
-            bool fut = true;
-            int irány = 1;
-            goRightUp();
-            while (fut)
-            {
-                MenyjAmígTudsz_ésKavics();
-                Fordulj(irány);
-                if(!Tudok_e_menni())
-                {
-                    fut = false;
-                }
-                else
-                {
-                    Lépj();
-                    if (Van_e_itt_kavics())
-                    {
-                        Vegyél_fel_egy_kavicsot();
-                        kavicsok++;
-                    }
-                    Fordulj(irány);
-                }
-
-                if(irány == 1)
-                {
-                    irány = -1;
-                }
-                else
-                {
-                    irány = 1;
-                }
-            }
-            MessageBox.Show(Convert.ToString(kavicsok) + " kavicsot tudtam felszedni");
+            Fordulj(1);
+            Lépj();
+            Fordulj_jobbra();
+            Lépj();
+            Lépj();
+            Lépj();
+            Tegyél_le_egy_kavicsot();
         }     
     }
 }
 `;
 
-const replaceNumbers = (s:string, match:RegExp, key:string) => {
-    match.exec(s).map(x => {
-        s = s.replaceAll(x, key.replaceAll(':x:', x.match(/[1-9]/gm).join()));
+const riplace = (s:string, match:RegExp, key:string, select:RegExp) => {
+    const r = match.exec(s);
+    if (!r) return s;
+    r.map(x => {
+        s = s.replaceAll(x, key.replaceAll(':x:', x.match(select)[0]));
     });
     return s;
 }
 
 const replace = (args:object, s:string):string => {
     for(const key in args) 
-        s = args[key].x ? replaceNumbers(s, args[key].x, key) : s.replaceAll(args[key], key);
+        s = args[key].x ? riplace(s, args[key].x, key, args[key].s) : s.replaceAll(args[key], key);
     return s;
 }
 
@@ -157,35 +107,78 @@ const insert = (s:string, toAdd:string, at:number):string => {
     return [s.slice(0, at), toAdd, s.slice(at)].join('');
 }
 
-export const replaceKareszFunctions = (str:string) => {
+const sel = /(?<=\()(.*?)(?=\))/gm;
+
+export const replaceKareszFunctions = (str:string):string => {
     // Instert utility functions after 
     // 'public partial class Form1 : Form {'
 
+    // RESET CONTENT - REMOVE THE LINE BELOW
     str = test;
-    const match = /public\s*partial\s*class\s*Form1\s*:\s*Form[\n\r\s]+{/gm.exec(str);
+
+    const match = /public\s+partial\s+class\s+Form1\s+:\s+Form[\n\r\s]+{/gm.exec(str) || /public\s+class\s+Program[\n\r\s]+{/gm.exec(str);
+    // console.log(match);
     if(! match)
-        return false;
-    
+        return;
+
+    console.log('GOT HERE');
+
     str = insert(str, UTIL_FUNCTIONS_FOR_CSHARP, str.indexOf(match[0]) + match[0].length);
-    
+
     str = replace({
-        'stdout("step")':/Lépj\s*\(s*\)/gm,
-        'stdout("turn 1")':/Fordulj_jobbra\s*\(s*\)/gm,
-        'stdout("turn -1")':/Fordulj_balra\s*\(s*\)/gm,
-        'stdout("pickup")':/Vegyél_fel_egy_kavicsot\s*\(s*\)/gm,
-        'stdout("place")':/Tegyél_le_egy_kavicsot\s*\(s*\)/gm,
-        'stdin("up","0")':/Északra_néz\s*\(s*\)/gm,
-        'stdin("down","2")':/Délre_néz\s*\(s*\)/gm,
-        'stdin("left","3")':/Keletre_néz\s*\(s*\)/gm,
-        'stdin("right","1")':/Nyugatra_néz\s*\(s*\)/gm,
-        'stdin("look")':/Merre_néz\s*\(s*\)/gm,
-        'stdin("isrock","true")':/Van_e_itt_kavics\s*\(s*\)/gm,
-        'stdin("under")':/Mi_van_alattam\s*\(s*\)/gm,
-        'stdin("wallahead","true")':/Van_e_előttem_fal\s*\(s*\)/gm,
-        'stdin("outofbounds","true")':/Kilépek_e_a_pályáról\s*\(s*\)/gm,
-        'stdout("turn :x:")':{ x: /Fordulj\s*\(\d*\)/gm },
+        'stdout("step")':/Lépj\s*\(\s*\)/gm,
+        'stdout("turn 1")':/Fordulj_jobbra\s*\(\s*\)/gm,
+        'stdout("turn -1")':/Fordulj_balra\s*\(\s*\)/gm,
+        'stdout("pickup")':/Vegyél_fel_egy_kavicsot\s*\(\s*\)/gm,
+        'stdout("place")':/Tegyél_le_egy_kavicsot\s*\(\s*\)/gm,
+        'stdout("place "+:x:)':{ x:/Tegyél_le_egy_kavicsot\s*\(.*\)/gm, s:sel },
+        'stdin("up","0")':/Északra_néz\s*\(\s*\)/gm,
+        'stdin("down","2")':/Délre_néz\s*\(\s*\)/gm,
+        'stdin("left","3")':/Keletre_néz\s*\(\s*\)/gm,
+        'stdin("right","1")':/Nyugatra_néz\s*\(\s*\)/gm,
+        'stdin("look")':/Merre_néz\s*\(\s*\)/gm,
+        'stdin("isrock","true")':/Van_e_itt_kavics\s*\(\s*\)/gm,
+        'stdin("under")':/Mi_van_alattam\s*\(\s*\)/gm,
+        'stdin("wallahead","true")':/Van_e_előttem_fal\s*\(\s*\)/gm,
+        'stdin("outofbounds","true")':/Kilépek_e_a_pályáról\s*\(\s*\)/gm,
+        'stdout("turn "+:x:)':{ x: /Fordulj\s*\(\d*\)/gm, s:sel },
     }, str); 
 
     console.log(str);
     return str;
 }
+
+import { karesz } from './karesz-ss';
+import { parseCommand } from './karesz-standard';
+
+const write = (mono:any, data:string) => {
+    if(! mono.stdin.writable) return;
+    // these 3 commands are necessary for std inputs
+    mono.stdin.cork();
+    mono.stdin.write(`${data}\n`);
+    mono.stdin.uncork();
+}
+
+export const createSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}) => {
+    const k = new karesz(startingPoint, startRotation, (e:any) => {
+        console.log(e);
+    }, sizeX, sizeY);
+
+    await run(filename, (mono:any, input:string) => {
+        const [ IO, line ] = input.split(':');
+
+        console.log(`stdout received: ${IO} >> '${line}'`);
+
+        const result = parseCommand(line, k);
+        
+        console.log(result);
+        k.status();
+
+        if(IO == 'in' && result) 
+            write(mono, result.toString());
+    }, 
+    (e:any) => console.log(`ERROR: ${e}`));
+
+    console.log(k.steps);
+}
+
