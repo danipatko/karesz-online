@@ -1,9 +1,8 @@
 import { spawn } from 'child_process';
-import { group_outros, xlink_attr } from 'svelte/internal';
 import fs from 'fs';
 
-const P = '/home/dapa/Projects/karesz-online/testing/Program.cs';
-const _P = '/home/dapa/Projects/karesz-online/testing/Program.exe';
+const P = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.cs';
+const _P = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.exe';
 
 /**
  * Use mcs to compile .NET file
@@ -12,7 +11,11 @@ const _P = '/home/dapa/Projects/karesz-online/testing/Program.exe';
 export const compile = (filename:string=P):Promise<any> => {
     return new Promise<any>((res, rej) => {
         const c = spawn('mcs', [filename]);
+        // error handling
         c.on('error', (err:any) => rej(err));
+        c.stderr.on('data', (err:any) => rej(err));
+        c.stderr.on('error', (err:any) => rej(err));
+
         c.on('exit', (code, signal) => res({ code:code, signal:signal }));
     });
 }
@@ -20,7 +23,11 @@ export const compile = (filename:string=P):Promise<any> => {
 export const precompile = (filename:string=P) => {
     return new Promise<any>((res, rej) => {
         const c = spawn('mono', ['--aot=full', filename]);
+        // error handling
         c.on('error', (err:any) => rej(err));
+        c.stderr.on('data', (err:any) => rej(err));
+        c.stderr.on('error', (err:any) => rej(err));
+        
         c.on('exit', (code, signal) => res({ code:code, signal:signal }));
     });
 }
@@ -44,28 +51,33 @@ export const run = (filename:string=P, datahandler:Function, errorhandler:any) =
 }
 
 export const tryrun = async() => {
-    // const rr = await run();
-    //console.log(rr);
+    // prepare .cs file for compilation and execution
+    const contents = fs.readFileSync(P).toString();
+    fs.writeFileSync(P, replaceKareszFunctions(contents) || contents);
 
-    fs.writeFileSync(P, replaceKareszFunctions(fs.readFileSync(P).toString()));
+    await compile(P).catch((err:any) => {
+        console.log(`An error occured while compiling: ${err}\nCommand: 'mcs ${P}'`);
+        return;
+    });
+    
+    await precompile(_P).catch((err:any) => {
+        console.log(`An error occured performing ahead-of-time compile: ${err}\nCommand: 'mono --aot=full ${_P}'`);
+        return;
+    })
 
-    // console.log(' (sadjvbfkl) '.match(sel)[0]);
-
-    await compile(_P);
-    await precompile(_P);
     await createSession(_P);
 
-    console.log('exited');
+    console.log('Done!');
 }
 
 const UTIL_FUNCTIONS_FOR_CSHARP = 
 `
-public static bool stdin(string command,string match){Console.WriteLine($"in:{command}");string value=Console.ReadLine();return value==match;}
-public static int stdin(string command){Console.WriteLine($"in:{command}");string value=Console.ReadLine();return int.Parse(value);}
-public static void stdout(string command){Console.WriteLine($"out:{command}");}
+\t\tpublic static bool stdin(string command,string match){Console.WriteLine($"in:{command}");string value=Console.ReadLine();return value==match;}
+\t\tpublic static int stdin(string command){Console.WriteLine($"in:{command}");string value=Console.ReadLine();return int.Parse(value);}
+\t\tpublic static void stdout(string command){Console.WriteLine($"out:{command}");}
 `;
 
-const test = `
+const _test = `
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,39 +86,106 @@ namespace Karesz
 {
     public class Program
     {
-        static void Main(string[] args)
+        void Main(string[] args)
         {
-            Fordulj(1);
-            Lépj();
-            Fordulj_jobbra();
-            Lépj();
-            Lépj();
-            Lépj();
-            Tegyél_le_egy_kavicsot();
+            Console.WriteLine("in:wallahead");
+            string r = Console.ReadLine();
+            Console.WriteLine("Recvd: "+r);
         }     
     }
 }
 `;
 
+
+const test = `
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace Karesz
+{
+    public partial class Form1 : Form
+    {
+        void Fordulj_meg()
+        {
+            Fordulj(balra);
+            Fordulj(balra);
+        }
+
+        void menj_a_falig()
+        {
+            while (!Van_e_előttem_fal())
+            {
+                Lépj();
+            }
+        }
+
+        bool Tudok_e_lépni()
+        {
+            return (!Van_e_előttem_fal() && !Kilépek_e_a_pályáról());
+        }
+
+        void valami()
+        {
+            while (!Kilépek_e_a_pályáról())
+            {
+                Fordulj_jobbra();
+                while (!Tudok_e_lépni())
+                {
+                    Fordulj_balra();
+                }
+                Lépj();
+            }
+        }
+        
+        void FELADAT()
+        {
+            menj_a_falig();
+            Fordulj(jobbra);
+            menj_a_falig();
+            Fordulj_meg();
+            valami();
+        }
+    }
+}
+`;
+
+/**
+ * Replace function with extras: select a string from matched one that will be placed on :x:
+ * @param s the base string
+ * @param match primary match
+ * @param key string to replace match with
+ * @param select string to replace :x: with
+ * @returns replaced string
+ */
 const riplace = (s:string, match:RegExp, key:string, select:RegExp) => {
-    const r = match.exec(s);
+    const r = s.match(match);
     if (!r) return s;
+    
     r.map(x => {
-        s = s.replaceAll(x, key.replaceAll(':x:', x.match(select)[0]));
+        s = s.replaceAll(x, key.replaceAll(':x:', x.match(select)[0].trim()));
     });
     return s;
 }
 
+/**
+ * Replace a series of strings/matches in a string
+ * @returns {string} replaced string
+ */
 const replace = (args:object, s:string):string => {
     for(const key in args) 
         s = args[key].x ? riplace(s, args[key].x, key, args[key].s) : s.replaceAll(args[key], key);
     return s;
 }
 
-const insert = (s:string, toAdd:string, at:number):string => {
-    return [s.slice(0, at), toAdd, s.slice(at)].join('');
-}
+/**
+ * Insert a string to a string at a specific index
+ */
+const insert = (s:string, toAdd:string, at:number):string => 
+    [s.slice(0, at), toAdd, s.slice(at)].join('');
 
+// Regex capture for the content between two parenthesis
 const sel = /(?<=\()(.*?)(?=\))/gm;
 
 export const replaceKareszFunctions = (str:string):string => {
@@ -116,19 +195,13 @@ export const replaceKareszFunctions = (str:string):string => {
     // RESET CONTENT - REMOVE THE LINE BELOW
     str = test;
 
-    const match = /public\s+partial\s+class\s+Form1\s+:\s+Form[\n\r\s]+{/gm.exec(str) || /public\s+class\s+Program[\n\r\s]+{/gm.exec(str);
-    // console.log(match);
-    if(! match)
-        return;
-
-    console.log('GOT HERE');
-
-    str = insert(str, UTIL_FUNCTIONS_FOR_CSHARP, str.indexOf(match[0]) + match[0].length);
-
     str = replace({
+        'public class Program': /public\s+partial\s+class\s+Form1\s+:\s+Form/gm,
         'stdout("step")':/Lépj\s*\(\s*\)/gm,
         'stdout("turn 1")':/Fordulj_jobbra\s*\(\s*\)/gm,
         'stdout("turn -1")':/Fordulj_balra\s*\(\s*\)/gm,
+        ' stdout("turn -1")':/Fordulj\s*\(\s*balra\s*\)/gm,
+        ' stdout("turn 1")':/Fordulj\s*\(\s*jobbra\s*\)/gm,
         'stdout("pickup")':/Vegyél_fel_egy_kavicsot\s*\(\s*\)/gm,
         'stdout("place")':/Tegyél_le_egy_kavicsot\s*\(\s*\)/gm,
         'stdout("place "+:x:)':{ x:/Tegyél_le_egy_kavicsot\s*\(.*\)/gm, s:sel },
@@ -141,16 +214,29 @@ export const replaceKareszFunctions = (str:string):string => {
         'stdin("under")':/Mi_van_alattam\s*\(\s*\)/gm,
         'stdin("wallahead","true")':/Van_e_előttem_fal\s*\(\s*\)/gm,
         'stdin("outofbounds","true")':/Kilépek_e_a_pályáról\s*\(\s*\)/gm,
-        'stdout("turn "+:x:)':{ x: /Fordulj\s*\(\d*\)/gm, s:sel },
+        'stdout("turn "+:x:)':{ x: /Fordulj\s*\(.*\)/gm, s:sel }, 
+        '\t\tstatic :x:':{ x:/.*[a-zA-Z]+\s+[a-zA-Z\_\u00C0-\u00ff]+\s*\(.*\)[\n\r\s]*\{/gm, s:/.*/gms },
+        'void Main(string[] args)':/void\s+FELADAT\s*\(\s*\)/gm,
     }, str); 
 
-    console.log(str);
-    return str;
+    const match = /public\s+class\s+Program[\n\r\s]+\{/gm.exec(str);
+    // console.log(match);
+    // Unable to locate Program
+    if(! match)
+        return;
+
+    // insert util functions to start of script
+    return insert(str, UTIL_FUNCTIONS_FOR_CSHARP, str.indexOf(match[0]) + match[0].length);
 }
 
 import { karesz } from './karesz-ss';
 import { parseCommand } from './karesz-standard';
 
+/**
+ * Write a string to the stdin of a child process
+ * @param mono the child process to write to
+ * @param data writeable string
+ */
 const write = (mono:any, data:string) => {
     if(! mono.stdin.writable) return;
     // these 3 commands are necessary for std inputs
@@ -159,26 +245,39 @@ const write = (mono:any, data:string) => {
     mono.stdin.uncork();
 }
 
+/**
+ * Create a base karesz object and prepare a dotnet script and try to execute it 
+ */
 export const createSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}) => {
     const k = new karesz(startingPoint, startRotation, (e:any) => {
-        console.log(e);
+        console.log(`Karesz feedback: '${e}'`);
     }, sizeX, sizeY);
 
     await run(filename, (mono:any, input:string) => {
-        const [ IO, line ] = input.split(':');
+        // input may be one or more lines
+        const lines = input.split('\n');
 
-        console.log(`stdout received: ${IO} >> '${line}'`);
+        var line:Array<string>;
+        var result:number|boolean;
+        for (let i = 0; i < lines.length; i++) {
+            // console.log(`Received: '${lines[i]}'`);   // DEBUG
+            // Split line to 'out:' or 'in:' and value
+            line = lines[i].split(':');
+            // parse command and update karesz 
+            result = parseCommand(line[1], k);
 
-        const result = parseCommand(line, k);
-        
-        console.log(result);
-        k.status();
+            console.log(`Result of parseCommand: ${result}`);   // DEBUG
 
-        if(IO == 'in' && result) 
-            write(mono, result.toString());
+            if(line[0] == 'in' && result !== undefined) {
+                console.log('Writing...');
+                write(mono, result.toString());
+                break;
+            }
+        }
     }, 
     (e:any) => console.log(`ERROR: ${e}`));
 
+    console.log('--- Steps done ---');
     console.log(k.steps);
 }
 

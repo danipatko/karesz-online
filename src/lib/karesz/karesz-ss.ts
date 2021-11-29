@@ -63,7 +63,6 @@ class map {
     }
 
     _print = (kp?:point):void => {
-        var str = '';
         // iter vertically
         for (let y = 0; y < this.matrix.length; y++) 
             // one line

@@ -21,9 +21,11 @@ I/-    outofbounds
 */
 
 export const parseCommand = (L:string, k:karesz):number|boolean => {
+    if(!L) return;
+
     const [command, value] = L.split(' ');
 
-    console.log(`${command} - ${value}`);
+    console.log(`Parsing command: ${command} - ${value}`);
 
     switch(command.trim().toLocaleLowerCase()) {
         case 'step': 
@@ -47,7 +49,10 @@ export const parseCommand = (L:string, k:karesz):number|boolean => {
         case 'under': return k.whatIsUnder();
         case 'wallahead': return k.Van_e_előttem_fal();
         case 'outofbounds': return k.Kilépek_e_a_pályáról();
+        default:
+            console.log('COMMAND NOT FOUND');
+            break;
     }
     
-    return null;
+    return undefined;
 }
