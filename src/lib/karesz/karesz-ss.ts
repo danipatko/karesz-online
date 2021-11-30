@@ -66,7 +66,7 @@ class map {
         // iter vertically
         for (let y = 0; y < this.matrix.length; y++) 
             // one line
-            console.log(y + 'y: ' + this.matrix[y].map((v, x) => kp && x == kp.x && y == kp.y ? 'K' : v ).join(' ') + '\n');
+            console.log(y + ': ' + this.matrix[y].map((v, x) => kp && x == kp.x && y == kp.y ? 'K' : v ).join(' ') + '\n');
         console.log('-----------------------');
     }
 
@@ -115,7 +115,7 @@ export class karesz extends map {
     private isFieldClear = (p:point):boolean => 
         this.inBounds(p) && (this.matrix[p.x][p.y] == field.empty || this.isRock(this.matrix[p.x][p.y]));
 
-    private _forward = (size:number=1):point => {
+    private forward = (size:number=1):point => {
         switch(this.rotation) {
             case rotation.up:
                 return { x:this.position.x, y: this.position.y - size };
@@ -128,12 +128,6 @@ export class karesz extends map {
         }
     }
 
-    private forward = (size:number=1):point => {
-        const p = this._forward();
-        console.log(`FORWARD: x:${p.x} y:${p.y}`);
-        return p;
-    }
-    
     /**
      * Take n steps forward
      */
@@ -225,13 +219,12 @@ export class karesz extends map {
     Van_e_itt_kavics = ():boolean => this.isRockUnder();
     Mi_van_alattam = ():field => this.whatIsUnder();
     Van_e_előttem_fal = ():boolean => this.whatIsInFront() == field.wall;
-    Kilépek_e_a_pályáról = ():boolean => this.inBounds(this.forward());
+    Kilépek_e_a_pályáról = ():boolean => !this.inBounds(this.forward());
 }
 
 // Called on run - execute array of instructions
-export const run = (instructions:Array<instruction>):any => {
-
-    console.log('CALLED');
+export const run = ():any => { 
+    console.log('RUN KARESZ TEST --------------');
     
     return undefined;
 };

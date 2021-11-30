@@ -243,37 +243,47 @@ const write = (mono:any, data:string) => {
 /**
  * Create a base karesz object and prepare a dotnet script and try to execute it 
  */
-export const createSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}) => {
+export const createSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}):Promise<any> => {
     const k = new karesz(startingPoint, startRotation, sizeX, sizeY);
+    const maxSteps = 5000;
+    const maxTime = Date.now() + 1000*60*2; // maximal two minutes 
 
     let steps = 0;
     await run(filename, (mono:any, input:string) => {
         // input may be one or more lines
         const lines = input.split('\n');
-        if(steps > 10) return;
+        if(steps > maxSteps || maxTime < Date.now()) {
+            mono.kill('SIGKILL');
+            return;
+        } 
 
+        if(input === undefined) return;
+        
         var line:Array<string>;
         var result:number|boolean;
         for (let i = 0; i < lines.length; i++) {
-            // console.log(`Received: '${lines[i]}'`);   // DEBUG
-            // Split line to 'out:' or 'in:' and value
+            // Split line to 'out' or 'in' and value
             line = lines[i].split(':');
-            // if(!line[0].startsWith('out:') || !line[0].startsWith('in:')) continue;
+
+            // skip undefined, or irrevelant logs
+            if(line[1] === undefined || !(line[0] == 'out' || line[0] == 'in')) 
+                continue;
+            
             // parse command and update karesz 
             result = parseCommand(line[1], k);
+            console.log(`parseCommand (${line[1]}) --> ${result}`);   //DEBUG
 
-            console.log(`parseCommand (${line[1]}) --> ${result}`);   // DEBUG
             steps++;
-            k.status();
+            // k.status(); //DEBUG
 
             if(result !== undefined && result['error']){
-                console.log(`Karesz warning: '${result['error']}'`);
+                console.log(`Karesz warning: '${result['error']}'`);  //DEBUG
                 k.steps.push({ command:'ERROR', value:result['error'] });
                 break;
             }
 
             if(line[0] == 'in' && result !== undefined) {
-                console.log('Writing...');
+                console.log('Writing...');  //DEBUG
                 write(mono, result.toString());
                 break;
             }
@@ -281,7 +291,7 @@ export const createSession = async(filename:string, { sizeY=10, sizeX=10, starti
     }, 
     (e:any) => console.log(`ERROR: ${e}`));
 
-    console.log('--- Steps done ---');
-    console.log(k.steps);
+    console.log('--- Steps done ---');  //DEBUG
+    console.log(k.steps);   //DEBUG
 }
 
