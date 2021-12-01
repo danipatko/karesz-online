@@ -29,8 +29,11 @@ export const createProject = async(code:string, steps:object, stats:object, pass
     return await db.get('karesz', 'project', {id:id} );
 }
 
-export const updateProject = async(id:string, passwd:string, params:object):Promise<void> => {
+export const updateProject = async(id:string, passwd:string, params:object):Promise<any> => {
     passwd = encrypt(passwd);
+    if(! await db.recordExists('karesz', 'project', { id, passwd }))
+        return;
+    
     await db.updateRecord('karesz', 'project', {id:id, passwd:passwd}, params);
     // return updated one
     return await db.get('karesz', 'project', {id:id});

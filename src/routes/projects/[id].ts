@@ -5,5 +5,5 @@ export async function get(req:any) {
     const { id } = req.params;
     if(! id) return R(undefined, 'Missing ID request parameter', 404);
 
-    return await getProject(id);
+    return R(await getProject(id), 'Project not found.', 404);
 }

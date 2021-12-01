@@ -89,6 +89,7 @@ const count = async(database:string, table:string, selector:object):Promise<numb
  * @param toParse object: keys name must match SQL column name, and it's value is the type to parse to
  */
  const parse = (SQLReturnPacket:object, toParse:object):any => {
+    if(!SQLReturnPacket) return;
     for(const key in toParse) {
         // if the return packet does not contain the key, simply pass
         if(SQLReturnPacket[key] === undefined || SQLReturnPacket[key] === null) continue;
@@ -133,12 +134,12 @@ const selectorString = (table:string, args:object, logic='AND'):string => {
  * @returns array of rows
  */
 const get = async(database:string, table:string, selector:object, ...fields:Array<string>):Promise<any> => {
-    return (await execute(database,`
+    return await execute(database,`
         SELECT ${fields.length?fields.join(','):'*'}
         FROM ${table} 
         WHERE ${selectorString(table, selector)} 
         LIMIT 1
-    `))[0];
+    `);
 }
 /**
  * Check if item exists in database
