@@ -65,7 +65,7 @@ export const tryrun = async() => {
         return;
     })
 
-    await createSession(_P);
+    await runSession(_P);
 
     console.log('Done!');
 }
@@ -224,7 +224,7 @@ export const replaceKareszFunctions = (str:string):string => {
     return insert(str, UTIL_FUNCTIONS_FOR_CSHARP, str.indexOf(match[0]) + match[0].length);
 }
 
-import { karesz } from './karesz-ss';
+import { instruction, karesz } from './karesz-ss';
 import { parseCommand } from './karesz-standard';
 
 /**
@@ -243,7 +243,7 @@ const write = (mono:any, data:string) => {
 /**
  * Create a base karesz object and prepare a dotnet script and try to execute it 
  */
-export const createSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}):Promise<any> => {
+export const runSession = async(filename:string, { sizeY=10, sizeX=10, startingPoint={x:0,y:0}, startRotation=0 }={}):Promise<instruction[]> => {
     const k = new karesz(startingPoint, startRotation, sizeX, sizeY);
     const maxSteps = 5000;
     const maxTime = Date.now() + 1000*60*2; // maximal two minutes 
@@ -293,5 +293,7 @@ export const createSession = async(filename:string, { sizeY=10, sizeX=10, starti
 
     console.log('--- Steps done ---');  //DEBUG
     console.log(k.steps);   //DEBUG
+
+    return k.steps;
 }
 
