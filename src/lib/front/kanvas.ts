@@ -14,11 +14,11 @@ export interface entity {
 export const enitities: {
     karesz:entity,
     wall:entity,
-    stone:entity
+    rock:entity
 } = {
     karesz: { position: {x: 0, y:0}, name:'karesz', path:'no path yet', type:'svg', constant:false },
     wall: { position: {x: 0, y:0}, name:'wall', path:'#f00', type:'square', constant:true },
-    stone: { position: {x: 0, y:0}, name:'stone', path:'#000', type:'round', constant:false }
+    rock: { position: {x: 0, y:0}, name:'rock', path:'#000', type:'round', constant:false }
 };
 
 export class kanvas{
@@ -48,6 +48,10 @@ export class kanvas{
     public add (position:point, type:string='svg', path:string, name:string='unnamed entity', constant:boolean=false):void {
         this.objects.push({position, name, type, path, constant});
     }
+    
+    public addDirect(x:entity){
+        this.objects.push(x);
+    }
 
     protected drawGrid ():void {
         this.ctx.fillStyle = this.settings['separator_color'];
@@ -71,34 +75,60 @@ export class kanvas{
         this.ctx.fill(); 
     }
 
-    protected drawEntities(redraw:boolean=false):void {
-        for(const k in redraw ? this.objects: this.objects.filter(x => !x.constant)){
+    protected drawIMG = (position:point, source:string) => {
+        var img = new Image();
+        img.onload = () => {
+            this.ctx.drawImage(img, (position.x*this.cellSize)+1, (position.y*this.cellSize)+1, (this.cellSize*2) - 2, (this.cellSize*2) - 2);
+        }
+        img.src = source;
+    }
+
+    protected drawEntities(redraw:boolean=true/*TO DO*/):void {
+        for(const k in redraw ? this.objects : this.objects.filter(x => !x.constant)){
             switch (this.objects[k].type) {
-                case 'svg':
-                    // TODO
-                    break;
                 case 'square':
                     this.drawSquare(this.objects[k].position, this.objects[k].path);
                     break;
                 case 'circle':
                     this.drawCircle(this.objects[k].position, this.objects[k].path);
                     break;
-                // image
                 default:
-                    // TODO
+                    this.drawIMG(this.objects[k].position, this.objects[k].path);
                     break;
             }
         }
     }
 
-    public render = (redraw:boolean=true):void => {
-        if(redraw)
-            this.drawGrid();
-        this.drawEntities(redraw);
+    public render = ():void => {
+        this.drawGrid();
+        this.drawEntities();
     }
 
-    /*public reposition = ():void => {
+    protected exec = (instruction:instruction) => {
 
-    }*/
+    }
 
+    /* run specific variables */
+    public lastTickIndex:number = 0;
+    public timer:any;
+    public i:number = 0;
+
+    public run = async(instructions:instruction[], fromTick:number=0, tickSpeed:number=50):Promise<void> => {
+        return new Promise<void>(res => {
+            this.i = fromTick;
+            this.timer = setInterval(() => {
+                this.exec(instructions[this.i++]);
+            }, tickSpeed);
+        });
+    }
+
+    public stop = () => {
+        this.lastTickIndex = this.i;
+        clearInterval(this.timer);
+    }
+}
+
+export interface instruction {
+    command:string,
+    value?:any
 }
