@@ -1,4 +1,5 @@
-import { field, instruction, karesz } from './karesz-ss';
+import { field, instruction } from './karesz-utils';
+import type { karesz } from './karesz';
 
 /*
 POSSIBLE INSTRUCTIONS: 
@@ -24,8 +25,6 @@ export const parseCommand = (L:string, k:karesz):number|boolean => {
     if(!L) return;
 
     const [command, value] = L.split(' ');
-
-    // console.log(`Parsing command: ${command} - ${value}`); //DEBUG
 
     switch(command.trim().toLocaleLowerCase()) {
         case 'step': 
