@@ -1,4 +1,4 @@
-import { createProject } from '$lib/db/functions/projects';
+/*import { createProject } from '$lib/db/functions/projects';
 import { R } from '$lib/util';
 
 // English characters & atleast 3 characters
@@ -13,4 +13,5 @@ export async function post(req:any) {
     if(! (code && passwd && validatePassword(passwd) && lang)) return R(undefined, 'Missing parameter \'readme\' from request.', 400);
 
     return R(await createProject(code, [], {}, passwd, readme, creator, lang), 'Project was not created', 404);
-}
+}*/
+export default 0;

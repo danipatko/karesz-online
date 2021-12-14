@@ -1,9 +1,10 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
-import type { karesz, kontext } from './karesz';
-import { replaceKareszFunctions, write } from './specific/dotnet-strings';
+import kontext from '../kontext';
+import karesz from '../karesz';
+import { replaceKareszFunctions, write } from './dotnet-strings';
 import path from 'path/posix';
-import { parseCommand } from './karesz-standard';
+import { parseCommand } from '../karesz-standard';
 
 // DEBUG
 const P = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.cs';
@@ -13,7 +14,7 @@ const _P = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.exe';
  * Use mcs to compile .NET file
  * DEBUG NOTE: using WSL, root is /mnt/c/...
  */
-export const compile = (filename:string=P):Promise<any> => {
+export const compile = async(filename:string=P):Promise<any> => {
     return new Promise<any>((res, rej) => {
         const c = spawn('mcs', [filename]);
         // error handling
@@ -27,7 +28,7 @@ export const compile = (filename:string=P):Promise<any> => {
 /**
  * Precompile executable with mono
  */
-export const precompile = (filename:string=P) => {
+export const precompile = async(filename:string=P) => {
     return new Promise<any>((res, rej) => {
         const c = spawn('mono', ['--aot=full', filename]);
         // error handling
@@ -44,7 +45,7 @@ export const precompile = (filename:string=P) => {
  * @param datahandler callback function called on data recv
  * @param errorhandler callback function called on error recv
  */
-export const run = (mono:any, datahandler:any, errorhandler:any):Promise<any> => {
+export const run = async(mono:any, datahandler:any, errorhandler:any):Promise<any> => {
     return new Promise<any>((res, rej) => {
         // set std buffer and run with mono
         mono.stdin.setDefaultEncoding('utf-8');
@@ -61,20 +62,20 @@ export const run = (mono:any, datahandler:any, errorhandler:any):Promise<any> =>
     });
 }
 
-const TESTING_DIRECTORY_PATH = ``;
+const TESTING_DIRECTORY_PATH = `/mnt/c/Users/Dani/home/Projects/karesz-online/testing`;
 
-
-export const tryrun = async(karesz:karesz, { filename='Program.cs', max_ticks=5000, max_time=1000*60 }={}):Promise<void> => {
+export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', filename='Program.cs', max_ticks=5000, max_time=1000*60 }={}):Promise<void> => {
     return new Promise<any>(async res => {
+        // create karesz
+        const karenv = new kontext(sizeX, sizeY);
+        const k = new karesz({x:startX, y:startY});
+        karenv.addKaresz(k);
+/*
         // get path for .cs and .exe
         const dotcs = path.join(TESTING_DIRECTORY_PATH, filename);
         const executable = path.join(TESTING_DIRECTORY_PATH, filename.replaceAll('.cs', '.exe'));
-        // read file
-        const contents = fs.readFileSync(dotcs).toString();
-        if(!contents)
-            res({error:`Invalid path: ${dotcs}`});
         // replace contents
-        fs.writeFileSync(dotcs, replaceKareszFunctions(contents) || 'Not found.');
+        fs.writeFileSync(dotcs, replaceKareszFunctions(code) || 'Not found.');
         
         // compile .cs file to .exe
         await compile(dotcs).catch((err:any) => {
@@ -101,7 +102,7 @@ export const tryrun = async(karesz:karesz, { filename='Program.cs', max_ticks=50
             // continue if undefined
             if(input === undefined) return;
             // execute command
-            parseInput(input, karesz, mono);
+            parseInput(input, k, mono);
         }, 
         // handle errors
         (e:any) => {
@@ -111,11 +112,12 @@ export const tryrun = async(karesz:karesz, { filename='Program.cs', max_ticks=50
         // kill after reaching max time (ms)
         setTimeout(() => {
             if(!finished) mono.kill('SIGKILL');
-        }, max_time);
+        }, max_time);*/
+
+        res(0);
 
         console.log('Done!');
     });
-   
 }
 
 const parseInput = (input:string, karesz:karesz, mono:any):object|number|boolean => {

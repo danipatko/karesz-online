@@ -1,4 +1,4 @@
-import { updateProject } from '$lib/db/functions/projects';
+/*import { updateProject } from '$lib/db/functions/projects';
 import { R } from '$lib/util';
 
 export async function post(req:any) {
@@ -9,4 +9,5 @@ export async function post(req:any) {
     if(! (readme && passwd)) return R(undefined, 'Missing parameter \'readme\' from request.', 400);
 
     return R(await updateProject(id, passwd, { readme, timestamp:new Date() }), 'Project does not exist, or password is invalid', 401);
-}
+}*/
+export default 0;

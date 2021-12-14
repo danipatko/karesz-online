@@ -1,4 +1,4 @@
-import db from '../db';
+/*import db from '../db';
 import { encrypt, randstr } from '../../util';
 
 export const getProject = async(id:string):Promise<any> => 
@@ -37,4 +37,5 @@ export const updateProject = async(id:string, passwd:string, params:object):Prom
     await db.updateRecord('karesz', 'project', {id:id, passwd:passwd}, params);
     // return updated one
     return await db.get('karesz', 'project', {id:id});
-}
+}*/
+export default 0;
