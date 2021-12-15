@@ -64,10 +64,11 @@ export const run = async(mono:any, datahandler:any, errorhandler:any):Promise<an
 
 const TESTING_DIRECTORY_PATH = `/mnt/c/Users/Dani/home/Projects/karesz-online/testing`;
 
-export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', filename='Program.cs', max_ticks=5000, max_time=1000*5 }={}):Promise<any> => {
+export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', mapString='', filename='Program.cs', max_ticks=5000, max_time=1000*5 }={}):Promise<any> => {
     return new Promise<any>(async res => {
         // create karesz
         const karenv = new kontext(sizeX, sizeY);
+        // karenv.load(mapString);
         const k = new karesz({x:startX, y:startY});
         karenv.addKaresz(k);
 

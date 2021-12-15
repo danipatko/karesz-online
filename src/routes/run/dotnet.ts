@@ -8,6 +8,7 @@ export const post = async(req:any) => {
     }
     const { sizeX, sizeY, startX, startY } = kareszconfig;
     const { results, error } = await tryrun({ sizeX, sizeY, startX, startY, code });
+    console.log(JSON.stringify(results) || error);
     if(error || !results) 
         return R(undefined, error, 200);
 

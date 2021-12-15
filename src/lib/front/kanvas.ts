@@ -11,6 +11,13 @@ export interface entity {
     constant: boolean;
 }
 
+export interface karesz {
+    position: point;
+    rotation: number;
+    id: string;
+    path: Array<instruction>;
+}
+
 export const enitities: {
     karesz:entity,
     wall:entity,
@@ -24,7 +31,8 @@ export const enitities: {
 export class kanvas{
     public sizeX: number;
     public sizeY: number;
-    public objects:Array<entity> = [];
+    public entities:Array<entity> = [];
+    public kareszes:Array<entity> = [];
     public wallWidth:number;
     public settings: object = {
         foreground_color: '#000',
@@ -46,11 +54,11 @@ export class kanvas{
     }
 
     public add (position:point, type:string='svg', path:string, name:string='unnamed entity', constant:boolean=false):void {
-        this.objects.push({position, name, type, path, constant});
+        this.entities.push({position, name, type, path, constant});
     }
     
     public addDirect(x:entity){
-        this.objects.push(x);
+        this.entities.push(x);
     }
 
     protected drawGrid ():void {
@@ -84,16 +92,16 @@ export class kanvas{
     }
 
     protected drawEntities(redraw:boolean=true/*TO DO*/):void {
-        for(const k in redraw ? this.objects : this.objects.filter(x => !x.constant)){
-            switch (this.objects[k].type) {
+        for(const k in redraw ? this.entities : this.entities.filter(x => !x.constant)){
+            switch (this.entities[k].type) {
                 case 'square':
-                    this.drawSquare(this.objects[k].position, this.objects[k].path);
+                    this.drawSquare(this.entities[k].position, this.entities[k].path);
                     break;
                 case 'circle':
-                    this.drawCircle(this.objects[k].position, this.objects[k].path);
+                    this.drawCircle(this.entities[k].position, this.entities[k].path);
                     break;
                 default:
-                    this.drawIMG(this.objects[k].position, this.objects[k].path);
+                    this.drawIMG(this.entities[k].position, this.entities[k].path);
                     break;
             }
         }
@@ -104,8 +112,17 @@ export class kanvas{
         this.drawEntities();
     }
 
-    protected exec = (instruction:instruction) => {
-
+    protected run = (instruction:instruction) => {
+        switch (instruction.command) {
+            case 'step':
+                break;
+            
+            case 'turn':
+                break;
+        
+            default:
+                break;
+        }
     }
 
     /* run specific variables */
@@ -113,11 +130,12 @@ export class kanvas{
     public timer:any;
     public i:number = 0;
 
-    public run = async(instructions:instruction[], fromTick:number=0, tickSpeed:number=50):Promise<void> => {
+    public play = async(instructions:instruction[], fromTick:number=0, tickSpeed:number=50):Promise<void> => {
         return new Promise<void>(res => {
             this.i = fromTick;
             this.timer = setInterval(() => {
-                this.exec(instructions[this.i++]);
+                this.run(instructions[this.i++]);
+                if(this.i >= instructions.length) res();
             }, tickSpeed);
         });
     }

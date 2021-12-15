@@ -46,6 +46,6 @@ export default class kontext {
     load = (mapStr:string):void => {
         const arr = mapStr.split('\n');
         for (let y = 0; y < arr.length; y++)
-            this.matrix[y] = arr[y].split('\t').map(x => parseInt(x));
+            this.matrix[y] = arr[y].split('').map(x => parseInt(x));
     }
 }
