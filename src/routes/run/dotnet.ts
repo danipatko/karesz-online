@@ -1,7 +1,4 @@
-// import karesz from "$lib/karesz/karesz";
-// import kontext from "$lib/karesz/kontext";
-// import { tryrun } from "$lib/karesz/dotnet/karesz-dotnet";
-import { xd } from "$lib/karesz/dotnet/asd";
+import { tryrun } from "$lib/karesz/dotnet/karesz-dotnet";
 import { R } from "$lib/util";
 
 export const post = async(req:any) => {
@@ -9,13 +6,10 @@ export const post = async(req:any) => {
     if(! (code && kareszconfig)) {
         return R(undefined, 'Code field not found in request body.', 400);
     }
-
-    console.log('ASD');
     const { sizeX, sizeY, startX, startY } = kareszconfig;
+    const { results, error } = await tryrun({ sizeX, sizeY, startX, startY, code });
+    if(error || !results) 
+        return R(undefined, error, 200);
 
-    console.log(xd());
-
-   // const steps = await tryrun({sizeX, sizeY, startX, startY, code})
-
-    return R({steps:'steps'}, 'Bruh');
+    return R({ results }, 'Bruh');
 }

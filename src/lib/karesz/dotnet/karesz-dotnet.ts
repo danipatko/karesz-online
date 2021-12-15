@@ -56,7 +56,7 @@ export const run = async(mono:any, datahandler:any, errorhandler:any):Promise<an
         mono.stderr.on('error', errorhandler);
 
         // C# Console.WriteLine uses this channel
-        mono.stdout.on('data', (buf:Buffer) => datahandler(mono, buf.toString()));
+        mono.stdout.on('data', (buf:Buffer) => datahandler(buf.toString()));
 
         mono.once('exit', (code, signal) => res({ code:code, signal:signal }));
     });
@@ -64,39 +64,48 @@ export const run = async(mono:any, datahandler:any, errorhandler:any):Promise<an
 
 const TESTING_DIRECTORY_PATH = `/mnt/c/Users/Dani/home/Projects/karesz-online/testing`;
 
-export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', filename='Program.cs', max_ticks=5000, max_time=1000*60 }={}):Promise<void> => {
+export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', filename='Program.cs', max_ticks=5000, max_time=1000*5 }={}):Promise<any> => {
     return new Promise<any>(async res => {
         // create karesz
         const karenv = new kontext(sizeX, sizeY);
         const k = new karesz({x:startX, y:startY});
         karenv.addKaresz(k);
-/*
+
         // get path for .cs and .exe
         const dotcs = path.join(TESTING_DIRECTORY_PATH, filename);
         const executable = path.join(TESTING_DIRECTORY_PATH, filename.replaceAll('.cs', '.exe'));
         // replace contents
-        fs.writeFileSync(dotcs, replaceKareszFunctions(code) || 'Not found.');
+        try {
+            fs.writeFileSync(dotcs, replaceKareszFunctions(code) || 'Not found.');
+        } catch (error) {
+            res({ error:`Failed to save file.\n${error}` });
+        }
         
         // compile .cs file to .exe
         await compile(dotcs).catch((err:any) => {
-            res({error:`An error occured while compiling: ${err}\nCommand: 'mcs ${dotcs}'`})
+            res({ error:`An error occured while compiling: ${err}\nCommand: 'mcs ${dotcs}'` })
         });
         // precompile exe
         await precompile(executable).catch((err:any) => {
-            res({error:`An error occured performing ahead-of-time compile: ${err}\nCommand: 'mono --aot=full ${_P}'`});
+            res({ error:`An error occured performing ahead-of-time compile: ${err}\nCommand: 'mono --aot=full ${_P}'` });
         });
         // prepare run
         var finished = false;
-        const mono = spawn('stdbuf', ['-i0', '-o0', '-e0', 'mono', filename]);
 
-        await run(executable,
+        // kill after reaching max time (ms)
+        setTimeout(() => {
+            if(!finished) mono.kill('SIGKILL');
+            res({ error: `Error: exceeded maximum time limit.` });
+        }, max_time);
+        const startTime = Date.now();
+        const mono = spawn('stdbuf', ['-i0', '-o0', '-e0', 'mono', executable]);    // clear std
+        var ticks = 0;  // track number of ticks
+        const { /*exitcode, exitsignal,*/ error } = await run(mono,
         // handle incoming data
-        (mono:any, input:string) => {
-            // track ticks
-            var ticks;
-            if(ticks > max_ticks) {
+        (input:string) => {
+            if(++ticks > max_ticks) {
                 mono.kill('SIGKILL');
-                res({error:`Exceeded tick limit of ${max_ticks} ticks.`});
+                res({ error:`Error: exceeded tick limit of ${max_ticks} ticks.` });
                 return;
             } 
             // continue if undefined
@@ -106,38 +115,36 @@ export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', f
         }, 
         // handle errors
         (e:any) => {
-            res({error:`Process ended with an error:\n'${e}'`})
+            res({ error:`Process ended with an error:\n'${e}'` });
         });
 
-        // kill after reaching max time (ms)
-        setTimeout(() => {
-            if(!finished) mono.kill('SIGKILL');
-        }, max_time);*/
+        finished = true;
+        if(error) {
+            res({ error });
+        }
 
-        res(0);
-
-        console.log('Done!');
+        res({ results:{ steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime }});
     });
 }
 
 const parseInput = (input:string, karesz:karesz, mono:any):object|number|boolean => {
-    // replace crlf
-    var line:Array<string>;
     var result:number|boolean;
-    for(const i in input.replaceAll('\r\n','\n').split('\n')) {
+    // replace crlf
+    const split = input.replaceAll('\r\n','\n').split('\n');
+    for(const line in split) {
         // split line to in/out : 'command'
-        const [io, cmd] = input[i].split(':').map(x => x.replaceAll(/\s+/g,''));
+        const [io, cmd] = split[line].split(':').map(x => x.trim());
         // ignore debug logs
         if(!(io && cmd) || !(io == 'out' || io == 'in')) 
             continue;
         // parse and do command
         result = parseCommand(cmd, karesz);
+        if(result === undefined) continue;
         // handle karesz errors
-        if(result !== undefined && result['error']) {
+        if(result['error']) 
             return { error: result['error'] };
-        }
         // write to stdin
-        if(io == 'in' && result !== undefined) {
+        if(io == 'in') {
             console.log(`Writing to stdin: '${result}'`);  //DEBUG
             write(mono, result.toString());
         }

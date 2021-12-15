@@ -1,4 +1,4 @@
-import { field, instruction } from './karesz-utils';
+import { fields, instruction } from './karesz-utils';
 import type karesz from './karesz';
 
 /*
@@ -37,7 +37,7 @@ export const parseCommand = (L:string, k:karesz):number|boolean => {
             k.Vegyel_fel_egy_kavicsot();
         break;
         case 'place': 
-            k.Tegyel_le_egy_kavicsot(parseInt(value) || field.rock_black);
+            k.Tegyel_le_egy_kavicsot(parseInt(value) || fields.rock_black);
         break; 
         case 'left': return k.Nyugatra_nez();
         case 'right': return k.Keletre_nez();
@@ -47,9 +47,9 @@ export const parseCommand = (L:string, k:karesz):number|boolean => {
         case 'isrock': return k.isRockUnder();
         case 'under': return k.whatIsUnder();
         case 'wallahead': return k.Van_e_elottem_fal();
-        case 'outofbounds': return k.Kilepek_e_a_palyaról();
+        case 'outofbounds': return k.Kilepek_e_a_palyarol();
         default:
-            console.log('COMMAND NOT FOUND');
+            console.log(`Command '${command}' not found.`);//DEBUG
             break;
     }
     

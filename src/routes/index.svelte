@@ -78,8 +78,9 @@ namespace Karesz
 			}),
 			method:'post',
 		});
-		console.log(result);
-		return result.ok ? await result.json() : 'error';
+		const a = result.ok ? await result.json() : 'error';
+		console.log(a);
+		return a;
 	}
 
 </script>

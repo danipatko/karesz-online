@@ -9,7 +9,7 @@ export interface point {
     y: number
 }
 // some stats
-export interface stats {
+export interface statistics {
     numSteps:number,
     numTurns:number,
     numWallchecks:number,
@@ -21,19 +21,19 @@ export interface stats {
 }
 
 // Basic turning directions
-export enum direction {
+export enum directions {
     right = 1,
     left = -1
 };
 // rotation degrees
-export enum rotation {
+export enum rotations {
     up = 0,
     right = 1,
     down = 2,
     left = 3
 }
 // possible field values in matrix
-export enum field {
+export enum fields {
     empty = 0,
     wall = 1,
     rock_black = 2,
