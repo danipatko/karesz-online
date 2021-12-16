@@ -1,38 +1,29 @@
+import { fields, rotations } from "$lib/karesz/karesz-utils";
+
 export interface point {
     x: number;
     y: number;
 }
 
-export interface entity {
-    position: point;
-    name: string;
-    type: string;
-    path: string;
-    constant: boolean;
-}
-
 export interface karesz {
     position: point;
-    rotation: number;
+    rotation: rotations;
     id: string;
-    path: Array<instruction>;
+    hidden:boolean;
 }
 
-export const enitities: {
-    karesz:entity,
-    wall:entity,
-    rock:entity
-} = {
-    karesz: { position: {x: 0, y:0}, name:'karesz', path:'no path yet', type:'svg', constant:false },
-    wall: { position: {x: 0, y:0}, name:'wall', path:'#f00', type:'square', constant:true },
-    rock: { position: {x: 0, y:0}, name:'rock', path:'#000', type:'round', constant:false }
-};
+const ROCK_COLORS = {
+    2: '#000',
+    3: '#f00',
+    4: '#0f0',
+    5: '#0ff',
+}
 
 export class kanvas{
     public sizeX: number;
     public sizeY: number;
-    public entities:Array<entity> = [];
-    public kareszes:Array<entity> = [];
+    public matrix: Array<Array<fields>>;
+    public kareszes:Array<karesz> = [];
     public wallWidth:number;
     public settings: object = {
         foreground_color: '#000',
@@ -43,25 +34,20 @@ export class kanvas{
     };
     protected cellSize: number;
     public ctx: CanvasRenderingContext2D;
+    public canvas: HTMLCanvasElement;
 
     constructor(x:number, y:number, canvas: HTMLCanvasElement) {
         this.sizeX = x;
         this.sizeY = y;
         this.cellSize = Math.min(Math.floor(canvas.width / x), Math.floor(canvas.height / y))
+        this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+        this.matrix = Array(y).fill(fields.empty).map(() => Array(y).fill(fields.empty));
         canvas.width++;
         canvas.height++;
     }
 
-    public add (position:point, type:string='svg', path:string, name:string='unnamed entity', constant:boolean=false):void {
-        this.entities.push({position, name, type, path, constant});
-    }
-    
-    public addDirect(x:entity){
-        this.entities.push(x);
-    }
-
-    protected drawGrid ():void {
+    private drawGrid ():void {
         this.ctx.fillStyle = this.settings['separator_color'];
         // horizontal
         for (let y = 0; y < this.sizeY * this.cellSize + 1; y+=this.cellSize) 
@@ -71,80 +57,125 @@ export class kanvas{
             this.ctx.fillRect(x, 0, 1, this.sizeY * this.cellSize);
     }
 
-    protected drawSquare(position:point, color:string='#000'):void {
+    private drawSquare(position:point, color:string='#000'):void {
         this.ctx.fillStyle = color;
         this.ctx.fillRect((position.x*this.cellSize)+1, (position.y*this.cellSize)+1, this.cellSize-1, this.cellSize-1);
     }
 
-    protected drawCircle(position:point, color:string='#000'):void{
+    private drawCircle(position:point, color:string='#000'):void{
         this.ctx.beginPath();
         this.ctx.arc((position.x*this.cellSize)+(this.cellSize/2), (position.y*this.cellSize)+(this.cellSize/2), (this.cellSize/2)-2, 0, 2 * Math.PI, false);
         this.ctx.fillStyle = color;
         this.ctx.fill(); 
     }
 
-    protected drawIMG = (position:point, source:string) => {
+    private drawIMG(position:point, source:string):void {
         var img = new Image();
-        img.onload = () => {
-            this.ctx.drawImage(img, (position.x*this.cellSize)+1, (position.y*this.cellSize)+1, (this.cellSize*2) - 2, (this.cellSize*2) - 2);
-        }
+        img.onload = () => 
+            this.ctx.drawImage(img, (position.x*this.cellSize)+1, (position.y*this.cellSize)+1, (this.cellSize) - 2, (this.cellSize) - 2);
         img.src = source;
     }
 
-    protected drawEntities(redraw:boolean=true/*TO DO*/):void {
-        for(const k in redraw ? this.entities : this.entities.filter(x => !x.constant)){
-            switch (this.entities[k].type) {
-                case 'square':
-                    this.drawSquare(this.entities[k].position, this.entities[k].path);
-                    break;
-                case 'circle':
-                    this.drawCircle(this.entities[k].position, this.entities[k].path);
-                    break;
-                default:
-                    this.drawIMG(this.entities[k].position, this.entities[k].path);
-                    break;
-            }
+    /**
+     * Draw the surroundings (walls and rocks)
+     */
+     private drawMap():void {
+        for (let x = 0; x < this.matrix.length; x++) {
+            for (let y = 0; y < this.matrix[x].length; y++) {
+                if(this.matrix[x][y] == fields.empty) 
+                    continue;
+                else if (this.matrix[x][y] = fields.wall)
+                    this.drawSquare({x, y}, this.settings['wall_color']);
+                else if (this.matrix[x][y] > 1) 
+                    this.drawCircle({x,y}, ROCK_COLORS[this.matrix[x][y]]);
+            }   
         }
     }
 
-    public render = ():void => {
-        this.drawGrid();
-        this.drawEntities();
+    private drawKaresz(k:karesz):void{
+        this.drawIMG({x:k.position.x, y:k.position.y}, `/karesz/karesz${k.rotation}.png`);
     }
 
-    protected run = (instruction:instruction) => {
+    public clear():void {
+        this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
+    }
+
+    public render ():void {
+        this.clear();
+        this.drawGrid();
+        this.drawMap();
+        this.drawKaresz(this.kareszes[0]);
+    }
+
+    public changeField (position:point, field:fields):void {
+        this.matrix[position.x][position.y] = field;
+    }
+
+    private runInstruction(instruction:instruction):void {
+        this.lastTickIndex = this.i;
         switch (instruction.command) {
             case 'step':
+                this.kareszes[0].position = instruction.value;
                 break;
-            
             case 'turn':
-                break;
-        
-            default:
+                this.kareszes[0].rotation = instruction.value;
                 break;
         }
+        this.render();
+    }
+
+    public cursorAt(e:MouseEvent):point {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
+
+    public reset ():void {
+        this.stop();
+        this.kareszes[0].position = { x: this.sizeX/2, y:this.sizeY/2 };
+        this.kareszes[0].rotation = rotations.up;
+        this.clear();
+        this.render();
     }
 
     /* run specific variables */
-    public lastTickIndex:number = 0;
-    public timer:any;
-    public i:number = 0;
+    private lastTickIndex:number = 0;
+    private i:number = 0;
+    private running:boolean = false;
+    private tickSpeed:number = 200;
 
-    public play = async(instructions:instruction[], fromTick:number=0, tickSpeed:number=50):Promise<void> => {
-        return new Promise<void>(res => {
-            this.i = fromTick;
-            this.timer = setInterval(() => {
-                this.run(instructions[this.i++]);
-                if(this.i >= instructions.length) res();
-            }, tickSpeed);
+    public setTickSpeed(ms:number):void {
+        this.tickSpeed = ms;
+    }
+
+    public async play (instructions:instruction[], resume:boolean=false, playbackSpeed:number=200):Promise<void> {
+        return new Promise<void>(async res => {
+            if (this.running) { res(); return; }
+            if (!resume || this.i >= instructions.length) this.reset();
+            this.tickSpeed = playbackSpeed;
+            this.running = true;
+            this.i = resume ? this.lastTickIndex : 0;
+            while(this.running) {
+                if(this.i >= instructions.length-1) {
+                    this.running = false; 
+                }
+                this.runInstruction(instructions[this.i++]);
+                await sleep(this.tickSpeed);
+            }
+            res();
         });
     }
 
-    public stop = () => {
+    public stop():void {
+        this.running = false;
         this.lastTickIndex = this.i;
-        clearInterval(this.timer);
     }
 }
+
+const sleep = (ms:number):Promise<void> =>
+    new Promise(res => setTimeout(res, ms));
 
 export interface instruction {
     command:string,

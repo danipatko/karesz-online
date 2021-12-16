@@ -2,21 +2,41 @@
 	// import ErrorPage from '$lib/svelte-components/error.svelte';
 	import { onMount } from 'svelte';
 	import { kanvas } from '$lib/front/kanvas';
+	import type { instruction } from '$lib/karesz/karesz-utils';
 	export let canvas:HTMLCanvasElement;
-	  
+
+	let k;
+	let steps:instruction[] = [];
+	let stats:object;
+	let code_content:HTMLTextAreaElement;
+	let playbackSpeedSlider:HTMLInputElement;
+
 	onMount(() => {
-		console.log('INNIT');
-		const k = new kanvas(10, 10, canvas);
+		k = new kanvas(10, 10, canvas);
+		k.kareszes.push({hidden:false, id:'asd', position:{x:5,y:5}, rotation:0});
 		k.render();
 		code_content.value = test_dotnet_code;
+
+		playbackSpeedSlider.onchange = () => 
+			k.setTickSpeed(playbackSpeedSlider.value);
 	});
 
-	var code_content:HTMLTextAreaElement;
+	const start = ():void => 
+		k.play(SAMPLE_RESULTS, false, playbackSpeedSlider.value);
+	
+	const resume = ():void => 
+		k.play(SAMPLE_RESULTS, true, playbackSpeedSlider.value);
+	
+	const pause = ():void => 
+		k.stop();
 
-const SAMPLE_RESULTS = {"steps":[{"command":"turn","value":1},{"command":"step","value":{"x":6,"y":5}},{"command":"step","value":{"x":7,"y":5}},{"command":"step","value":{"x":8,"y":5}},{"command":"step","value":{"x":9,"y":5}},{"command":"turn","value":0},{"command":"turn","value":3},{"command":"step","value":{"x":8,"y":5}},{"command":"step","value":{"x":7,"y":5}},{"command":"step","value":{"x":6,"y":5}},{"command":"step","value":{"x":5,"y":5}},{"command":"step","value":{"x":4,"y":5}},{"command":"step","value":{"x":3,"y":5}},{"command":"step","value":{"x":2,"y":5}},{"command":"step","value":{"x":1,"y":5}},{"command":"step","value":{"x":0,"y":5}}],"statistics":{"numColor":0,"numCrashes":0,"numPickups":0,"numSteps":13,"numTurns":3,"numWallchecks":0,"rocksCollected":0,"rocksPlaced":0},"exec_time":57};
+	const reset = ():void => 
+		k.reset();
+	
+	const SAMPLE_RESULTS = [{"command":"turn","value":1},{"command":"step","value":{"x":6,"y":5}},{"command":"step","value":{"x":7,"y":5}},{"command":"step","value":{"x":8,"y":5}},{"command":"step","value":{"x":9,"y":5}},{"command":"turn","value":0},{"command":"turn","value":3},{"command":"step","value":{"x":8,"y":5}},{"command":"step","value":{"x":7,"y":5}},{"command":"step","value":{"x":6,"y":5}},{"command":"step","value":{"x":5,"y":5}},{"command":"step","value":{"x":4,"y":5}},{"command":"step","value":{"x":3,"y":5}},{"command":"step","value":{"x":2,"y":5}},{"command":"step","value":{"x":1,"y":5}},{"command":"step","value":{"x":0,"y":5}}];
 
-	/**/
-	const test_dotnet_code = `using System;
+/**/
+const test_dotnet_code = `using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -63,7 +83,7 @@ namespace Karesz
         }
     }
 }
-	`;
+`;
 	//*/
 	const submitCode = async():Promise<void> => {
 		const result = await fetch(`/run/dotnet`, {
@@ -73,9 +93,10 @@ namespace Karesz
 			}),
 			method:'post',
 		});
-		const a = result.ok ? await result.json() : 'error';
-		console.log(a);
-		return a;
+		const { results } = result.ok ? await result.json() : 'error';
+		if(!results) return;
+		console.log(results);
+		stats = { exec_time: results.exec_time, ...results.statistics }
 	}
 
 </script>
@@ -90,6 +111,13 @@ namespace Karesz
 <main>
 	<div class="karesz-kontainer">
 		<canvas bind:this="{canvas}"  width="300" height="300" id="main" class="karesz-kanvas"></canvas>
+	</div>
+	<div>
+		<button on:click="{start}">Play</button>
+		<button on:click="{pause}">Stop</button>
+		<button on:click="{resume}">Resume</button>
+		<button on:click="{reset}">Reset</button>
+		<div><input type="range" min="1" max="1000" value="200" bind:this="{playbackSpeedSlider}"></div>
 	</div>
 	<div>
 		<textarea bind:this="{code_content}" name="Code karesz here" rows="50" cols="100" id="code"></textarea>
