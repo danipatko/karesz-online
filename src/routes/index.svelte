@@ -6,26 +6,26 @@
 	export let canvas:HTMLCanvasElement;
 
 	let k;
-	let steps:instruction[] = [];
-	let stats:object;
-	let code_content:HTMLTextAreaElement;
-	let playbackSpeedSlider:HTMLInputElement;
+	let CURRENT_STEPS_PARSED:instruction[] = [];
+	let CURRENT_STATISTICS:object;
+	let EDITOR:HTMLTextAreaElement;
+	let PLAYBACK_SPEED_SLIDER:HTMLInputElement;
 
 	onMount(() => {
 		k = new kanvas(10, 10, canvas);
 		k.kareszes.push({hidden:false, id:'asd', position:{x:5,y:5}, rotation:0});
 		k.render();
-		code_content.value = test_dotnet_code;
+		EDITOR.value = test_dotnet_code;
 
-		playbackSpeedSlider.onchange = () => 
-			k.setTickSpeed(playbackSpeedSlider.value);
+		PLAYBACK_SPEED_SLIDER.oninput = () => 
+			k.setTickSpeed(PLAYBACK_SPEED_SLIDER.value);
 	});
 
 	const start = ():void => 
-		k.play(SAMPLE_RESULTS, false, playbackSpeedSlider.value);
+		k.play(SAMPLE_RESULTS || CURRENT_STEPS_PARSED, false, PLAYBACK_SPEED_SLIDER.value);
 	
 	const resume = ():void => 
-		k.play(SAMPLE_RESULTS, true, playbackSpeedSlider.value);
+		k.play(SAMPLE_RESULTS || CURRENT_STEPS_PARSED, true, PLAYBACK_SPEED_SLIDER.value);
 	
 	const pause = ():void => 
 		k.stop();
@@ -33,7 +33,7 @@
 	const reset = ():void => 
 		k.reset();
 	
-	const SAMPLE_RESULTS = [{"command":"turn","value":1},{"command":"step","value":{"x":6,"y":5}},{"command":"step","value":{"x":7,"y":5}},{"command":"step","value":{"x":8,"y":5}},{"command":"step","value":{"x":9,"y":5}},{"command":"turn","value":0},{"command":"turn","value":3},{"command":"step","value":{"x":8,"y":5}},{"command":"step","value":{"x":7,"y":5}},{"command":"step","value":{"x":6,"y":5}},{"command":"step","value":{"x":5,"y":5}},{"command":"step","value":{"x":4,"y":5}},{"command":"step","value":{"x":3,"y":5}},{"command":"step","value":{"x":2,"y":5}},{"command":"step","value":{"x":1,"y":5}},{"command":"step","value":{"x":0,"y":5}}];
+	const SAMPLE_RESULTS = 'r=1,m=6:5,m=7:5,m=8:5,m=9:5,r=0,r=3,m=8:5,m=7:5,m=6:5,m=5:5,m=4:5,m=3:5,m=2:5,m=1:5,m=0:5';
 
 /**/
 const test_dotnet_code = `using System;
@@ -72,6 +72,7 @@ namespace Karesz
 
         void FELADAT()
         {
+			Tegyél_le_egy_kavicsot(fekete);
             Fordulj(jobbra);
             while(Tudok_e_lépni()) {
                 Lépj();
@@ -88,16 +89,19 @@ namespace Karesz
 	const submitCode = async():Promise<void> => {
 		const result = await fetch(`/run/dotnet`, {
 			body: JSON.stringify({
-				code:code_content.value, 
+				code:EDITOR.value, 
 				kareszconfig:{ sizeX:10, sizeY: 10, startX: 5, startY:5 }
 			}),
 			method:'post',
 		});
 		const { results } = result.ok ? await result.json() : 'error';
 		if(!results) return;
-		console.log(results);
-		stats = { exec_time: results.exec_time, ...results.statistics }
+		CURRENT_STEPS_PARSED = k.parseCommands(results.steps);
+		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics }
 	}
+
+	// kareszl
+	// p=1:4,r=3,p=1:5
 
 </script>
 <style>
@@ -117,10 +121,10 @@ namespace Karesz
 		<button on:click="{pause}">Stop</button>
 		<button on:click="{resume}">Resume</button>
 		<button on:click="{reset}">Reset</button>
-		<div><input type="range" min="1" max="1000" value="200" bind:this="{playbackSpeedSlider}"></div>
+		<div><input type="range" min="1" max="1000" value="200" bind:this="{PLAYBACK_SPEED_SLIDER}"></div>
 	</div>
 	<div>
-		<textarea bind:this="{code_content}" name="Code karesz here" rows="50" cols="100" id="code"></textarea>
+		<textarea bind:this="{EDITOR}" name="Code karesz here" rows="50" cols="100" id="code"></textarea>
 	</div>
 	<button on:click="{async() => await submitCode()}">submit</button>
 </main>

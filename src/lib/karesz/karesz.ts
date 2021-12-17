@@ -8,7 +8,7 @@ export default class karesz {
     rotation:rotations = rotations.up;
     stats:statistics = { numColor:0, numCrashes:0, numPickups:0, numSteps:0, numTurns:0, numWallchecks:0, rocksCollected:0, rocksPlaced:0 };
     errorCallback:Function = console.error;
-    steps:Array<instruction> = [];
+    steps:string = '';
     ktxt:kontext;  // set by kontext when adding
     id:string = '';
  
@@ -56,7 +56,7 @@ export default class karesz {
         if(! this.isFieldClear(targ)) { return { error:'Cannot step forward' }; }
         
         this.position = targ;
-        this.steps.push({ command:'step', value:this.position });
+        this.steps += `m=${this.position.x}:${this.position.y},`;
         this.stats.numSteps++;
     }
 
@@ -65,7 +65,7 @@ export default class karesz {
      */
     turn (direction:directions):void {
         this.rotation = modulo(this.rotation + direction, 4);
-        this.steps.push({ command:'turn', value:this.rotation });
+        this.steps += `r=${this.rotation},`
         this.stats.numTurns++;
     }
 
@@ -88,16 +88,15 @@ export default class karesz {
             return { error:'No rock was below' };
 
         this.ktxt.matrix[this.position.x][this.position.y] = fields.empty;
-        this.steps.push({ command:'pickup', value: this.position });
+        this.steps += `u=${this.position.x}:${this.position.y},`;
         this.stats.rocksCollected++;
     }
 
     placeRock(color?:fields):void|object {
         if(this.isRockUnder())
             return { error: 'Cannot place rock' };
-                
         this.ktxt.matrix[this.position.x][this.position.y] = color || fields.rock_black;
-        this.steps.push({ command:'place', value: { position: this.position, color: color || fields.rock_black }});
+        this.steps += `d=${this.position.x}:${this.position.y},`;        
         this.stats.rocksPlaced++;
     }
 

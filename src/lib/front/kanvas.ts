@@ -112,13 +112,20 @@ export class kanvas{
     }
 
     private runInstruction(instruction:instruction):void {
+        this.clear();
         this.lastTickIndex = this.i;
         switch (instruction.command) {
-            case 'step':
+            case 'm':
                 this.kareszes[0].position = instruction.value;
                 break;
-            case 'turn':
+            case 'r':
                 this.kareszes[0].rotation = instruction.value;
+                break;
+            case 'u':
+                this.matrix[instruction.value.x][instruction.value.y] = 0;
+                break;
+            case 'd':
+                this.matrix[instruction.value.x][instruction.value.y] = 2;
                 break;
         }
         this.render();
@@ -150,17 +157,39 @@ export class kanvas{
         this.tickSpeed = ms;
     }
 
+    // parse command
+    private parse(line:string):instruction{
+        const [command, val] = line.split('=');
+        switch (command.trim().toLowerCase()) {
+            case 'm':   // position
+                const m1 = val.match(/([0-9]+):([0-9]+)/mi)
+                return m1 ? { command, value: { x:parseInt(m1[1]), y:parseInt(m1[2])}} : undefined;
+            case 'r':   // rotation 
+                return { command, value: parseInt(val) };
+            case 'u':   // pick up rock
+                const m2 = val.match(/([0-9]+):([0-9]+)/mi);
+                return m2 ? { command, value: {x:parseInt(m2[1]), y:parseInt(m2[2]) }} : undefined;
+            case 'd':   // place rock
+                const m3 = val.match(/([0-9]+):([0-9]+)/mi);
+                return m3 ? { command, value: {x:parseInt(m3[1]), y:parseInt(m3[2]) }} : undefined;
+            default: return undefined;
+        }
+    }
+
+    public parseCommands = (instructions: string):instruction[] =>
+        instructions.split(',').map(x => this.parse(x)); 
+
     public async play (instructions:instruction[], resume:boolean=false, playbackSpeed:number=200):Promise<void> {
         return new Promise<void>(async res => {
             if (this.running) { res(); return; }
             if (!resume || this.i >= instructions.length) this.reset();
+            this.clear();
             this.tickSpeed = playbackSpeed;
             this.running = true;
             this.i = resume ? this.lastTickIndex : 0;
             while(this.running) {
-                if(this.i >= instructions.length-1) {
-                    this.running = false; 
-                }
+                if(this.i >= instructions.length-1) this.running = false; 
+                if(instructions[this.i] === undefined) continue;
                 this.runInstruction(instructions[this.i++]);
                 await sleep(this.tickSpeed);
             }
