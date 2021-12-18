@@ -68,7 +68,8 @@ export const replaceKareszFunctions = (str:string):string => {
         'stdout("turn "+:x:)':{ x: /Fordulj\s*\(.*\)/gm, s:sel }, 
         '\t\tstatic :x:':{ x:/.*[a-zA-Z]+\s+[a-zA-Z\_\u00C0-\u00ff]+\s*\(.*\)[\n\r\s]*\{/gm, s:/.*/gms },
         'void Main(string[] args)':/void\s+FELADAT\s*\(\s*\)/gm,
-        '':/^\s*using(?!.*(Linq|Collections|System\;|Text|Threading).*).+/gm,
+        '':/using(?!.*(Linq|Collections|System\;|Text|Threading).*).+/gm,
+        // ^\s*
     }, str); 
 
     const match = /public\s+class\s+Program[\n\r\s]+\{/gm.exec(str);

@@ -3,9 +3,8 @@
 	import { onMount } from 'svelte';
 	import { kanvas } from '$lib/front/kanvas';
 	import type { instruction } from '$lib/karesz/karesz-utils';
-	export let canvas:HTMLCanvasElement;
-
-	let k;
+	let canvas:HTMLCanvasElement;
+	let k:kanvas;
 	let CURRENT_STEPS_PARSED:instruction[] = [];
 	let CURRENT_STATISTICS:object;
 	let EDITOR:HTMLTextAreaElement;
@@ -18,14 +17,16 @@
 		EDITOR.value = test_dotnet_code;
 
 		PLAYBACK_SPEED_SLIDER.oninput = () => 
-			k.setTickSpeed(PLAYBACK_SPEED_SLIDER.value);
+			k.setTickSpeed(parseInt(PLAYBACK_SPEED_SLIDER.value));
+
+		$commandStore = [{ index:0, command:'r', value:1 }];
 	});
 
-	const start = ():void => 
-		k.play(SAMPLE_RESULTS || CURRENT_STEPS_PARSED, false, PLAYBACK_SPEED_SLIDER.value);
+	const start = ():Promise<void> => 
+		k.play(k.parseCommands(SAMPLE_RESULTS) || CURRENT_STEPS_PARSED, false, parseInt(PLAYBACK_SPEED_SLIDER.value));
 	
-	const resume = ():void => 
-		k.play(SAMPLE_RESULTS || CURRENT_STEPS_PARSED, true, PLAYBACK_SPEED_SLIDER.value);
+	const resume = ():Promise<void> => 
+		k.play(k.parseCommands(SAMPLE_RESULTS) || CURRENT_STEPS_PARSED, true, parseInt(PLAYBACK_SPEED_SLIDER.value));
 	
 	const pause = ():void => 
 		k.stop();
@@ -100,8 +101,16 @@ namespace Karesz
 		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics }
 	}
 
-	// kareszl
-	// p=1:4,r=3,p=1:5
+	import Command from '$lib/svelte-components/command.svelte';
+	import { commandStore } from '$lib/svelte-components/store';
+
+	const listOfCommands = () => {
+		const arr = k.parseCommands(SAMPLE_RESULTS);
+		console.log(arr);
+		for (let i = 0; i < arr.length; i++) {
+			$commandStore[i] = { index:i+1, command:arr[i].command, value:arr[i].value };
+		}
+	}
 
 </script>
 <style>
@@ -127,4 +136,13 @@ namespace Karesz
 		<textarea bind:this="{EDITOR}" name="Code karesz here" rows="50" cols="100" id="code"></textarea>
 	</div>
 	<button on:click="{async() => await submitCode()}">submit</button>
+	<br>
+	<button on:click="{listOfCommands}">Add dynamic compontent</button>
+	<div>
+		<ul>	
+			{#each $commandStore as item}
+				<li><svelte:component this={Command} index={item['index']} command={item['command']} value={item['value']}/></li>
+			{/each}
+		</ul>
+	</div>
 </main>
