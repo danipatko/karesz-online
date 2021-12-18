@@ -42,4 +42,11 @@ export enum fields {
     rock_yellow = 5
 }
 
+export const command_eqvivalents = {
+    'r':'Set rotation ',
+    'm':'Move to position ',
+    'u':'Pick up rock from ',
+    'd':'Place rock at ',
+};
+
 export const modulo = (a:number, b:number):number => a < 0 ? b + a%b : a%b;

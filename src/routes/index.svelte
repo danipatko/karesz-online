@@ -9,7 +9,7 @@
 	let CURRENT_STATISTICS:object;
 	let EDITOR:HTMLTextAreaElement;
 	let PLAYBACK_SPEED_SLIDER:HTMLInputElement;
-
+	
 	onMount(() => {
 		k = new kanvas(10, 10, canvas);
 		k.kareszes.push({hidden:false, id:'asd', position:{x:5,y:5}, rotation:0});
@@ -104,10 +104,17 @@ namespace Karesz
 	import Command from '$lib/svelte-components/command.svelte';
 	import { commandStore } from '$lib/svelte-components/store';
 
-	const listOfCommands = () => {
+	export const jumpToStep = (index:number):void => {
+		console.log(index);
+		k.i = index;
+		k.render();
+	}
+
+	const listCommands = () => {
 		const arr = k.parseCommands(SAMPLE_RESULTS);
-		console.log(arr);
+		// console.log(arr); // DEBUG
 		for (let i = 0; i < arr.length; i++) {
+			// const asd = new Command({ target:'', props:{index:i+1, command:arr[i].command, value:arr[i].value}});
 			$commandStore[i] = { index:i+1, command:arr[i].command, value:arr[i].value };
 		}
 	}
@@ -137,7 +144,7 @@ namespace Karesz
 	</div>
 	<button on:click="{async() => await submitCode()}">submit</button>
 	<br>
-	<button on:click="{listOfCommands}">Add dynamic compontent</button>
+	<button on:click="{listCommands}">Add dynamic compontent</button>
 	<div>
 		<ul>	
 			{#each $commandStore as item}
