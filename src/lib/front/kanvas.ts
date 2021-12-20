@@ -96,24 +96,9 @@ export class kanvas{
         this.drawIMG({x:k.position.x, y:k.position.y}, `/karesz/karesz${k.rotation}.png`);
     }
 
-    public clear():void {
-        this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
-    }
-
-    public render ():void {
+    private runInstruction(instruction:instruction, i:number, render:boolean=true):void {
         this.clear();
-        this.drawGrid();
-        this.drawMap();
-        this.drawKaresz(this.kareszes[0]);
-    }
-
-    public changeField (position:point, field:fields):void {
-        this.matrix[position.x][position.y] = field;
-    }
-
-    private runInstruction(instruction:instruction):void {
-        this.clear();
-        this.lastTickIndex = this.i;
+        this.lastTickIndex = i;
         switch (instruction.command) {
             case 'm':
                 this.kareszes[0].position = instruction.value;
@@ -128,23 +113,7 @@ export class kanvas{
                 this.matrix[instruction.value.x][instruction.value.y] = 2;
                 break;
         }
-        this.render();
-    }
-
-    public cursorAt(e:MouseEvent):point {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        };
-    }
-
-    public reset ():void {
-        this.stop();
-        this.kareszes[0].position = { x: this.sizeX/2, y:this.sizeY/2 };
-        this.kareszes[0].rotation = rotations.up;
-        this.clear();
-        this.render();
+        if (render) this.render();
     }
 
     /* run specific variables */
@@ -181,8 +150,8 @@ export class kanvas{
 
     public async play (instructions:instruction[], resume:boolean=false, playbackSpeed:number=200):Promise<void> {
         return new Promise<void>(async res => {
-            if (this.running) { res(); return; }
-            if (!resume || this.i >= instructions.length) this.reset();
+            if (this.running) { this.stop(); res(); return; }
+            if (this.i >= instructions.length) this.reset();
             this.clear();
             this.tickSpeed = playbackSpeed;
             this.running = true;
@@ -190,16 +159,57 @@ export class kanvas{
             while(this.running) {
                 if(this.i >= instructions.length-1) this.running = false; 
                 if(instructions[this.i] === undefined) continue;
-                this.runInstruction(instructions[this.i++]);
+                this.runInstruction(instructions[this.i], this.i++);
                 await sleep(this.tickSpeed);
             }
             res();
         });
     }
 
+    public jumpToStep(instructions:instruction[], index:number):void {
+        this.reset(false);
+        if(index > instructions.length || this.running) return;
+        for (let i = 0; i <= index; i++) 
+            this.runInstruction(instructions[i], i, false);
+        this.render();
+    }
+
     public stop():void {
         this.running = false;
         this.lastTickIndex = this.i;
+    }
+
+    public clear():void {
+        this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
+    }
+
+    public render ():void {
+        this.clear();
+        this.drawGrid();
+        this.drawMap();
+        this.drawKaresz(this.kareszes[0]);
+    }
+
+    public changeField (position:point, field:fields):void {
+        this.matrix[position.x][position.y] = field;
+    }
+
+    public cursorAt(e:MouseEvent):point {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
+
+    public reset (render:boolean=true):void {
+        this.stop();
+        this.i = 0;
+        this.lastTickIndex = 0;
+        this.kareszes[0].position = { x: this.sizeX/2, y:this.sizeY/2 };
+        this.kareszes[0].rotation = rotations.up;
+        this.clear();
+        if(render) this.render();
     }
 }
 

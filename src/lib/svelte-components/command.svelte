@@ -1,18 +1,14 @@
 <script lang="ts">
-    import { command_eqvivalents } from "$lib/karesz/karesz-utils";
-	export let command:string;
+    import { command_eqvivalents } from '$lib/karesz/karesz-utils';
+    export let command:string;
 	export let value:any;
     export let index:number;
-
-    const invokeClick = () => {
-        console.log(command);
-        console.log(value);
-        console.log(index);
-    }
+    import { currentCommandIndex } from '$lib/svelte-components/store';
+    const invokeClick = () => currentCommandIndex.update(x => index);
 </script>
 
 <div on:click="{invokeClick}" id="command-index-{index}" class="command-box">
-	<span class="command-index">{index}</span>
+	<span class="command-index">{index+1}</span>
     <span class="command-name">{command_eqvivalents[command]}</span>
     <span class="command-value">
         {#if command == 'r'}
