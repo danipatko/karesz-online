@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* STANDARD NEON HOVER
+border-gray-400 m-1 p-2 rounded-md hover:shadow-sm hover:shadow-green-400 hover:bg-green-600 hover:border-green-400 dark:border-gray-400
+
+*/
+
+@layer base {
+    /* width */
+    ::-webkit-scrollbar {
+        @apply w-1 h-1;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+        @apply bg-zinc-600;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+        @apply bg-green-400 ;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-green-300;
+    }
+}
+
+@layer components {
+    .command-box {
+        @apply cursor-pointer border-2 hover:shadow-sm hover:shadow-green-400 border-gray-400 m-1 p-1 rounded-md bg-opacity-5 hover:bg-green-600 hover:border-green-400;
+    }
+
+    .button-start {
+        @apply border hover:shadow-sm hover:shadow-green-400 border-gray-400 m-1 px-1 py-0.5 rounded-md bg-opacity-5 hover:bg-green-600 hover:border-green-400;
+    }
+
+    .button-stop {
+        @apply border hover:shadow-sm hover:shadow-red-600 border-gray-400 m-1 px-1 py-0.5 rounded-md bg-opacity-5 hover:bg-red-800 hover:border-red-600;
+    }
+}

@@ -7,10 +7,10 @@
     const invokeClick = () => currentCommandIndex.update(x => index);
 </script>
 
-<div on:click="{invokeClick}" id="command-index-{index}" class="command-box">
-	<span class="command-index">{index+1}</span>
-    <span class="command-name">{command_eqvivalents[command]}</span>
-    <span class="command-value">
+<div on:click="{invokeClick}" id="command-index-{index}" class="command-box select-none">
+	<span class="command-index text-sm p-1 dark:text-white font-bold">{index+1}</span>
+    <span class="command-name text-sm p-1 dark:text-white">{command_eqvivalents[command]}</span>
+    <span class="command-value text-sm dark:text-white font-bold">
         {#if command == 'r'}
             <span class="command-value-highlighted command-value-number">{value*90}°</span>
         {:else if value}

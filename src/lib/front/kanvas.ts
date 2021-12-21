@@ -118,8 +118,8 @@ export class kanvas{
 
     /* run specific variables */
     private lastTickIndex:number = 0;
-    public i:number = 0;
-    private running:boolean = false;
+    private i:number = 0;
+    public running:boolean = false;
     private tickSpeed:number = 200;
 
     public setTickSpeed(ms:number):void {
