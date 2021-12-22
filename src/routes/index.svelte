@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { kanvas } from '$lib/front/kanvas';
-	import type { instruction } from '$lib/karesz/karesz-utils';
+	import { fields, instruction } from '$lib/karesz/karesz-utils';
 	import { currentCommandIndex } from '$lib/svelte-components/store';
 	import Command from '$lib/svelte-components/command.svelte';
 	import { commandStore } from '$lib/svelte-components/store';
@@ -14,16 +14,18 @@
 	let CURRENT_STATISTICS:object;
 	let EDITOR:HTMLTextAreaElement;
 	let PLAYBACK_SPEED_SLIDER:HTMLInputElement;
+	let SELECTED_FIELD:fields = fields.null;
 	
 	// window.onload
 	onMount(() => {
 		adjustOnResize(false);
 		// create new karesz canvas, fill default editor and test instuctions
-		k = new kanvas(10, 10, canvas);
-		k.kareszes.push({hidden:false, id:'asd', position:{x:5,y:5}, rotation:0});
+		k = new kanvas(20, 15, canvas);
+		k.kareszes.push({hidden:false, id:'karesz', position:{x:5,y:5}, rotation:0});
+		adjustOnResize();
 		k.render();
 		// set up test env
-		EDITOR.value = sampleCode;
+		// EDITOR.value = sampleCode;
 		parseCommands(sampleCommands);
 		// dynamically set tick speed 
 		PLAYBACK_SPEED_SLIDER.oninput = () => 
@@ -32,18 +34,27 @@
 		currentCommandIndex.subscribe(index => {
 			if(index != -1) k.jumpToStep(CURRENT_STEPS_PARSED, index);
 		});
-
+		// enable darkmode
 		document.body.classList.add('dark');
+
+		canvas.onclick = canvasInteract
 	});
 
 	window.onresize = () => adjustOnResize();
 
+	const canvasInteract = (e:MouseEvent):void => {
+		if(SELECTED_FIELD == fields.null)
+			k.changeKareszPosition(k.getClickPoint(e));
+		else 
+			k.changeField(k.getClickPoint(e), SELECTED_FIELD);
+
+	}
+
+	// resize canvas on window resize
 	const adjustOnResize = (render:boolean=true):void => {
-		// the canvas
-		const container = document.getElementById('karesz-kontainer');
-		canvas.width = container.clientWidth - 1;
-		canvas.height = container.clientHeight - 1;
-		if(render) k.render();
+		canvas.width = document.getElementById('karesz-col').clientWidth - 1;
+		canvas.height = document.getElementById('karesz-kontainer').clientHeight - 1;
+		if(render) { k.resize(); }
 	}
 
 	// wrapper for events
@@ -56,6 +67,10 @@
 	// wrapper for events
 	const reset = ():void => 
 		k.reset();
+
+	const asd = ():void => {
+		k.changeField({x:1,y:2}, fields.wall);
+	}
 
 	// parse string commands to an array of instructions (global => CURRENT_STEPS_PARSED)
 	const parseCommands = (commands:string):void => {
@@ -89,11 +104,24 @@
 <!-- settings: speed, grid size, reset -->
 
 <main class="dark:bg-darkgray">
-	<div class="grid grid-cols-2 gap-4">
-		<!-- Karesz section -->
-		<div class="grid grid-cols-3 gap-4">
-			<div id="karesz-kontainer" class="karesz-kontainer col-span-2">
-				<canvas bind:this="{canvas}"  width="300" height="300" id="main" class="karesz-kanvas">Your browser doesn't support canvas bruh.</canvas>
+	<div class="grid grid-cols-2 gap-4 h-screen">
+		<!-- karesz section -->
+		<div class="grid grid-cols-3 gap-4 h-screen">
+			<div id="karesz-col" class="grid grid-rows-3 gap-4 col-span-2 h-screen">
+				<!-- karesz -->
+				<div id="karesz-kontainer" class="karesz-kontainer row-span-2 p-2">
+					<canvas bind:this="{canvas}"  width="300" height="300" id="main" class="karesz-kanvas">Your browser doesn't support canvas bruh.</canvas>
+				</div>
+				<!-- controls -->
+				<div class="karesz-controls">
+					<div class="karesz-control-bar">
+						<button class="button-start font-bold dark:text-white" on:click="{(e) => startStop(e.target)}">START</button>
+						<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
+					</div>
+					<div class="karesz-settings-container">
+						<div><input type="range" min="1" max="1000" value="200" bind:this="{PLAYBACK_SPEED_SLIDER}"></div>
+					</div>
+				</div>
 			</div>
 			<div class="result-container">
 				<div class="statistics-container">
@@ -125,16 +153,10 @@
 			--> </div>
 	</div>
 	<div>
-		<div class="karesz-control-bar">
-			<button class="button-start font-bold dark:text-white" on:click="{(e) => startStop(e.target)}">START</button>
-			<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
-		</div>
-		<div class="karesz-settings-container">
-			<div><input type="range" min="1" max="1000" value="200" bind:this="{PLAYBACK_SPEED_SLIDER}"></div>
-		</div>
+		
 	</div>
 </main>
-
+<!--
 <h1>Karezs</h1>
 <p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
 
@@ -146,4 +168,4 @@
 	<button on:click="{async() => await submitCode()}">submit</button>
 	<br>
 	
-</main>
+</main>-->

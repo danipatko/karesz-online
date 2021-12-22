@@ -15,7 +15,7 @@ border-gray-400 m-1 p-2 rounded-md hover:shadow-sm hover:shadow-green-400 hover:
 
     /* Track */
     ::-webkit-scrollbar-track {
-        @apply bg-zinc-600;
+        @apply bg-zinc-600 rounded-md;
     }
 
     /* Handle */

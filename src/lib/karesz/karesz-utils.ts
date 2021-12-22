@@ -34,6 +34,7 @@ export enum rotations {
 }
 // possible field values in matrix
 export enum fields {
+    null = -1,
     empty = 0,
     wall = 1,
     rock_black = 2,

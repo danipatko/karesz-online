@@ -39,12 +39,20 @@ export class kanvas{
     constructor(x:number, y:number, canvas: HTMLCanvasElement) {
         this.sizeX = x;
         this.sizeY = y;
-        this.cellSize = Math.min(Math.floor(canvas.width / x), Math.floor(canvas.height / y))
         this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.matrix = Array(y).fill(fields.empty).map(() => Array(y).fill(fields.empty));
-        canvas.width++;
-        canvas.height++;
+        this.resize(false);
+        this.matrix = this.empty2DArray();
+    }
+
+    private empty2DArray = (x:number=this.sizeX, y:number=this.sizeY):number[][] =>
+        Array(x).fill(fields.empty).map(() => Array(y).fill(fields.empty));
+
+    public resize(render:boolean=true):void {
+        this.cellSize = Math.min(Math.floor(this.canvas.width / this.sizeX), Math.floor(this.canvas.height / this.sizeX))
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.width++;
+        this.canvas.height++;
+        if(render) this.render();
     }
 
     private drawGrid ():void {
@@ -190,23 +198,32 @@ export class kanvas{
         this.drawKaresz(this.kareszes[0]);
     }
 
-    public changeField (position:point, field:fields):void {
-        this.matrix[position.x][position.y] = field;
+    public changeField (p:point, field:fields):void {
+        if(p.x >= this.sizeX || p.y >= this.sizeY || this.kareszes[0].position == p) return;
+        this.matrix[p.x][p.y] = field;
+        this.render();
     }
 
-    public cursorAt(e:MouseEvent):point {
+    public changeKareszPosition (p:point):void {
+        if(p.x >= this.sizeX || p.y >= this.sizeY) return;
+        this.kareszes[0].position = p;
+        this.render();
+    }
+
+    public getClickPoint(e:MouseEvent):point {
         const rect = this.canvas.getBoundingClientRect();
         return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
+            x: Math.floor((e.clientX - rect.left) / this.cellSize),
+            y: Math.floor((e.clientY - rect.top) / this.cellSize)
         };
     }
 
     public reset (render:boolean=true):void {
         this.stop();
         this.i = 0;
+        this.matrix = this.empty2DArray();
         this.lastTickIndex = 0;
-        this.kareszes[0].position = { x: this.sizeX/2, y:this.sizeY/2 };
+        // this.kareszes[0].position = { x: Math.floor(this.sizeX/2), y: Math.floor(this.sizeY/2) };
         this.kareszes[0].rotation = rotations.up;
         this.clear();
         if(render) this.render();
