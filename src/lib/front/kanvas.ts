@@ -1,4 +1,4 @@
-import { fields, rotations } from "$lib/karesz/karesz-utils";
+import { fields, modulo, rotations } from "$lib/karesz/karesz-utils";
 
 export interface point {
     x: number;
@@ -36,12 +36,30 @@ export class kanvas{
     public ctx: CanvasRenderingContext2D;
     public canvas: HTMLCanvasElement;
 
-    constructor(x:number, y:number, canvas: HTMLCanvasElement) {
+    public startState = {
+        position: { x:0, y:0 },
+        rotation: rotations.up
+    };
+    private resumeState = {
+        position: {x:0, y:0},
+        rotation: 0
+    };
+    private updateCallback:Function;
+
+    constructor(x:number, y:number, canvas: HTMLCanvasElement, updateCallback:Function) {
         this.sizeX = x;
         this.sizeY = y;
         this.canvas = canvas;
         this.resize(false);
         this.matrix = this.empty2DArray();
+        this.setStartingState({ x: Math.floor(this.sizeX / 2), y: Math.floor(this.sizeY / 2) }, rotations.up);
+        this.updateCallback = updateCallback;
+        this.kareszes.push({ hidden:false, id:'karesz', position:this.startState.position, rotation:this.startState.rotation });
+        this.update();
+    }
+
+    private update ():void {
+        this.updateCallback(this.kareszes[0].position, this.kareszes[0].rotation, this.i, this.running);
     }
 
     private empty2DArray = (x:number=this.sizeX, y:number=this.sizeY):number[][] =>
@@ -105,6 +123,7 @@ export class kanvas{
     }
 
     private runInstruction(instruction:instruction, i:number, render:boolean=true):void {
+        console.log(instruction);
         this.clear();
         this.lastTickIndex = i;
         switch (instruction.command) {
@@ -155,21 +174,45 @@ export class kanvas{
 
     public parseCommands = (instructions: string):instruction[] =>
         instructions.split(',').map(x => this.parse(x)); 
+    
+    private setState ({ rotation=rotations.up, position={ x:0, y:0 }}={}):void {
+        this.kareszes[0].position = position;
+        this.kareszes[0].rotation = rotation;
+    }
 
-    public async play (instructions:instruction[], resume:boolean=false, playbackSpeed:number=200):Promise<void> {
+    private setStartingState(startingPoint:point, startingRotation:rotations):void {
+        this.startState.position = startingPoint;
+        this.startState.rotation = startingRotation;
+    }
+
+    public async play (instructions:instruction[], resume:boolean=false, onstop:Function, onUpdate:Function):Promise<void> {
         return new Promise<void>(async res => {
-            if (this.running) { this.stop(); res(); return; }
-            if (this.i >= instructions.length) this.reset();
             this.clear();
-            this.tickSpeed = playbackSpeed;
+            // stop if running
+            if (this.running) { this.stop(); res(); return; }
+            // reset if reached end of instructions
+            if (this.i >= instructions.length) this.reset(false);
+            // load previous state 
+            if(resume && !(this.i >= instructions.length || this.lastTickIndex < 1)) {
+                this.i = this.lastTickIndex;
+                this.setState(this.resumeState);
+            } else {
+                this.i = 0;
+                this.setState(this.startState);
+            }
+            this.update();
+            // loop
             this.running = true;
-            this.i = resume ? this.lastTickIndex : 0;
             while(this.running) {
                 if(this.i >= instructions.length-1) this.running = false; 
                 if(instructions[this.i] === undefined) continue;
+                onUpdate(this.i);
                 this.runInstruction(instructions[this.i], this.i++);
+                this.update();
                 await sleep(this.tickSpeed);
             }
+            // callback for start button
+            onstop(false);
             res();
         });
     }
@@ -179,12 +222,19 @@ export class kanvas{
         if(index > instructions.length || this.running) return;
         for (let i = 0; i <= index; i++) 
             this.runInstruction(instructions[i], i, false);
+        this.i = index;
+        this.resumeState.position = this.kareszes[0].position;
+        this.resumeState.rotation = this.kareszes[0].rotation;
+        this.update();
         this.render();
     }
 
     public stop():void {
         this.running = false;
         this.lastTickIndex = this.i;
+        this.update();
+        this.resumeState.position = this.kareszes[0].position;
+        this.resumeState.rotation = this.kareszes[0].rotation;
     }
 
     public clear():void {
@@ -204,9 +254,17 @@ export class kanvas{
         this.render();
     }
 
+    private equals (p1:point, p2:point):boolean {
+        return p1.x == p2.x && p1.y == p2.y;
+    }
+
     public changeKareszPosition (p:point):void {
-        if(p.x >= this.sizeX || p.y >= this.sizeY) return;
-        this.kareszes[0].position = p;
+        if(this.running || p.x >= this.sizeX || p.y >= this.sizeY) return;
+        if(this.equals(this.kareszes[0].position, p)) 
+            this.kareszes[0].rotation = modulo(this.kareszes[0].rotation + 1, 4);
+        else 
+            this.kareszes[0].position = p;
+        this.update();
         this.render();
     }
 
@@ -223,8 +281,8 @@ export class kanvas{
         this.i = 0;
         this.matrix = this.empty2DArray();
         this.lastTickIndex = 0;
-        // this.kareszes[0].position = { x: Math.floor(this.sizeX/2), y: Math.floor(this.sizeY/2) };
-        this.kareszes[0].rotation = rotations.up;
+        this.kareszes[0].position = this.startState.position;
+        this.kareszes[0].rotation = this.startState.rotation;
         this.clear();
         if(render) this.render();
     }

@@ -28,6 +28,7 @@
   },
   "type": "module",
   "dependencies": {
+    "monaco-editor": "^0.31.1",
     "mysql": "^2.18.1",
     "vite": "^2.7.2"
   }
