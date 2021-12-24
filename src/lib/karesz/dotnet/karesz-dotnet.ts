@@ -61,13 +61,14 @@ export const run = async(mono:any, datahandler:any, errorhandler:any):Promise<an
         mono.once('exit', (code, signal) => res({ code:code, signal:signal }));
     });
 }
+// /mnt/c/Users/Dani/home
+const TESTING_DIRECTORY_PATH = `/home/dapa/Projects/karesz-online/testing`;
 
-const TESTING_DIRECTORY_PATH = `/mnt/c/Users/Dani/home/Projects/karesz-online/testing`;
-
-export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', mapString='', filename='Program.cs', max_ticks=5000, max_time=1000*5 }={}):Promise<any> => {
+export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', map=undefined, filename='Program.cs', max_ticks=10000, max_time=1000*2 }={}):Promise<any> => {
     return new Promise<any>(async res => {
         // create karesz
         const karenv = new kontext(sizeX, sizeY);
+        if(map) karenv.load(map);
         // karenv.load(mapString);
         const k = new karesz({x:startX, y:startY});
         karenv.addKaresz(k);
@@ -151,74 +152,3 @@ const parseInput = (input:string, karesz:karesz, mono:any):object|number|boolean
         }
     }
 }
-
-
-// DEBUG
-const _test = `
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Karesz
-{
-    public class Program
-    {
-        void Main(string[] args)
-        {
-            Console.WriteLine("in:wallahead");
-            string r = Console.ReadLine();
-            Console.WriteLine("Recvd: "+r);
-        }     
-    }
-}
-`;
-
-const test = `
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.IO;
-using System.Threading;
-
-namespace Karesz
-{
-    public partial class Form1 : Form
-    {
-        void Fordulj_meg()
-        {
-            Fordulj(balra);
-            Fordulj(balra);
-        }
-
-        void menj_a_falig()
-        {
-            while (!Van_e_előttem_fal())
-            {
-                Lépj();
-            }
-        }
-
-        bool Tudok_e_lépni()
-        {
-            return (!Van_e_előttem_fal() && !Kilépek_e_a_pályáról());
-        }
-
-        void FELADAT()
-        {
-            Fordulj(jobbra);
-            while(Tudok_e_lépni()) {
-                Lépj();
-            }
-            Fordulj_meg();
-            while(Tudok_e_lépni()) {
-                Lépj();
-            }
-        }
-    }
-}
-`;

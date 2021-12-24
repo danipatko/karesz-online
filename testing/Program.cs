@@ -19,8 +19,8 @@ namespace Karesz
 
 		static void Fordulj_meg()
         {
-             stdout("turn -1");
-             stdout("turn -1");
+            stdout("turn -1") ;
+            stdout("turn -1") ;
         }
 
 		static void menj_a_falig()
@@ -38,7 +38,7 @@ namespace Karesz
 
 		static void Main(string[] args)
         {
-             stdout("turn 1");
+            stdout("turn 1") ;
             while(Tudok_e_lépni()) {
                 stdout("step");
             }
@@ -46,6 +46,8 @@ namespace Karesz
             while(Tudok_e_lépni()) {
                 stdout("step");
             }
+            Fordulj_meg();
+            stdout("step");
         }
     }
 }

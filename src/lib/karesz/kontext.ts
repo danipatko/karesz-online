@@ -18,28 +18,6 @@ export default class kontext {
         this.kareszes.push(k);
     }
 
-   /* public applyAll(action:Function):void{
-        for (let i = 0; i < this.kareszes.length; i++) {
-            action(this.kareszes[i]);
-        }
-    }
-
-    public applyFirst(action:Function):void {
-        action(this.kareszes[0]);
-    }
-
-    public getKaresz(index:number):karesz {
-        return this.kareszes[index];
-    }
-
-    _print = (kp?:point):void => {
-        // iter vertically
-        for (let y = 0; y < this.matrix.length; y++) 
-            // one line
-            console.log(y + ': ' + this.matrix[y].map((v, x) => kp && x == kp.x && y == kp.y ? 'K' : v ).join(' ') + '\n');
-        console.log('-----------------------');
-    }*/
-
     /**
      * Populate map contents from a string
      */

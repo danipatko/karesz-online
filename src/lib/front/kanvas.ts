@@ -76,6 +76,8 @@ export class kanvas{
     public resetCells(size:number):void {
         this.sizeX = size;
         this.sizeY = size;
+        console.log(`${this.sizeX}:${this.sizeY}`);
+        this.matrix = this.empty2DArray();
         this.resize();
     }
 
@@ -153,7 +155,7 @@ export class kanvas{
     private lastTickIndex:number = 0;
     private i:number = 0;
     public running:boolean = false;
-    private tickSpeed:number = 200;
+    private tickSpeed:number = 100;
 
     public setTickSpeed(ms:number):void {
         this.tickSpeed = ms;
@@ -255,6 +257,8 @@ export class kanvas{
     }
 
     public changeField (p:point, field:fields):void {
+        console.log(`${this.matrix.length}:${this.matrix[0].length}`);
+        console.log(p);
         if(p.x >= this.sizeX || p.y >= this.sizeY || this.kareszes[0].position == p) return;
         this.matrix[p.x][p.y] = this.matrix[p.x][p.y] == field ? 0 : field;
         this.render();
@@ -292,6 +296,18 @@ export class kanvas{
         this.clear();
         if(render) this.render();
     }
+
+    public generateMapData():object {
+        return {
+            sizeX: this.sizeX,
+            sizeY: this.sizeY,
+            startX: this.startState.position.x,
+            startY: this.startState.position.y,
+            startRotation: this.startState.rotation,
+            map: this.matrix.map(x => x.join('')).join('\n'),
+        }
+    }
+    
 }
 
 const sleep = (ms:number):Promise<void> =>

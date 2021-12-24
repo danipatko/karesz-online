@@ -14,6 +14,7 @@
 	let CURRENT_STATISTICS:object;
 	let SELECTED_FIELD:fields = fields.null;
 	let startStopButton:HTMLButtonElement;
+	let editor:any;
 	export let STARTING_POINT:point = {x:5, y:5};
 	export let STARTING_ROTATION:rotations = rotations.up;
 	export let MAP_SIZE:number = 10;
@@ -25,6 +26,7 @@
 	export let CURRENT_ROTATION:number;
 
 	import * as monaco from 'monaco-editor';
+import { list } from 'postcss';
 
 	// window.onload
 	onMount(() => {
@@ -39,7 +41,6 @@
 		adjustOnResize();
 		k.render();
 		// set up test env
-		// EDITOR.value = sampleCode;
 		parseCommands(sampleCommands);
 		// dynamically set tick speed 
 		document.getElementById('speedrange').oninput = () => 
@@ -52,7 +53,7 @@
 		document.body.classList.add('dark');
 		canvas.onclick = canvasInteract;
 
-		monaco.editor.create(document.getElementById('editor'), {
+		editor = monaco.editor.create(document.getElementById('editor'), {
 			value: sampleCode,
 			language: 'csharp',
 			theme: 'vs-dark'
@@ -116,19 +117,21 @@
 	const submitCode = async():Promise<void> => {
 		const result = await fetch(`/run/dotnet`, {
 			body: JSON.stringify({
-				code:'', 
-				kareszconfig:{ sizeX:10, sizeY: 10, startX: 5, startY:5, startRotation: 0 }
+				code:editor.getValue(), 
+				karesz: k.generateMapData()
 			}),
 			method:'post',
 		});
-		const { results } = result.ok ? await result.json() : undefined;
-		if(!results) return;
+		if(!result.ok) return;
+		const { results } = await result.json();
 		parseCommands(results.steps);
-		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics }
+		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics };
 	}
 
 	// populate $commandStore 
 	const listCommands = (commands: instruction[]) => {
+		console.log(commands);
+		commands = commands.filter(x => x !== undefined);
 		for (let i = 0; i < commands.length; i++) 
 			$commandStore[i] = { index:i, command:commands[i].command, value:commands[i].value };
 	}
@@ -146,7 +149,7 @@
 				</div>
 				<!-- controls -->
 				<div class="karesz-settings dark:text-white">
-					<div class="grid grid-cols-3 gap-4 px-4">
+					<div class="grid grid-cols-4 gap-4 px-4">
 						<div class="text-center">
 							<button bind:this="{startStopButton}" class="button-start font-bold dark:text-white" on:click="{startStop}">START</button>
 						</div>
@@ -155,6 +158,9 @@
 						</div>
 						<div class="text-center">
 							<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
+						</div>
+						<div class="text-center">
+							<button class="button-start font-bold dark:text-white" on:click="{submitCode}">COMPILE</button>
 						</div>
 					</div>
 					<div class="karesz-settings-control-section m-4 ">
