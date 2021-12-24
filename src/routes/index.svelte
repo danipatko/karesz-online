@@ -12,14 +12,15 @@
 	let k:kanvas;
 	let CURRENT_STEPS_PARSED:instruction[] = [];
 	let CURRENT_STATISTICS:object;
-	let EDITOR:HTMLTextAreaElement;
 	let SELECTED_FIELD:fields = fields.null;
 	let startStopButton:HTMLButtonElement;
 	export let STARTING_POINT:point = {x:5, y:5};
-	export let STARTING_ROTATION = 0;
+	export let STARTING_ROTATION:rotations = rotations.up;
+	export let MAP_SIZE:number = 10;
+
 	export let STEP_INDEX = 0;
 	export let RUNNING_STATE = 0;
-	export let PLAYBACK_SPEED = 200;
+	export let PLAYBACK_SPEED = 100;
 	export let CURRENT_POSITION:string;
 	export let CURRENT_ROTATION:number;
 
@@ -51,28 +52,14 @@
 		document.body.classList.add('dark');
 		canvas.onclick = canvasInteract;
 
-		// SETUP MONACO EDITOR
-
-		monaco.editor.defineTheme('myCoolTheme', {
-			base: 'vs-dark',
-			inherit: false,
-			rules: [       
-				{ token: 'green', background: 'FF0000', foreground: '00FF00', fontStyle: 'italic'},
-				{ token: 'red', foreground: 'FF0000' , fontStyle: 'bold underline'},
-				{ token: 'black', background: '000000' },
-				{ token: 'white', foreground: 'FFFFFF' }
-			],
-			colors: {
-				'editor.foreground': '#FFFFFF',
-				'editor.background': '#000000',
-			}
-		});
-
 		monaco.editor.create(document.getElementById('editor'), {
 			value: sampleCode,
 			language: 'csharp',
 			theme: 'vs-dark'
 		});
+
+		document.getElementById('mapsize-range').oninput = () => 
+			k.resetCells(MAP_SIZE);
 	});
 
 	window.onresize = () => adjustOnResize();
@@ -119,16 +106,22 @@
 		listCommands(CURRENT_STEPS_PARSED);
 	}
 
+	const saveStartingState = ():void => {
+		STARTING_POINT = k.kareszes[0].position;
+		STARTING_ROTATION = k.kareszes[0].rotation;
+	}
+
 	// send code to server
+	// required params: code to compile, map size, starting point and rotation
 	const submitCode = async():Promise<void> => {
 		const result = await fetch(`/run/dotnet`, {
 			body: JSON.stringify({
-				code:EDITOR.value, 
-				kareszconfig:{ sizeX:10, sizeY: 10, startX: 5, startY:5 }
+				code:'', 
+				kareszconfig:{ sizeX:10, sizeY: 10, startX: 5, startY:5, startRotation: 0 }
 			}),
 			method:'post',
 		});
-		const { results } = result.ok ? await result.json() : 'error';
+		const { results } = result.ok ? await result.json() : undefined;
 		if(!results) return;
 		parseCommands(results.steps);
 		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics }
@@ -142,8 +135,6 @@
 
 </script>
 
-<!-- settings: speed, grid size, reset -->
-
 <main class="dark:bg-darkgray">
 	<div class="grid grid-cols-2 gap-4 h-screen">
 		<!-- karesz section -->
@@ -155,31 +146,53 @@
 				</div>
 				<!-- controls -->
 				<div class="karesz-settings dark:text-white">
-					<div class="px-4"><button bind:this="{startStopButton}" class="button-start font-bold dark:text-white" on:click="{startStop}">START</button></div>
+					<div class="grid grid-cols-3 gap-4 px-4">
+						<div class="text-center">
+							<button bind:this="{startStopButton}" class="button-start font-bold dark:text-white" on:click="{startStop}">START</button>
+						</div>
+						<div class="text-center">
+							<button on:click="{saveStartingState}" class="button-start font-bold dark:text-white">START HERE</button>
+						</div>
+						<div class="text-center">
+							<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
+						</div>
+					</div>
 					<div class="karesz-settings-control-section m-4 ">
-						<div class="section-div">Controls</div>
+						<!-- <div class="section-div">Controls</div>-->
 						<div class="p-2">
 							<label for="speedrange">Tick speed:  <span class="font-bold">{PLAYBACK_SPEED}ms</span></label>
 							<br>
 							<input id="speedrange" type="range" min="1" max="1000" bind:value="{PLAYBACK_SPEED}" class="form-range appearance-none w-full"/>
 						</div>
 						<div class="p-2">
-							<div class="karesz-starting-state">
-
-							</div>
+							<label for="mapsize-range">Map size:  <span class="font-bold">{MAP_SIZE}x{MAP_SIZE} </span></label>
+							<br>
+							<input id="mapsize-range" type="range" min="10" max="50" step="10" bind:value="{MAP_SIZE}" class="form-range appearance-none w-full"/>
 						</div>
 					</div>
-					<div class="karesz-settings-container"></div>
-					<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
+					<div class="field-select m-4">
+						<label for="selected">Selected: </label>
+						<select bind:value="{SELECTED_FIELD}" name="selected object" id="selected" class="bg-darkgray">
+							<option value="-1">None</option>
+							<option value="0">Clear</option>
+							<option value="1">Wall</option>
+							<option value="2">Black rock</option>
+							<option value="3">Red rock</option>
+							<option value="4">Green rock</option>
+							<option value="5">Yellow rock</option>
+						</select>
+					</div>
 				</div>
 			</div>
 			<div class="result-container">
 				<!-- stats -->
 				<div class="statistics-container m-2">
+					<div class="p-1 dark:text-white text-sm">Starting point: <span class="font-bold">{STARTING_POINT.x}:{STARTING_POINT.y}</span></div>
+					<div class="p-1 dark:text-white text-sm">Starting rotation: <span class="font-bold">{STARTING_ROTATION*90}°</span></div>
 					<div class="p-1 dark:text-white text-sm">Position: <span class="font-bold">{CURRENT_POSITION}</span></div>
 					<div class="p-1 dark:text-white text-sm">Rotation: <span class="font-bold">{CURRENT_ROTATION}°</span></div>
 					<div class="p-1 dark:text-white text-sm"><span class="font-bold">{RUNNING_STATE ? 'Running' : 'Stopped'}</span></div>
-					<div class="p-1 dark:text-white text-sm"><span class="font-bold">Current step: {STEP_INDEX}</span></div>
+					<div class="p-1 dark:text-white text-sm">Current step: <span class="font-bold">{STEP_INDEX}</span></div>
 				</div>
 				<div class="karesz-kommand-kontainer overflow-y-scroll max-h-screen col-span-1">
 					<!-- command list -->
@@ -190,21 +203,8 @@
 			</div>
 		</div>
 		<!-- Editor section -->
-		<div id="editor" class="">
+		<div id="editor">
 
 		</div>
 	</div>
 </main>
-<!--
-<h1>Karezs</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
-
-<main class="dark:bg-darkgray">
-	
-	<div>
-		<textarea class="bg-zinc-900" bind:this="{EDITOR}" name="Code karesz here" rows="50" cols="100" id="code"></textarea>
-	</div>
-	<button on:click="{async() => await submitCode()}">submit</button>
-	<br>
-	
-</main>-->

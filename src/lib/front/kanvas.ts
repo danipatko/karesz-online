@@ -16,7 +16,7 @@ const ROCK_COLORS = {
     2: '#000',
     3: '#f00',
     4: '#0f0',
-    5: '#0ff',
+    5: '#ff0',
 }
 
 export class kanvas{
@@ -66,11 +66,17 @@ export class kanvas{
         Array(x).fill(fields.empty).map(() => Array(y).fill(fields.empty));
 
     public resize(render:boolean=true):void {
-        this.cellSize = Math.min(Math.floor(this.canvas.width / this.sizeX), Math.floor(this.canvas.height / this.sizeX))
+        this.cellSize = Math.min(Math.floor(this.canvas.width / this.sizeX), Math.floor(this.canvas.height / this.sizeY))
         this.ctx = this.canvas.getContext('2d');
-        this.canvas.width++;
-        this.canvas.height++;
+        // this.canvas.width++;
+        // this.canvas.height++;
         if(render) this.render();
+    }
+
+    public resetCells(size:number):void {
+        this.sizeX = size;
+        this.sizeY = size;
+        this.resize();
     }
 
     private drawGrid ():void {
@@ -110,16 +116,16 @@ export class kanvas{
             for (let y = 0; y < this.matrix[x].length; y++) {
                 if(this.matrix[x][y] == fields.empty) 
                     continue;
-                else if (this.matrix[x][y] = fields.wall)
+                else if (this.matrix[x][y] == fields.wall)
                     this.drawSquare({x, y}, this.settings['wall_color']);
                 else if (this.matrix[x][y] > 1) 
                     this.drawCircle({x,y}, ROCK_COLORS[this.matrix[x][y]]);
-            }   
+            }
         }
     }
 
-    private drawKaresz(k:karesz):void{
-        this.drawIMG({x:k.position.x, y:k.position.y}, `/karesz/karesz${k.rotation}.png`);
+    private drawKaresz(k:karesz):void {
+        this.drawIMG({x:k.position.x, y:k.position.y}, `/karesz/Karesz${k.rotation}.png`);
     }
 
     private runInstruction(instruction:instruction, i:number, render:boolean=true):void {
@@ -187,9 +193,9 @@ export class kanvas{
 
     public async play (instructions:instruction[], resume:boolean=false, onstop:Function, onUpdate:Function):Promise<void> {
         return new Promise<void>(async res => {
-            this.clear();
             // stop if running
             if (this.running) { this.stop(); res(); return; }
+            this.clear();
             // reset if reached end of instructions
             if (this.i >= instructions.length) this.reset(false);
             // load previous state 
@@ -250,7 +256,7 @@ export class kanvas{
 
     public changeField (p:point, field:fields):void {
         if(p.x >= this.sizeX || p.y >= this.sizeY || this.kareszes[0].position == p) return;
-        this.matrix[p.x][p.y] = field;
+        this.matrix[p.x][p.y] = this.matrix[p.x][p.y] == field ? 0 : field;
         this.render();
     }
 
