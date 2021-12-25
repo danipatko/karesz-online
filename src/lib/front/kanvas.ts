@@ -181,14 +181,14 @@ export class kanvas{
     }
 
     public parseCommands = (instructions: string):instruction[] =>
-        instructions.split(',').map(x => this.parse(x)); 
+        instructions.split(',').map(x => this.parse(x)).filter(x => x !== undefined); 
     
     private setState ({ rotation=rotations.up, position={ x:0, y:0 }}={}):void {
         this.kareszes[0].position = position;
         this.kareszes[0].rotation = rotation;
     }
 
-    private setStartingState(startingPoint:point, startingRotation:rotations):void {
+    public setStartingState(startingPoint:point=this.kareszes[0].position, startingRotation:rotations=this.kareszes[0].rotation):void {
         this.startState.position = startingPoint;
         this.startState.rotation = startingRotation;
     }
@@ -293,8 +293,19 @@ export class kanvas{
         this.lastTickIndex = 0;
         this.kareszes[0].position = this.startState.position;
         this.kareszes[0].rotation = this.startState.rotation;
-        this.clear();
-        if(render) this.render();
+        if(render) {
+            this.clear();
+            this.render();
+        }
+    }
+
+    public toStart():void {
+        this.stop();
+        this.i = 0;
+        this.lastTickIndex = 0;
+        this.kareszes[0].position = this.startState.position;
+        this.kareszes[0].rotation = this.startState.rotation;
+        this.render();
     }
 
     public generateMapData():object {

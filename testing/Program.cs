@@ -46,8 +46,6 @@ namespace Karesz
             while(Tudok_e_lépni()) {
                 stdout("step");
             }
-            Fordulj_meg();
-            stdout("step");
         }
     }
 }

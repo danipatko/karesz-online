@@ -23,14 +23,8 @@ export default class karesz {
 
     inBounds = (p:point):boolean => p && (p.x < this.ktxt.sizeX && p.x >= 0) && (p.y < this.ktxt.sizeY && p.y >= 0);
 
-   /* private print():void {
-        for (let y = 0; y < this.kontext.sizeY; y++) 
-            console.log(y + ': ' + this.kontext.matrix.map(x => x[y]).join(' ') + '\n');
-        console.log('-----------------------');
-    }*/
-
     /**
-     * Check if can step to a point
+     * Check if able to step to a point
      */
     isFieldClear = (p:point):boolean => 
         this.inBounds(p) && (this.ktxt.matrix[p.x][p.y] == fields.empty || this.isRock(this.ktxt.matrix[p.x][p.y]));
@@ -51,7 +45,7 @@ export default class karesz {
     /**
      * Take n steps forward
      */
-    step (n:number=1):void|object {
+    step (n:number=1):object {
         const targ = this.forward(n);
         if(! this.isFieldClear(targ)) { return { error:'Cannot step forward' }; }
         
@@ -83,7 +77,7 @@ export default class karesz {
     /**
      * If any, pick up rock from player position
      */
-    pickUpRock():void|object {
+    pickUpRock():object {
         if(! this.isRockUnder())
             return { error:'No rock was below' };
 
@@ -93,8 +87,6 @@ export default class karesz {
     }
 
     placeRock(color?:fields):void|object {
-        if(this.isRockUnder())
-            return { error: 'Cannot place rock' };
         this.ktxt.matrix[this.position.x][this.position.y] = color || fields.rock_black;
         this.steps += `d=${this.position.x}:${this.position.y},`;        
         this.stats.rocksPlaced++;
@@ -110,24 +102,12 @@ export default class karesz {
         return this.ktxt.matrix[x][y];
     }
 
-   /* protected status():void {
-        console.log(
-        `           --- STATS --- 
-        position: x.${this.position.x} | y.${this.position.y}
-        rotation: ${this.rotation}
-        under: ${this.whatIsUnder()}
-        front: ${this.whatIsInFront()}
-        stats: ${JSON.stringify(this.stats)}
-        `);
-        this.kontext._print(this.position);
-    }*/
-
     // -------- Util functions to match Molnar's karesz --------
 
-    Lepj = ():void|object => this.step();
+    Lepj = ():object => this.step();
     Fordulj_jobbra = ():void => this.turn(directions.right);
     Fordulj_balra = ():void => this.turn(directions.left);
-    Vegyel_fel_egy_kavicsot = ():void|object => this.pickUpRock();
+    Vegyel_fel_egy_kavicsot = ():object => this.pickUpRock();
     Tegyel_le_egy_kavicsot = (color?:fields):void|object => this.placeRock(color);
     Eszakra_nez = ():boolean => this.rotation == rotations.up;
     Delre_nez = ():boolean => this.rotation == rotations.down;

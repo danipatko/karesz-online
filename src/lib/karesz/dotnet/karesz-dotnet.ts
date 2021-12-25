@@ -5,6 +5,7 @@ import karesz from '../karesz';
 import { replaceKareszFunctions, write } from './dotnet-strings';
 import path from 'path/posix';
 import { parseCommand } from '../karesz-standard';
+import { rotations } from '../karesz-utils';
 
 // DEBUG
 const P = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing/Program.cs';
@@ -64,13 +65,14 @@ export const run = async(mono:any, datahandler:any, errorhandler:any):Promise<an
 // /mnt/c/Users/Dani/home
 const TESTING_DIRECTORY_PATH = `/home/dapa/Projects/karesz-online/testing`;
 
-export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', map=undefined, filename='Program.cs', max_ticks=10000, max_time=1000*2 }={}):Promise<any> => {
+export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, startRotation=rotations.up, code='', map=undefined, filename='Program.cs', max_ticks=5_000, max_time=1000*2 }={}):Promise<any> => {
     return new Promise<any>(async res => {
+        console.log(`STARTING FROM ${startX}:${startY} - ${startRotation}`);
         // create karesz
         const karenv = new kontext(sizeX, sizeY);
         if(map) karenv.load(map);
         // karenv.load(mapString);
-        const k = new karesz({x:startX, y:startY});
+        const k = new karesz({x:startX, y:startY}, startRotation);
         karenv.addKaresz(k);
 
         // get path for .cs and .exe
@@ -89,16 +91,16 @@ export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', m
         });
         // precompile exe
         await precompile(executable).catch((err:any) => {
-            res({ error:`An error occured performing ahead-of-time compile: ${err}\nCommand: 'mono --aot=full ${_P}'` });
+            res({ error:`An error occured performing ahead-of-time compile: ${err}\nCommand: 'mono --aot=full ${executable}'` });
         });
-        // prepare run
+        
         var finished = false;
-
         // kill after reaching max time (ms)
         setTimeout(() => {
             if(!finished) mono.kill('SIGKILL');
-            res({ error: `Error: exceeded maximum time limit.` });
+            res({ results: { steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime, error: `Error: exceeded maximum time limit of ${max_time} ms.`} });
         }, max_time);
+        
         const startTime = Date.now();
         const mono = spawn('stdbuf', ['-i0', '-o0', '-e0', 'mono', executable]);    // clear std
         var ticks = 0;  // track number of ticks
@@ -107,13 +109,18 @@ export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', m
         (input:string) => {
             if(++ticks > max_ticks) {
                 mono.kill('SIGKILL');
-                res({ error:`Error: exceeded tick limit of ${max_ticks} ticks.` });
+                res({ results: { steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime, error:`Error: exceeded tick limit of ${max_ticks} ticks.` } });
                 return;
             } 
             // continue if undefined
             if(input === undefined) return;
             // execute command
-            parseInput(input, k, mono);
+            const result = parseInput(input, k, mono);
+            // break on error
+            if(result && result['error']) {
+                mono.kill('SIGKILL');
+                res({ results: { steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime, error: result['error'] } });
+            }
         }, 
         // handle errors
         (e:any) => {
@@ -121,16 +128,15 @@ export const tryrun = async({ sizeX=10, sizeY=10, startX=5, startY=5, code='', m
         });
 
         finished = true;
-        if(error) {
+        if(error)    // compile or runtime error
             res({ error });
-        }
-
+        
         res({ results:{ steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime }});
     });
 }
 
 const parseInput = (input:string, karesz:karesz, mono:any):object|number|boolean => {
-    var result:number|boolean;
+    var result:number|boolean|object|undefined;
     // replace crlf
     const split = input.replaceAll('\r\n','\n').split('\n');
     for(const line in split) {

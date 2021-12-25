@@ -26,7 +26,6 @@
 	export let CURRENT_ROTATION:number;
 
 	import * as monaco from 'monaco-editor';
-import { list } from 'postcss';
 
 	// window.onload
 	onMount(() => {
@@ -87,7 +86,9 @@ import { list } from 'postcss';
 
 	const flashCommand = (index:number):void => {
 		document.getElementsByClassName('current-command')[0]?.classList.remove('current-command');
-		document.getElementById(`command-index-${index}`).classList.add('current-command');
+		const e = document.getElementById(`command-index-${index}`)
+		e.classList.add('current-command');
+		e.scrollIntoView({ behavior:'smooth' });
 	}
 
 	const changeButtonState = (on:boolean):void => {
@@ -105,9 +106,11 @@ import { list } from 'postcss';
 	const parseCommands = (commands:string):void => {
 		CURRENT_STEPS_PARSED = k.parseCommands(commands);
 		listCommands(CURRENT_STEPS_PARSED);
+		k.toStart();
 	}
 
 	const saveStartingState = ():void => {
+		k.setStartingState();
 		STARTING_POINT = k.kareszes[0].position;
 		STARTING_ROTATION = k.kareszes[0].rotation;
 	}
@@ -115,6 +118,7 @@ import { list } from 'postcss';
 	// send code to server
 	// required params: code to compile, map size, starting point and rotation
 	const submitCode = async():Promise<void> => {
+		saveStartingState();
 		const result = await fetch(`/run/dotnet`, {
 			body: JSON.stringify({
 				code:editor.getValue(), 
@@ -124,6 +128,7 @@ import { list } from 'postcss';
 		});
 		if(!result.ok) return;
 		const { results } = await result.json();
+		console.log(results);
 		parseCommands(results.steps);
 		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics };
 	}
@@ -138,7 +143,7 @@ import { list } from 'postcss';
 
 </script>
 
-<main class="dark:bg-darkgray">
+<main class="dark:bg-darkgray overflow-hidden">
 	<div class="grid grid-cols-2 gap-4 h-screen">
 		<!-- karesz section -->
 		<div class="grid grid-cols-3 gap-4 h-screen">
@@ -149,12 +154,9 @@ import { list } from 'postcss';
 				</div>
 				<!-- controls -->
 				<div class="karesz-settings dark:text-white">
-					<div class="grid grid-cols-4 gap-4 px-4">
+					<div class="grid grid-cols-3 gap-4 px-4">
 						<div class="text-center">
 							<button bind:this="{startStopButton}" class="button-start font-bold dark:text-white" on:click="{startStop}">START</button>
-						</div>
-						<div class="text-center">
-							<button on:click="{saveStartingState}" class="button-start font-bold dark:text-white">START HERE</button>
 						</div>
 						<div class="text-center">
 							<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
@@ -163,7 +165,7 @@ import { list } from 'postcss';
 							<button class="button-start font-bold dark:text-white" on:click="{submitCode}">COMPILE</button>
 						</div>
 					</div>
-					<div class="karesz-settings-control-section m-4 ">
+					<div class="karesz-settings-control-section m-4">
 						<!-- <div class="section-div">Controls</div>-->
 						<div class="p-2">
 							<label for="speedrange">Tick speed:  <span class="font-bold">{PLAYBACK_SPEED}ms</span></label>
@@ -177,9 +179,9 @@ import { list } from 'postcss';
 						</div>
 					</div>
 					<div class="field-select m-4">
-						<label for="selected">Selected: </label>
+						<label for="selected">Selected field: </label>
 						<select bind:value="{SELECTED_FIELD}" name="selected object" id="selected" class="bg-darkgray">
-							<option value="-1">None</option>
+							<option selected value="-1">None</option>
 							<option value="0">Clear</option>
 							<option value="1">Wall</option>
 							<option value="2">Black rock</option>
@@ -190,7 +192,7 @@ import { list } from 'postcss';
 					</div>
 				</div>
 			</div>
-			<div class="result-container">
+			<div class="result-container overflow-y-scroll max-h-screen">
 				<!-- stats -->
 				<div class="statistics-container m-2">
 					<div class="p-1 dark:text-white text-sm">Starting point: <span class="font-bold">{STARTING_POINT.x}:{STARTING_POINT.y}</span></div>
@@ -200,7 +202,7 @@ import { list } from 'postcss';
 					<div class="p-1 dark:text-white text-sm"><span class="font-bold">{RUNNING_STATE ? 'Running' : 'Stopped'}</span></div>
 					<div class="p-1 dark:text-white text-sm">Current step: <span class="font-bold">{STEP_INDEX}</span></div>
 				</div>
-				<div class="karesz-kommand-kontainer overflow-y-scroll max-h-screen col-span-1">
+				<div class="karesz-kommand-kontainer">
 					<!-- command list -->
 					{#each $commandStore as item}
 						<svelte:component this={Command} index={item['index']} command={item['command']} value={item['value']}/>

@@ -1,4 +1,4 @@
-import { fields, instruction } from './karesz-utils';
+import { fields } from './karesz-utils';
 import type karesz from './karesz';
 
 /*
@@ -21,21 +21,19 @@ I/-    outofbounds
 -/O    turn :x:
 */
 
-export const parseCommand = (L:string, k:karesz):number|boolean => {
+export const parseCommand = (L:string, k:karesz):number|boolean|object|undefined => {
     if(!L) return;
 
     const [command, value] = L.split(' ');
 
     switch(command.trim().toLocaleLowerCase()) {
         case 'step': 
-            k.Lepj();
-        break;
+            return k.Lepj();
         case 'turn': 
             k.turn(parseInt(value || '0'));
         break;
         case 'pickup': 
-            k.Vegyel_fel_egy_kavicsot();
-        break;
+            return k.Vegyel_fel_egy_kavicsot();
         case 'place': 
             k.Tegyel_le_egy_kavicsot(parseInt(value) || fields.rock_black);
         break; 
