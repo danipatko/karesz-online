@@ -1,4 +1,5 @@
 import { fields, modulo, rotations } from "$lib/karesz/karesz-utils";
+// import { commandStore } from '$lib/svelte-components/store';
 
 export interface point {
     x: number;
@@ -82,6 +83,8 @@ export class kanvas{
     }
 
     private drawGrid ():void {
+        this.ctx.fillStyle = this.settings['background_color'];
+        this.ctx.fillRect(0, 0, this.sizeX * this.cellSize, this.sizeY * this.cellSize);
         this.ctx.fillStyle = this.settings['separator_color'];
         // horizontal
         for (let y = 0; y < this.sizeY * this.cellSize + 1; y+=this.cellSize) 
@@ -106,7 +109,7 @@ export class kanvas{
     private drawIMG(position:point, source:string):void {
         var img = new Image();
         img.onload = () => 
-            this.ctx.drawImage(img, (position.x*this.cellSize)+1, (position.y*this.cellSize)+1, (this.cellSize) - 2, (this.cellSize) - 2);
+            this.ctx.drawImage(img, (position.x*this.cellSize)+2, (position.y*this.cellSize)+2, this.cellSize - 3, this.cellSize - 3);
         img.src = source;
     }
 

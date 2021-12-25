@@ -12,12 +12,12 @@
 	let k:kanvas;
 	let CURRENT_STEPS_PARSED:instruction[] = [];
 	let CURRENT_STATISTICS:object;
-	let SELECTED_FIELD:fields = fields.null;
-	let startStopButton:HTMLButtonElement;
+	let SELECTED_FIELD:fields = -1;
+	let startStopButton:HTMLDivElement;
 	let editor:any;
 	export let STARTING_POINT:point = {x:5, y:5};
 	export let STARTING_ROTATION:rotations = rotations.up;
-	export let MAP_SIZE:number = 10;
+	export let MAP_SIZE:number = 20;
 
 	export let STEP_INDEX = 0;
 	export let RUNNING_STATE = 0;
@@ -31,7 +31,7 @@
 	onMount(() => {
 		adjustOnResize(false);
 		// create new karesz canvas, fill default editor and test instuctions
-		k = new kanvas(10, 10, canvas, (p, r, i, running) => {
+		k = new kanvas(20, 20, canvas, (p, r, i, running) => {
 			CURRENT_POSITION = `${p.x}:${p.y}`;
 			CURRENT_ROTATION = r * 90;
 			RUNNING_STATE = running;
@@ -75,6 +75,8 @@
 	const adjustOnResize = (render:boolean=true):void => {
 		canvas.width = document.getElementById('karesz-col').clientWidth - 1;
 		canvas.height = document.getElementById('karesz-kontainer').clientHeight - 1;
+		const e = document.getElementById('karesz-kommand-kontainer');
+		e.style.maxHeight = `${window.innerHeight - e.offsetTop - 20}px`;
 		if(render) k.resize();
 	}
 
@@ -93,12 +95,12 @@
 
 	const changeButtonState = (on:boolean):void => {
 		if(! on) document.getElementsByClassName('current-command')[0]?.classList.remove('current-command');
-		startStopButton.classList.remove(on ? 'button-start' : 'button-stop');
-		startStopButton.classList.add(on ? 'button-stop' : 'button-start');
-		startStopButton.innerText = on ? 'STOP' : 'START';
+		startStopButton.classList.remove(on ? 'hover:bg-green-500' : 'hover:bg-red-600');
+		startStopButton.classList.add(on ? 'hover:bg-red-600' : 'hover:bg-green-500');
+		startStopButton.innerText = on ? 'STOP' : 'PLAY';
 	}
 
-	// wrapper for events
+	// wrapper
 	const reset = ():void => 
 		k.reset();
 
@@ -135,74 +137,77 @@
 
 	// populate $commandStore 
 	const listCommands = (commands: instruction[]) => {
-		console.log(commands);
-		commands = commands.filter(x => x !== undefined);
 		for (let i = 0; i < commands.length; i++) 
 			$commandStore[i] = { index:i, command:commands[i].command, value:commands[i].value };
 	}
 
 </script>
 
-<main class="dark:bg-darkgray overflow-hidden">
-	<div class="grid grid-cols-2 gap-4 h-screen">
+<main class="dark:bg-darkgray">
+	<div class="grid grid-cols-2 gap-2 h-screen">
 		<!-- karesz section -->
-		<div class="grid grid-cols-3 gap-4 h-screen">
+		<div class="grid grid-cols-3 gap-4 h-screen py-2 pl-2">
 			<div id="karesz-col" class="select-none grid grid-rows-3 gap-4 col-span-2 h-screen">
 				<!-- karesz -->
-				<div id="karesz-kontainer" class="karesz-kontainer row-span-2 p-2">
+				<div id="karesz-kontainer" class="karesz-kontainer row-span-2">
 					<canvas bind:this="{canvas}"  width="300" height="300" id="main" class="karesz-kanvas">Your browser doesn't support canvas bruh.</canvas>
 				</div>
-				<!-- controls -->
-				<div class="karesz-settings dark:text-white">
-					<div class="grid grid-cols-3 gap-4 px-4">
-						<div class="text-center">
-							<button bind:this="{startStopButton}" class="button-start font-bold dark:text-white" on:click="{startStop}">START</button>
-						</div>
-						<div class="text-center">
-							<button class="button-stop font-bold dark:text-white" on:click="{reset}">RESET</button>
-						</div>
-						<div class="text-center">
-							<button class="button-start font-bold dark:text-white" on:click="{submitCode}">COMPILE</button>
-						</div>
-					</div>
-					<div class="karesz-settings-control-section m-4">
-						<!-- <div class="section-div">Controls</div>-->
+				<div class="karesz-settings dark:text-white grid grid-cols-2 gap-4">
+					<!-- map -->
+					<div class="p-2">
+						<div class="text-sm text-zinc-500 border-b border-zinc-600 mb-3">Map settings</div>
 						<div class="p-2">
-							<label for="speedrange">Tick speed:  <span class="font-bold">{PLAYBACK_SPEED}ms</span></label>
+							<label for="mapsize-range">Map size: <span class="font-bold">{MAP_SIZE}x{MAP_SIZE} </span></label>
 							<br>
-							<input id="speedrange" type="range" min="1" max="1000" bind:value="{PLAYBACK_SPEED}" class="form-range appearance-none w-full"/>
+							<input id="mapsize-range" type="range" min="10" max="50" step="10" class="w-full" bind:value="{MAP_SIZE}"/>
 						</div>
 						<div class="p-2">
-							<label for="mapsize-range">Map size:  <span class="font-bold">{MAP_SIZE}x{MAP_SIZE} </span></label>
-							<br>
-							<input id="mapsize-range" type="range" min="10" max="50" step="10" bind:value="{MAP_SIZE}" class="form-range appearance-none w-full"/>
+							<label for="selected-field" class="pr-2">Select field: </label>
+							<select bind:value="{SELECTED_FIELD}" name="selected object" id="selected-field" class="bg-darkgray font-bold">
+								<option value="-1">None</option>
+								<option value="0">Clear</option>
+								<option value="1">Wall</option>
+								<option value="2">Black rock</option>
+								<option value="3">Red rock</option>
+								<option value="4">Green rock</option>
+								<option value="5">Yellow rock</option>
+							</select>
+						</div>
+						<div class="p-2">
+							<label for="selected-map" class="pr-2">Load map: </label>
+							<select name="selected object" id="selected-map" class="bg-darkgray font-bold">
+								<option value="-1">empty</option>
+								<option value="0">palya1.txt</option>
+								<option value="1">palya2.txt</option>
+								<option value="2">palya3.txt</option>
+								<option value="3">palya4.txt</option>
+								<option value="4">palya5.txt</option>
+								<option value="5">palya6.txt</option>
+							</select>
 						</div>
 					</div>
-					<div class="field-select m-4">
-						<label for="selected">Selected field: </label>
-						<select bind:value="{SELECTED_FIELD}" name="selected object" id="selected" class="bg-darkgray">
-							<option selected value="-1">None</option>
-							<option value="0">Clear</option>
-							<option value="1">Wall</option>
-							<option value="2">Black rock</option>
-							<option value="3">Red rock</option>
-							<option value="4">Green rock</option>
-							<option value="5">Yellow rock</option>
-						</select>
-					</div>
+
 				</div>
 			</div>
-			<div class="result-container overflow-y-scroll max-h-screen">
+			<div class="result-container max-h-screen">
+				<div class="buttons grid-cols-3 grid select-none">
+					<div bind:this="{startStopButton}" on:click="{startStop}" class="p-2 font-bold cursor-pointer bg-zinc-600 dark:text-white hover:bg-green-500 text-center">PLAY</div>
+					<div on:click="{reset}" class="p-2 font-bold cursor-pointer bg-zinc-600 dark:text-white hover:bg-green-500 text-center">RESET</div>
+					<div on:click="{submitCode}" class="p-2 font-bold cursor-pointer bg-zinc-600 dark:text-white hover:bg-green-500 text-center">RUN</div>
+				</div>
 				<!-- stats -->
 				<div class="statistics-container m-2">
-					<div class="p-1 dark:text-white text-sm">Starting point: <span class="font-bold">{STARTING_POINT.x}:{STARTING_POINT.y}</span></div>
-					<div class="p-1 dark:text-white text-sm">Starting rotation: <span class="font-bold">{STARTING_ROTATION*90}°</span></div>
 					<div class="p-1 dark:text-white text-sm">Position: <span class="font-bold">{CURRENT_POSITION}</span></div>
 					<div class="p-1 dark:text-white text-sm">Rotation: <span class="font-bold">{CURRENT_ROTATION}°</span></div>
 					<div class="p-1 dark:text-white text-sm"><span class="font-bold">{RUNNING_STATE ? 'Running' : 'Stopped'}</span></div>
 					<div class="p-1 dark:text-white text-sm">Current step: <span class="font-bold">{STEP_INDEX}</span></div>
+					<div class="p-1 dark:text-white text-sm">
+						<label for="speedrange">Tick time: <span class="font-bold">{PLAYBACK_SPEED}ms</span></label>
+						<br>
+						<input id="speedrange" type="range" min="1" max="1000" class="w-full" bind:value="{PLAYBACK_SPEED}"/>
+					</div>
 				</div>
-				<div class="karesz-kommand-kontainer">
+				<div id="karesz-kommand-kontainer" class="overflow-y-scroll">
 					<!-- command list -->
 					{#each $commandStore as item}
 						<svelte:component this={Command} index={item['index']} command={item['command']} value={item['value']}/>

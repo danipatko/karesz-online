@@ -27,7 +27,7 @@ border-gray-400 m-1 p-2 rounded-md hover:shadow-sm hover:shadow-green-400 hover:
     ::-webkit-scrollbar-thumb:hover {
         @apply bg-green-300;
     }
-
+/*
     input[type="range"]::-webkit-slider-runnable-track {
         @apply h-3 outline-none bg-zinc-600 cursor-pointer overflow-hidden;
     }
@@ -35,14 +35,14 @@ border-gray-400 m-1 p-2 rounded-md hover:shadow-sm hover:shadow-green-400 hover:
     /*input[type="range"] {
         @apply form-range appearance-none;
     }*/
-
+/*
     input[type="range"]::-webkit-slider-thumb {
         @apply w-5 h-3 bg-green-400 shadow-green-400 shadow-sm;
         cursor: pointer;
         -webkit-appearance: none;
         border-bottom: 1px solid #29334f;
     }
-    
+    */
     .current-command {
         background-color: rgb(22 163 74 / var(--tw-bg-opacity)) !important;
         border-color: rgb(74 222 128 / var(--tw-border-opacity)) !important;
