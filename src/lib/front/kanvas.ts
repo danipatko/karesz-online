@@ -200,7 +200,7 @@ export class kanvas{
         return new Promise<void>(async res => {
             // stop if running
             if (this.running) { this.stop(); res(); return; }
-            this.clear();
+            // this.clear();
             // reset if reached end of instructions
             if (this.i >= instructions.length) this.reset(false);
             // load previous state 
@@ -292,11 +292,11 @@ export class kanvas{
     public reset (render:boolean=true):void {
         this.stop();
         this.i = 0;
-        this.matrix = this.empty2DArray();
         this.lastTickIndex = 0;
         this.kareszes[0].position = this.startState.position;
         this.kareszes[0].rotation = this.startState.rotation;
         if(render) {
+            this.matrix = this.empty2DArray();
             this.clear();
             this.render();
         }

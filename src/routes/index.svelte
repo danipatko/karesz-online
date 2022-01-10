@@ -121,6 +121,7 @@
 	// required params: code to compile, map size, starting point and rotation
 	const submitCode = async():Promise<void> => {
 		saveStartingState();
+		$commandStore = [];
 		const result = await fetch(`/run/dotnet`, {
 			body: JSON.stringify({
 				code:editor.getValue(), 
