@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { command_eqvivalents } from '$lib/karesz/karesz-utils';
+    import { command_eqvivalents } from '$lib/util/karesz';
     export let command:string;
 	export let value:any;
     export let index:number;

@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { kanvas } from '$lib/front/kanvas';
-	import { fields, instruction, point, rotations } from '$lib/karesz/karesz-utils';
+	import { fields, instruction, point, rotations } from '$lib/util/karesz';
 	import { currentCommandIndex } from '$lib/svelte-components/store';
 	import Command from '$lib/svelte-components/command.svelte';
 	import { commandStore } from '$lib/svelte-components/store';

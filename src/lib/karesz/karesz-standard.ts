@@ -1,5 +1,5 @@
-import { fields } from './karesz-utils';
-import type karesz from './karesz';
+import { fields } from '../util/karesz';
+import type Karesz from './karesz';
 
 /*
 POSSIBLE INSTRUCTIONS: 
@@ -21,7 +21,7 @@ I/-    outofbounds
 -/O    turn :x:
 */
 
-export const parseCommand = (L:string, k:karesz):number|boolean|object|undefined => {
+export const parseCommand = (L:string, k:Karesz):number|boolean|object|undefined => {
     if(!L) return;
 
     const [command, value] = L.split(' ');

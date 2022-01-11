@@ -35,6 +35,24 @@ export class Command {
     public running:boolean = false;
     private isLinux:boolean = false;
 
+    public dataHandler:(s:string|Serializable, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void = () => {};
+    public errorHandler:(s:Error, kill:(signal:NodeJS.Signals)=>void)=>void = () => {};
+    public exitHandler:(code:number|null, signal:NodeJS.Signals|null) => void = () => {};
+
+    private handleData(s:string):void {
+        console.log(`DATAHANDLER CALLED: '${s}'`);
+        console.log(this.dataHandler);
+        this.dataHandler(s, this.write, this.kill);
+    }
+
+    private handleErrors(e:Error):void {
+        this.errorHandler(e, this.kill);
+    }
+
+    private handleExit(code:number, signal:NodeJS.Signals):void {
+        this.exitHandler(code, signal);
+    }
+
     constructor(...args:Array<string>) {
         if(!args.length) throw new Error(`Missing command arguments.`);
         this.args = args;
@@ -65,7 +83,18 @@ export class Command {
         console.log(`Running: '${this.args.join(' ')}'`); // DEBUG
         // spawn command
         this.process = spawn(this.args.shift() || '', this.args, commandOptions);
-        if(this.process === null) throw new Error(`An error occured when spawning '${this.args.join(' ')}'.`);
+        if(this.process === null || this.process.stdout == null) throw new Error(`An error occured when spawning '${this.args.join(' ')}'.`);
+       
+        // set error handlers
+        this.process.stdout?.addListener('error', this.handleErrors);
+        this.process.addListener('error', this.handleErrors);
+        this.process.stderr?.addListener('error', this.handleErrors);
+        // set data handlers
+        this.process.stdout?.addListener('data',  this.handleData);
+        this.process.addListener('message', this.handleData);
+        // set exit handler
+        this.process.addListener('exit', this.handleExit);
+
         this.running = true;
 
         this.process.stdout?.setEncoding(commandOptions.std?.encoding || 'utf-8');
@@ -79,33 +108,25 @@ export class Command {
      * Called on message, or stdout.data
      */
     public onData(handler:(s:string|number|Serializable, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void):Command {
-        if(!this.process || !this.process.stdout) throw new Error(`Cannot set data handler: process is not initialized.`);
-        this.process.stdout.on('data', _ => handler(_, this.write, this.kill));
-        this.process.on('message', _ => handler(_, this.write, this.kill));
-        this.process.stderr?.on('data', _ => handler(_, this.write, this.kill));
+        this.dataHandler = handler;
+        console.log(`SET DATAHANDLER TO \n`);
+        console.log(this.dataHandler);
         return this;
     }
 
     /**
      * Called on error or stdout.error
      */
-    public onError(handler: (err: Error) => void):Command {
-        if(!this.process || !this.process.stdout) throw new Error(`Cannot set error handler: process is not initialized.`);
-        this.process.stdout.on('error', handler);
-        this.process.on('error', handler);
-        this.process.stderr?.on('error', handler);
+    public onError(handler: (err: Error, kill:(signal:NodeJS.Signals)=>void) => void):Command {
+        this.errorHandler = handler;
         return this;
     }
 
     /**
      * One-time event - called on exit, returns exit code and signal
      */
-    public onExit(handler: (code: number | null, signal: NodeJS.Signals | null) => void):Command {
-        if(!this.process) throw new Error(`Cannot set exit handler: process is not initialized.`);
-        this.process.on('exit', (code, signal) => { 
-            this.running = false;
-            handler(code, signal);
-        });
+    public onExit(handler: (code: number|null, signal: NodeJS.Signals | null) => void):Command {
+        this.exitHandler = handler;
         return this;
     }
 
@@ -121,18 +142,28 @@ export class Command {
     }
 
     /**
-     * Run command asyncronously
+     * Run command asyncronously. Returns a `CommandResults` object containing the output.
      */
-    public async runAsync(commandOptions:CommandOptions={}):Promise<CommandResults> {
+    public async runAwait(commandOptions:CommandOptions={}):Promise<CommandResults> {
         return new Promise<CommandResults>(resolve => {
-            var data:string = ''
+            var data:string = '';
             var errors:string = '';
-            this.run(commandOptions)
-                .onData(dat => data += dat)
+            this.onData(dat => data += dat)
                 .onError(err => errors += err)
                 .onExit((code, signal) => 
                     resolve({ code, signal, data, errors, ok: !errors && code == 0 })
-                );
+                ).run(commandOptions);
+        });
+    }
+
+    /**
+     * Run command asyncronously. Returns the exit code and signal, handlers should be assigned manually.
+     */
+    public async runAsync(commandOptions:CommandOptions={}):Promise<any> {
+        return new Promise<any>(res => {
+            this.onExit((code, signal) => 
+                res({ code, signal })
+            ).run(commandOptions);
         });
     }
 }

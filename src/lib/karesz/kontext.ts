@@ -1,10 +1,10 @@
-import type karesz from "./karesz";
-import { fields } from "./karesz-utils";
+import type Karesz from "./karesz";
+import { fields } from "../util/karesz";
 
-export default class kontext {
+export default class Kontext {
     sizeX:number = 10;
     sizeY:number = 10;
-    kareszes:Array<karesz> = [];
+    kareszes:Array<Karesz> = [];
     matrix:Array<Array<fields>> = [[]];
 
     constructor(_sizeX:number=10, _sizeY:number=10) {
@@ -13,7 +13,7 @@ export default class kontext {
         this.matrix = Array(_sizeY).fill(fields.empty).map(() => Array(_sizeX).fill(fields.empty));
     }
 
-    addKaresz(k:karesz):void {
+    addKaresz(k:Karesz):void {
         k.ktxt = this;
         this.kareszes.push(k);
     }

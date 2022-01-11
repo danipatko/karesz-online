@@ -1,15 +1,15 @@
 // import type kontext from './kontext';
-import { fields, point, directions, instruction, rotations, statistics, modulo } from './karesz-utils';
-import type kontext from './kontext';
+import { fields, point, directions, instruction, rotations, statistics, modulo } from '../util/karesz';
+import type Kontext from './kontext';
 
-export default class karesz {
+export default class Karesz {
     // Default parameters
     position:point = {x:0, y:0};
     rotation:rotations = rotations.up;
     stats:statistics = { numColor:0, numCrashes:0, numPickups:0, numSteps:0, numTurns:0, numWallchecks:0, rocksCollected:0, rocksPlaced:0 };
     errorCallback:Function = console.error;
     steps:string = '';
-    ktxt:kontext;  // set by kontext when adding
+    ktxt:Kontext;  // set by kontext when adding
     id:string = '';
  
     // Initialization: starting position and rotation

@@ -1,4 +1,4 @@
-import { fields, modulo, rotations } from "$lib/karesz/karesz-utils";
+import { fields, modulo, rotations } from "$lib/util/karesz";
 // import { commandStore } from '$lib/svelte-components/store';
 
 export interface point {
