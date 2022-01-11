@@ -118,5 +118,37 @@ export default class Karesz {
     Mi_van_alattam = ():fields => this.whatIsUnder();
     Van_e_elottem_fal = ():boolean => this.whatIsInFront() == fields.wall;
     Kilepek_e_a_palyarol = ():boolean => !this.inBounds(this.forward());
+
+    // --- Parse
+    public parseExec(s:string):any {
+        if(!s) return;
+        const [command, value] = s.split(' ');
+
+        switch(command.trim().toLocaleLowerCase()) {
+            case 'step': 
+                return this.Lepj();
+            case 'turn': 
+                this.turn(parseInt(value || '0'));
+            break;
+            case 'pickup': 
+                return this.Vegyel_fel_egy_kavicsot();
+            case 'place': 
+                this.Tegyel_le_egy_kavicsot(parseInt(value) || fields.rock_black);
+            break; 
+            case 'left': return this.Nyugatra_nez();
+            case 'right': return this.Keletre_nez();
+            case 'up': return this.Eszakra_nez();
+            case 'down': return this.Delre_nez();
+            case 'look': return this.Merre_nez();
+            case 'isrock': return this.isRockUnder();
+            case 'under': return this.whatIsUnder();
+            case 'wallahead': return this.Van_e_elottem_fal();
+            case 'outofbounds': return this.Kilepek_e_a_palyarol();
+            default:
+                break;
+        }
+        
+        return undefined;
+    }
 }
 

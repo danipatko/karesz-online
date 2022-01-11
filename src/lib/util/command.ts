@@ -39,20 +39,6 @@ export class Command {
     public errorHandler:(s:Error, kill:(signal:NodeJS.Signals)=>void)=>void = () => {};
     public exitHandler:(code:number|null, signal:NodeJS.Signals|null) => void = () => {};
 
-    private handleData(s:string):void {
-        console.log(`DATAHANDLER CALLED: '${s}'`);
-        console.log(this.dataHandler);
-        this.dataHandler(s, this.write, this.kill);
-    }
-
-    private handleErrors(e:Error):void {
-        this.errorHandler(e, this.kill);
-    }
-
-    private handleExit(code:number, signal:NodeJS.Signals):void {
-        this.exitHandler(code, signal);
-    }
-
     constructor(...args:Array<string>) {
         if(!args.length) throw new Error(`Missing command arguments.`);
         this.args = args;
@@ -79,21 +65,21 @@ export class Command {
         // limit resource usage
         if(this.isLinux && commandOptions.limit)
             this.args = prlimit(this.args, { nproc:commandOptions.limit.nproc, stack:commandOptions.limit.stack, cputime:commandOptions.limit.cputime });
-            
+
         console.log(`Running: '${this.args.join(' ')}'`); // DEBUG
         // spawn command
         this.process = spawn(this.args.shift() || '', this.args, commandOptions);
         if(this.process === null || this.process.stdout == null) throw new Error(`An error occured when spawning '${this.args.join(' ')}'.`);
        
         // set error handlers
-        this.process.stdout?.addListener('error', this.handleErrors);
-        this.process.addListener('error', this.handleErrors);
-        this.process.stderr?.addListener('error', this.handleErrors);
+        this.process.stdout?.addListener('error', e => this.errorHandler(e, x => this.kill(x)));
+        this.process.addListener('error', e => this.errorHandler(e, x => this.kill(x)));
+        this.process.stderr?.addListener('error', e => this.errorHandler(e, x => this.kill(x)));
         // set data handlers
-        this.process.stdout?.addListener('data',  this.handleData);
-        this.process.addListener('message', this.handleData);
+        this.process.stdout?.addListener('data',  s => this.dataHandler(s, x => this.write(x), x => this.kill(x)));
+        this.process.addListener('message', s => this.dataHandler(s, x => this.write(x), x => this.kill(x)));
         // set exit handler
-        this.process.addListener('exit', this.handleExit);
+        this.process.addListener('exit', this.exitHandler);
 
         this.running = true;
 
@@ -109,8 +95,6 @@ export class Command {
      */
     public onData(handler:(s:string|number|Serializable, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void):Command {
         this.dataHandler = handler;
-        console.log(`SET DATAHANDLER TO \n`);
-        console.log(this.dataHandler);
         return this;
     }
 
@@ -137,7 +121,7 @@ export class Command {
     public write(data:string):void {
         if(!this || this.process === undefined) throw new Error(`Unable to write to stdin: process was never spawned`);
         this.process.stdin?.cork();
-        this.process.stdin?.write(data);
+        this.process.stdin?.write(`${data}\n`);
         this.process.stdin?.uncork();
     }
 
