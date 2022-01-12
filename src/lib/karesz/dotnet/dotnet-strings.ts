@@ -1,7 +1,7 @@
 import { randstr } from '$lib/util/util';
 
 export interface KareszFunctions {
-    std:'in'|'out';
+    std:'in'|'out'|'none';
     cmd:string;
     match:{ x:RegExp, s?:RegExp|undefined }|RegExp;
 }
@@ -50,7 +50,10 @@ export const replaceKareszFunctions = (str:string, config:Array<KareszFunctions>
 
     const toReplace = { ...FORM_REFORMAT };
     for(const key in config) 
-        toReplace[`${config[key].std=='in'?stdin:stdout}(${config[key].cmd.includes('"')?config[key].cmd:`"${config[key].cmd}"`})`] = config[key].match;
+        toReplace[ config[key].std != 'none' 
+        ? `${config[key].std=='in' ? stdin : stdout}(${config[key].cmd.includes('"') ? config[key].cmd : `"${config[key].cmd}"` })`
+        : `${config[key].cmd}`
+    ] = config[key].match;
     
     str = replace(toReplace, str);
     const match = /public\s+class\s+Program[\n\r\s]+\{/gm.exec(str);
@@ -83,6 +86,10 @@ export const BASE_CONFIG:Array<KareszFunctions> = [
     { std:'out', cmd:'turn -1', match: /Fordulj\s*\(\s*balra\s*\)/gm },
     { std:'out', cmd:'turn 1', match: /Fordulj\s*\(\s*jobbra\s*\)/gm },
     { std:'out', cmd:'pickup', match: /Vegyél_fel_egy_kavicsot\s*\(\s*\)/gm },
+    { std:'none', cmd:'2', match: /fekete/gm },
+    { std:'none', cmd:'3', match: /piros/gm },
+    { std:'none', cmd:'4', match: /zöld/gm },
+    { std:'none', cmd:'5', match: /sárga/gm },
     { std:'out', cmd:'place', match: /Tegyél_le_egy_kavicsot\s*\(\s*\)/gm },
     { std:'out', cmd:'"place "+:x:', match: { x:/Tegyél_le_egy_kavicsot\s*\(.*\)/gm } },
     { std:'in', cmd:'"up","0"', match: /Északra_néz\s*\(\s*\)/gm },

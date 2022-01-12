@@ -72,11 +72,13 @@ export class KareszDotnet {
         this.options.code = replaceKareszFunctions(this.options.code, BASE_CONFIG);
     }
 
+    private logs:string = '';   // logs created by user
+
     private parseLines (s:string, karesz:Karesz, write:(s:string)=>void):object|number|boolean {
         const lines = s.replaceAll('\r\n','\n').split('\n');
         for(const line in lines) {
             const [io, cmd] = lines[line].split(':').map(x => x.trim());
-            if(!(io && cmd) || !(io == 'out' || io == 'in')) continue;  // ignore logs
+            if(!(io && cmd) || !(io == 'out' || io == 'in')) { if(lines[line] != '' && lines[line] != '\n') this.logs += `${lines[line]}\n`; continue };  // ignore logs
             const result = karesz.parseExec(cmd);
             if(result === undefined) continue;
             if(result['error']) return { error: result['error'] };
@@ -115,13 +117,13 @@ export class KareszDotnet {
                 .onData((data, write, kill) => {
                     if(++ticksElapsed > this.options.limit.max_ticks) {
                         kill('SIGKILL');
-                        res({ results: { steps: k.getSteps(), exec_time:Date.now()-startTime, error:`Error: exceeded tick limit of ${this.options.limit.max_ticks} ticks.` }});
+                        res({ results: { steps: k.getSteps(), logs:this.logs, exec_time:Date.now()-startTime, error:`Error: exceeded tick limit of ${this.options.limit.max_ticks} ticks.` }});
                     } 
                     // execute command
                     const result = this.parseLines(data.toString(), k, (s) => write(s));
                     if(result && result['error']) {
                         kill('SIGKILL');
-                        res({ results: { steps: k.getSteps(), exec_time:Date.now()-startTime, error: result['error'] }});
+                        res({ results: { steps: k.getSteps(), logs:this.logs, exec_time:Date.now()-startTime, error: result['error'] }});
                     }
                 })
                 // break on first error
@@ -129,7 +131,7 @@ export class KareszDotnet {
                 .onExit((code, signal) => {
                     if(code != 0)
                         rej(`Exit code is not zero.`);
-                    res({ results: { steps: k.getSteps(), exec_time:Date.now()-startTime }});
+                    res({ results: { steps: k.getSteps(), logs:this.logs, exec_time:Date.now()-startTime }});
                 })
                 .run({ cwd:this.location, std:{ encoding:'utf-8', use_stdbuf:this.options.use_stdbuf } });
         });

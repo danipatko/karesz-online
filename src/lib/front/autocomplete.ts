@@ -19,14 +19,14 @@ export const createDependencyProposals = (range) => {
         },
         {
             label: 'balra',
-            kind: monaco.languages.CompletionItemKind.EnumMember,
+            kind: monaco.languages.CompletionItemKind.Constant,
             documentation: '-90˚',
             insertText: 'balra',
             range: range
         },
         {
             label: 'jobbra',
-            kind: monaco.languages.CompletionItemKind.EnumMember,
+            kind: monaco.languages.CompletionItemKind.Constant,
             documentation: '90°',
             insertText: 'jobbra',
             range: range
@@ -88,6 +88,13 @@ export const createDependencyProposals = (range) => {
             insertText: 'Nyugatra_néz()',
             range: range
         }, // 
+        {
+            label: 'Merre_néz',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: 'Karesz megnézi, hogy milyen irányba néz.',
+            insertText: 'Merre_néz()',
+            range: range
+        },
         {
             label: 'Van_e_itt_kavics',
             kind: monaco.languages.CompletionItemKind.Function,
@@ -151,6 +158,22 @@ export const createDependencyProposals = (range) => {
             kind: monaco.languages.CompletionItemKind.Function,
             documentation: 'Karesz lép, balra fordul, lép és jobbra fordul.',
             insertText: 'Lépj();\nFordulj(balra);\nLépj();\nFordulj(jobbra);',
+            range: range
+        },
+        {
+            label: 'cw',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: 'log',
+            insertText: 'Console.WriteLine("${1: }");',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range: range
+        },
+        {
+            label: 'Console.WriteLine',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: 'log',
+            insertText: 'Console.WriteLine("${1: }");',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
             range: range
         },
     ];
