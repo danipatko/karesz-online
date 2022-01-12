@@ -1,5 +1,4 @@
-import { fields, modulo, rotations } from "$lib/util/karesz";
-// import { commandStore } from '$lib/svelte-components/store';
+import { fields, modulo, rotations } from '$lib/util/karesz';
 
 export interface point {
     x: number;
@@ -13,18 +12,23 @@ export interface karesz {
     hidden:boolean;
 }
 
-const ROCK_COLORS = {
+export const ROCK_COLORS = {
     2: '#000',
     3: '#f00',
     4: '#0f0',
     5: '#ff0',
+    'b':2,
+    't':3,
+    'g':4,
+    'y':5,
 }
 
-export class kanvas{
+export class Kanvas {
+
     public sizeX: number;
     public sizeY: number;
     public matrix: Array<Array<fields>>;
-    public kareszes:Array<karesz> = [];
+    public karesz:karesz;
     public wallWidth:number;
     public settings: object = {
         foreground_color: '#000',
@@ -36,7 +40,6 @@ export class kanvas{
     protected cellSize: number;
     public ctx: CanvasRenderingContext2D;
     public canvas: HTMLCanvasElement;
-
     public startState = {
         position: { x:0, y:0 },
         rotation: rotations.up
@@ -45,22 +48,22 @@ export class kanvas{
         position: {x:0, y:0},
         rotation: 0
     };
-    private updateCallback:Function;
+    private updateCallback:(position:point, rotation:rotations, index:number, running:boolean) => void;
 
-    constructor(x:number, y:number, canvas: HTMLCanvasElement, updateCallback:Function) {
-        this.sizeX = x;
-        this.sizeY = y;
+    constructor(gridSizeX:number, gridSizeY:number, canvas: HTMLCanvasElement, updateCallback:(position:point, rotation:rotations, index:number, running:boolean) => void) {
+        this.sizeX = gridSizeX;
+        this.sizeY = gridSizeY;
         this.canvas = canvas;
         this.resize(false);
         this.matrix = this.empty2DArray();
         this.setStartingState({ x: Math.floor(this.sizeX / 2), y: Math.floor(this.sizeY / 2) }, rotations.up);
         this.updateCallback = updateCallback;
-        this.kareszes.push({ hidden:false, id:'karesz', position:this.startState.position, rotation:this.startState.rotation });
+        this.karesz = { hidden:false, id:'karesz', position:this.startState.position, rotation:this.startState.rotation };
         this.update();
     }
 
     private update ():void {
-        this.updateCallback(this.kareszes[0].position, this.kareszes[0].rotation, this.i, this.running);
+        this.updateCallback(this.karesz.position, this.karesz.rotation, this.i, this.running);
     }
 
     private empty2DArray = (x:number=this.sizeX, y:number=this.sizeY):number[][] =>
@@ -133,22 +136,38 @@ export class kanvas{
         this.drawIMG({x:k.position.x, y:k.position.y}, `/karesz/Karesz${k.rotation}.png`);
     }
 
-    private runInstruction(instruction:instruction, i:number, render:boolean=true):void {
-        console.log(instruction);
+    private forward (size:number=1):point {
+        switch(this.karesz.rotation) {
+            case rotations.up:
+                return { x:this.karesz.position.x, y: this.karesz.position.y - size };
+            case rotations.down:
+                return { x:this.karesz.position.x, y: this.karesz.position.y + size };
+            case rotations.right:
+                return { x:this.karesz.position.x + size, y: this.karesz.position.y };
+            case rotations.left:
+                return { x:this.karesz.position.x - size, y: this.karesz.position.y }
+        }
+    }
+
+    private run(step:string, i:number, render:boolean=true):void {
+        // console.log(instruction);   // DEBUG
         this.clear();
         this.lastTickIndex = i;
-        switch (instruction.command) {
-            case 'm':
-                this.kareszes[0].position = instruction.value;
+        switch (step[0]) {
+            case 'f':
+                this.karesz.position = this.forward();
                 break;
             case 'r':
-                this.kareszes[0].rotation = instruction.value;
+                this.karesz.rotation++;
+                break;
+            case 'l':
+                this.karesz.rotation--;
                 break;
             case 'u':
-                this.matrix[instruction.value.x][instruction.value.y] = 0;
+                this.matrix[this.karesz.position.x][this.karesz.position.y] = 0;
                 break;
-            case 'd':
-                this.matrix[instruction.value.x][instruction.value.y] = 2;
+            default:
+                this.matrix[this.karesz.position.x][this.karesz.position.y] = ROCK_COLORS[step[0]] || 0;
                 break;
         }
         if (render) this.render();
@@ -164,47 +183,44 @@ export class kanvas{
         this.tickSpeed = ms;
     }
 
-    // parse command
-    private parse(line:string):instruction{
-        const [command, val] = line.split('=');
-        switch (command.trim().toLowerCase()) {
-            case 'm':   // position
-                const m1 = val.match(/([0-9]+):([0-9]+)/mi)
-                return m1 ? { command, value: { x:parseInt(m1[1]), y:parseInt(m1[2])}} : undefined;
-            case 'r':   // rotation 
-                return { command, value: parseInt(val) };
-            case 'u':   // pick up rock
-                const m2 = val.match(/([0-9]+):([0-9]+)/mi);
-                return m2 ? { command, value: {x:parseInt(m2[1]), y:parseInt(m2[2]) }} : undefined;
-            case 'd':   // place rock
-                const m3 = val.match(/([0-9]+):([0-9]+)/mi);
-                return m3 ? { command, value: {x:parseInt(m3[1]), y:parseInt(m3[2]) }} : undefined;
-            default: return undefined;
-        }
-    }
-
-    public parseCommands = (instructions: string):instruction[] =>
-        instructions.split(',').map(x => this.parse(x)).filter(x => x !== undefined); 
-    
     private setState ({ rotation=rotations.up, position={ x:0, y:0 }}={}):void {
-        this.kareszes[0].position = position;
-        this.kareszes[0].rotation = rotation;
+        this.karesz.position = position;
+        this.karesz.rotation = rotation;
     }
 
-    public setStartingState(startingPoint:point=this.kareszes[0].position, startingRotation:rotations=this.kareszes[0].rotation):void {
+    public setStartingState(startingPoint:point=this.karesz.position, startingRotation:rotations=this.karesz.rotation):void {
         this.startState.position = startingPoint;
         this.startState.rotation = startingRotation;
     }
 
-    public async play (instructions:instruction[], resume:boolean=false, onstop:Function, onUpdate:Function):Promise<void> {
+
+    private steps:string;
+    public set(s:string):void {
+        this.steps = s; // decompress(b);
+    }
+
+    public getStepsDisplay():Array<string> {
+        const result:Array<string> = [];
+        for(var i = 0; i < this.steps.length; i++) {
+            switch(this.steps[i]) {
+                case 'f': result.push(`Move forward`); break;
+                case 'l': result.push(`Turn left`); break;
+                case 'r': result.push(`Turn right`); break;
+                case 'u': result.push(`Pick up rock`); break;
+                default: result.push(`Place ${{b:'black',t:'red',g:'green',y:'yellow'}[this.steps[i]]} rock`); break;
+            }
+        }
+        return result;
+    }
+
+    public async play (resume:boolean=false, onstop:Function, onUpdate:Function):Promise<void> {
         return new Promise<void>(async res => {
             // stop if running
             if (this.running) { this.stop(); res(); return; }
-            // this.clear();
             // reset if reached end of instructions
-            if (this.i >= instructions.length) this.reset(false);
+            if (this.i >= this.steps.length) this.reset(false);
             // load previous state 
-            if(resume && !(this.i >= instructions.length || this.lastTickIndex < 1)) {
+            if(resume && !(this.i >= this.steps.length || this.lastTickIndex < 1)) {
                 this.i = this.lastTickIndex;
                 this.setState(this.resumeState);
             } else {
@@ -215,10 +231,10 @@ export class kanvas{
             // loop
             this.running = true;
             while(this.running) {
-                if(this.i >= instructions.length-1) this.running = false; 
-                if(instructions[this.i] === undefined) continue;
+                if(this.i >= this.steps.length-1) this.running = false; 
+                if(this.steps[this.i] === undefined) continue;
                 onUpdate(this.i);
-                this.runInstruction(instructions[this.i], this.i++);
+                this.run(this.steps[this.i], this.i++);
                 this.update();
                 await sleep(this.tickSpeed);
             }
@@ -228,14 +244,14 @@ export class kanvas{
         });
     }
 
-    public jumpToStep(instructions:instruction[], index:number):void {
+    public jumpToStep(instructions:string, index:number):void {
         this.reset(false);
         if(index > instructions.length || this.running) return;
         for (let i = 0; i <= index; i++) 
-            this.runInstruction(instructions[i], i, false);
+            this.run(instructions[i], i, false);
         this.i = index;
-        this.resumeState.position = this.kareszes[0].position;
-        this.resumeState.rotation = this.kareszes[0].rotation;
+        this.resumeState.position = this.karesz.position;
+        this.resumeState.rotation = this.karesz.rotation;
         this.update();
         this.render();
     }
@@ -244,8 +260,8 @@ export class kanvas{
         this.running = false;
         this.lastTickIndex = this.i;
         this.update();
-        this.resumeState.position = this.kareszes[0].position;
-        this.resumeState.rotation = this.kareszes[0].rotation;
+        this.resumeState.position = this.karesz.position;
+        this.resumeState.rotation = this.karesz.rotation;
     }
 
     public clear():void {
@@ -256,13 +272,13 @@ export class kanvas{
         this.clear();
         this.drawGrid();
         this.drawMap();
-        this.drawKaresz(this.kareszes[0]);
+        this.drawKaresz(this.karesz);
     }
 
     public changeField (p:point, field:fields):void {
         console.log(`${this.matrix.length}:${this.matrix[0].length}`);
         console.log(p);
-        if(p.x >= this.sizeX || p.y >= this.sizeY || this.kareszes[0].position == p) return;
+        if(p.x >= this.sizeX || p.y >= this.sizeY || this.karesz.position == p) return;
         this.matrix[p.x][p.y] = this.matrix[p.x][p.y] == field ? 0 : field;
         this.render();
     }
@@ -273,10 +289,10 @@ export class kanvas{
 
     public changeKareszPosition (p:point):void {
         if(this.running || p.x >= this.sizeX || p.y >= this.sizeY) return;
-        if(this.equals(this.kareszes[0].position, p)) 
-            this.kareszes[0].rotation = modulo(this.kareszes[0].rotation + 1, 4);
+        if(this.equals(this.karesz.position, p)) 
+            this.karesz.rotation = modulo(this.karesz.rotation + 1, 4);
         else 
-            this.kareszes[0].position = p;
+            this.karesz.position = p;
         this.update();
         this.render();
     }
@@ -293,8 +309,8 @@ export class kanvas{
         this.stop();
         this.i = 0;
         this.lastTickIndex = 0;
-        this.kareszes[0].position = this.startState.position;
-        this.kareszes[0].rotation = this.startState.rotation;
+        this.karesz.position = this.startState.position;
+        this.karesz.rotation = this.startState.rotation;
         if(render) {
             this.matrix = this.empty2DArray();
             this.clear();
@@ -306,8 +322,8 @@ export class kanvas{
         this.stop();
         this.i = 0;
         this.lastTickIndex = 0;
-        this.kareszes[0].position = this.startState.position;
-        this.kareszes[0].rotation = this.startState.rotation;
+        this.karesz.position = this.startState.position;
+        this.karesz.rotation = this.startState.rotation;
         this.render();
     }
 

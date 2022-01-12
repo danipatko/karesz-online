@@ -1,22 +1,39 @@
 // import type kontext from './kontext';
-import { fields, point, directions, instruction, rotations, statistics, modulo } from '../util/karesz';
+// import { compress } from '$lib/util/util';
+import { fields, point, directions, rotations, modulo } from '../util/karesz';
 import type Kontext from './kontext';
+
+/**
+ * COMMANDS
+ * f - step 1 forward
+ * l - turn left
+ * r - turn right
+ * u - pick up any
+ * b - place black rock
+ * y - place yellow rock
+ * g - place green rock
+ * t - place red rock
+ */
+
+const ROCK_COLORS = {
+    2: 'b',
+    3: 't',
+    4: 'g',
+    5: 'y',
+}
 
 export default class Karesz {
     // Default parameters
     position:point = {x:0, y:0};
     rotation:rotations = rotations.up;
-    stats:statistics = { numColor:0, numCrashes:0, numPickups:0, numSteps:0, numTurns:0, numWallchecks:0, rocksCollected:0, rocksPlaced:0 };
     errorCallback:Function = console.error;
     steps:string = '';
     ktxt:Kontext;  // set by kontext when adding
     id:string = '';
  
-    // Initialization: starting position and rotation
     constructor(startPosition:point={x:0, y:0}, startRotation:rotations=rotations.up){
         this.position = startPosition;
         this.rotation = startRotation;
-        this.stats = { numColor:0, numCrashes:0, numPickups:0, numSteps:0, numTurns:0, numWallchecks:0, rocksCollected:0, rocksPlaced:0 };
     }
 
     isRock = (f:fields):boolean => f >= 2 && f <= 5;
@@ -50,8 +67,7 @@ export default class Karesz {
         if(! this.isFieldClear(targ)) { return { error:'Cannot step forward' }; }
         
         this.position = targ;
-        this.steps += `m=${this.position.x}:${this.position.y},`;
-        this.stats.numSteps++;
+        this.steps += 'f';
     }
 
     /**
@@ -59,8 +75,7 @@ export default class Karesz {
      */
     turn (direction:directions):void {
         this.rotation = modulo(this.rotation + direction, 4);
-        this.steps += `r=${this.rotation},`
-        this.stats.numTurns++;
+        this.steps += direction == 1 ? 'r' : 'l';
     }
 
     /**
@@ -82,14 +97,12 @@ export default class Karesz {
             return { error:'No rock was below' };
 
         this.ktxt.matrix[this.position.x][this.position.y] = fields.empty;
-        this.steps += `u=${this.position.x}:${this.position.y},`;
-        this.stats.rocksCollected++;
+        this.steps += 'u';
     }
 
     placeRock(color?:fields):void|object {
         this.ktxt.matrix[this.position.x][this.position.y] = color || fields.rock_black;
-        this.steps += `d=${this.position.x}:${this.position.y},`;        
-        this.stats.rocksPlaced++;
+        this.steps += ROCK_COLORS[color] || 'b';        
     }
 
     /**
@@ -104,22 +117,25 @@ export default class Karesz {
 
     // -------- Util functions to match Molnar's karesz --------
 
-    Lepj = ():object => this.step();
-    Fordulj_jobbra = ():void => this.turn(directions.right);
-    Fordulj_balra = ():void => this.turn(directions.left);
-    Vegyel_fel_egy_kavicsot = ():object => this.pickUpRock();
-    Tegyel_le_egy_kavicsot = (color?:fields):void|object => this.placeRock(color);
-    Eszakra_nez = ():boolean => this.rotation == rotations.up;
-    Delre_nez = ():boolean => this.rotation == rotations.down;
-    Keletre_nez = ():boolean => this.rotation == rotations.left;
-    Nyugatra_nez = ():boolean => this.rotation == rotations.right;
-    Merre_nez = ():rotations => this.rotation;
-    Van_e_itt_kavics = ():boolean => this.isRockUnder();
-    Mi_van_alattam = ():fields => this.whatIsUnder();
-    Van_e_elottem_fal = ():boolean => this.whatIsInFront() == fields.wall;
-    Kilepek_e_a_palyarol = ():boolean => !this.inBounds(this.forward());
+    public Lepj = ():object => this.step();
+    public Fordulj_jobbra = ():void => this.turn(directions.right);
+    public Fordulj_balra = ():void => this.turn(directions.left);
+    public Vegyel_fel_egy_kavicsot = ():object => this.pickUpRock();
+    public Tegyel_le_egy_kavicsot = (color?:fields):void|object => this.placeRock(color);
+    public Eszakra_nez = ():boolean => this.rotation == rotations.up;
+    public Delre_nez = ():boolean => this.rotation == rotations.down;
+    public Keletre_nez = ():boolean => this.rotation == rotations.left;
+    public Nyugatra_nez = ():boolean => this.rotation == rotations.right;
+    public Merre_nez = ():rotations => this.rotation;
+    public Van_e_itt_kavics = ():boolean => this.isRockUnder();
+    public Mi_van_alattam = ():fields => this.whatIsUnder();
+    public Van_e_elottem_fal = ():boolean => this.whatIsInFront() == fields.wall;
+    public Kilepek_e_a_palyarol = ():boolean => !this.inBounds(this.forward());
 
-    // --- Parse
+    public getSteps():string {
+        return this.steps; // compress(this.steps);
+    }
+
     public parseExec(s:string):any {
         if(!s) return;
         const [command, value] = s.split(' ');

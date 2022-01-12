@@ -1,4 +1,4 @@
-import { randstr } from '$lib/util';
+import { randstr } from '$lib/util/util';
 
 export interface KareszFunctions {
     std:'in'|'out';
@@ -6,66 +6,62 @@ export interface KareszFunctions {
     match:{ x:RegExp, s?:RegExp|undefined }|RegExp;
 }
 
-export class DotnetStrings {
+const functionsToInject = (stdin:string, stdout:string):string => {
+    console.log(`in: ${stdin}\nout: ${stdout}`); // DEBUG
+    return `\npublic static bool ${stdin}(string c,string m){System.Console.WriteLine($"in:{c}");string v=System.Console.ReadLine();return v==m;}
+    public static int ${stdin}(string c){System.Console.WriteLine($"in:{c}");string v=System.Console.ReadLine();return int.Parse(v);}
+    public static void ${stdout}(string c){System.Console.WriteLine($"out:{c}");}\n`;
+}
 
-    stdout:string;
-    stdin:string;
+/**
+ * Replace function with extras: select a string from matched one that will be placed on :x:
+ */
+const replaceX = (s:string, match:RegExp, key:string, select?:RegExp|undefined):string => {
+    if(!select)
+        select = sel;
+    const r = s.match(match);
+    if (!r) return s;
+    r.map(x => {
+        s = s.replaceAll(x, key.replaceAll(':x:', x.match(select)[0].trim()));
+    });
+    return s;
+}
 
-    private functionsToInject = ():string =>
-        `\npublic static bool ${this.stdin}(string c,string m){System.Console.WriteLine($"in:{c}");string v=System.Console.ReadLine();return v==m;}
-        public static int ${this.stdin}(string c){System.Console.WriteLine($"in:{c}");string v=System.Console.ReadLine();return int.Parse(v);}
-        public static void ${this.stdout}(string c){System.Console.WriteLine($"out:{c}");}\n`;
+/**
+ * Replace a series of strings/matches in a string
+ */
+const replace = (args:object, s:string):string => {
+    for(const key in args) 
+        s = args[key].x ? replaceX(s, args[key].x, key, args[key].s) : s.replaceAll(args[key], key);
+    return s;
+}
+
+/**
+ * Insert a string to a string at a specific index
+ */
+const insert = (s:string, toAdd:string, at:number):string =>
+    [s.slice(0, at), toAdd, s.slice(at)].join('');
+
+// Regex capture for the content between two parenthesis
+const sel:RegExp = /(?<=\()(.*?)(?=\))/gm;
+
+export const replaceKareszFunctions = (str:string, config:Array<KareszFunctions>):string|undefined => {
+    const stdout = `_${randstr(30)}`;
+    const stdin = `_${randstr(30)}`;
+    console.log(`in: ${stdin}\nout: ${stdout}`);
+
+    const toReplace = { ...FORM_REFORMAT };
+    for(const key in config) 
+        toReplace[`${config[key].std=='in'?stdin:stdout}(${config[key].cmd.includes('"')?config[key].cmd:`"${config[key].cmd}"`})`] = config[key].match;
     
-    constructor(){
-        this.stdout = `_${randstr(30)}`;
-        this.stdin = `_${randstr(30)}`;
-    }
-
-    /**
-     * Replace function with extras: select a string from matched one that will be placed on :x:
-     */
-    private replaceX (s:string, match:RegExp, key:string, select?:RegExp|undefined):string {
-        if(!select)
-            select = this.sel;
-        const r = s.match(match);
-        if (!r) return s;
-        r.map(x => {
-            s = s.replaceAll(x, key.replaceAll(':x:', x.match(select)[0].trim()));
-        });
-        return s;
-    }
-
-    /**
-     * Replace a series of strings/matches in a string
-     */
-    private replace(args:object, s:string):string {
-        for(const key in args) 
-            s = args[key].x ? this.replaceX(s, args[key].x, key, args[key].s) : s.replaceAll(args[key], key);
-        return s;
-    }
-
-    /**
-     * Insert a string to a string at a specific index
-     */
-    private insert = (s:string, toAdd:string, at:number):string =>
-        [s.slice(0, at), toAdd, s.slice(at)].join('');
-
-    // Regex capture for the content between two parenthesis
-    readonly sel:RegExp = /(?<=\()(.*?)(?=\))/gm;
-
-    public replaceKareszFunctions (str:string, config:Array<KareszFunctions>):string|undefined {
-        const toReplace = FORM_REFORMAT;
-        for(const key in config) 
-            toReplace[`${config[key].std=='in'?this.stdin:this.stdout}(${config[key].cmd.includes('"')?config[key].cmd:`"${config[key].cmd}"`})`] = config[key].match;
-
-        str = this.replace(toReplace, str);
-        const match = /public\s+class\s+Program[\n\r\s]+\{/gm.exec(str);
-        // Unable to locate Program class
-        if(! match)
-            return;
-        // insert util functions to start of script
-        return this.insert(str, this.functionsToInject(), str.indexOf(match[0]) + match[0].length);
-    }
+    str = replace(toReplace, str);
+    const match = /public\s+class\s+Program[\n\r\s]+\{/gm.exec(str);
+    // Unable to locate Program class
+    if(! match)
+        return;
+    console.log(FORM_REFORMAT);
+    // insert util functions to start of script
+    return insert(str, functionsToInject(stdin, stdout), str.indexOf(match[0]) + match[0].length);
 }
 
 /**

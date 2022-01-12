@@ -75,6 +75,7 @@ export class Command {
         this.process.stdout?.addListener('error', e => this.errorHandler(e, x => this.kill(x)));
         this.process.addListener('error', e => this.errorHandler(e, x => this.kill(x)));
         this.process.stderr?.addListener('error', e => this.errorHandler(e, x => this.kill(x)));
+        this.process.stderr?.addListener('data', e => this.errorHandler(e, x => this.kill(x)));
         // set data handlers
         this.process.stdout?.addListener('data',  s => this.dataHandler(s, x => this.write(x), x => this.kill(x)));
         this.process.addListener('message', s => this.dataHandler(s, x => this.write(x), x => this.kill(x)));

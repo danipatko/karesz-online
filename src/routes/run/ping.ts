@@ -1,4 +1,4 @@
-import { R } from "$lib/util"
+import { R } from "$lib/util/util"
 
 export const get = () => {
     return R({foo:'bar'});    

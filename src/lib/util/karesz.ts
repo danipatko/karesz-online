@@ -1,8 +1,3 @@
-export interface instruction {
-    command:string,
-    value?:any
-}
-
 // coordinate defined by the x and y axis
 export interface point {
     x: number,

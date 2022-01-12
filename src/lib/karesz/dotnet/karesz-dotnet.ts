@@ -1,12 +1,11 @@
-import { spawn } from 'child_process';
 import fs from 'fs';
 import Kontext from '../kontext';
 import Karesz from '../karesz';
 import path from 'path/posix';
 import { rotations } from '../../util/karesz';
 import { spwn } from '$lib/util/command';
-import { randstr } from '$lib/util';
-import { DotnetStrings, BASE_CONFIG } from './dotnet-strings';
+import { randstr } from '$lib/util/util';
+import { BASE_CONFIG, replaceKareszFunctions } from './dotnet-strings';
 
 export interface KareszDotnetOptions {
     code:string;
@@ -70,7 +69,8 @@ export class KareszDotnet {
     }
 
     private prepare():void {
-        this.options.code = new DotnetStrings().replaceKareszFunctions(this.options.code, BASE_CONFIG);
+        this.options.code = replaceKareszFunctions(this.options.code, BASE_CONFIG);
+        console.log(this.options.code);
     }
 
     private parseLines (s:string, karesz:Karesz, write:(s:string)=>void):object|number|boolean {
@@ -104,8 +104,10 @@ export class KareszDotnet {
             const k = new Karesz({x:this.options.karesz.startX, y:this.options.karesz.startY}, this.options.karesz.startRotation);
             karenv.addKaresz(k);
             // compile
-            await this.compile().catch(e => rej(e));
-            await this.precompile().catch(e => rej(e));
+            await this.compile()
+                .catch(e => rej(e));
+            await this.precompile()
+                .catch(e => rej(e));
             // run
             var ticksElapsed:number = 0;
             const startTime:number = Date.now();
@@ -114,13 +116,13 @@ export class KareszDotnet {
                 .onData((data, write, kill) => {
                     if(++ticksElapsed > this.options.limit.max_ticks) {
                         kill('SIGKILL');
-                        res({ results: { steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime, error:`Error: exceeded tick limit of ${this.options.limit.max_ticks} ticks.` }});
+                        res({ results: { steps: k.getSteps(), exec_time:Date.now()-startTime, error:`Error: exceeded tick limit of ${this.options.limit.max_ticks} ticks.` }});
                     } 
                     // execute command
                     const result = this.parseLines(data.toString(), k, (s) => write(s));
                     if(result && result['error']) {
                         kill('SIGKILL');
-                        res({ results: { steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime, error: result['error'] }});
+                        res({ results: { steps: k.getSteps(), exec_time:Date.now()-startTime, error: result['error'] }});
                     }
                 })
                 // break on first error
@@ -128,7 +130,7 @@ export class KareszDotnet {
                 .onExit((code, signal) => {
                     if(code != 0)
                         rej(`Exit code is not zero.`);
-                    res({ results: { steps: k.steps, statistics: k.stats, exec_time:Date.now()-startTime }});
+                    res({ results: { steps: k.getSteps(), exec_time:Date.now()-startTime }});
                 })
                 .run({ cwd:this.location, std:{ encoding:'utf-8', use_stdbuf:this.options.use_stdbuf } });
         });

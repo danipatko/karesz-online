@@ -1,27 +1,27 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { kanvas } from '$lib/front/kanvas';
-	import { fields, instruction, point, rotations } from '$lib/util/karesz';
+	import { Kanvas } from '$lib/front/kanvas';
+	import { fields, point, rotations } from '$lib/util/karesz';
 	import { currentCommandIndex } from '$lib/svelte-components/store';
 	import Command from '$lib/svelte-components/command.svelte';
 	import { commandStore } from '$lib/svelte-components/store';
-	import { sampleCommands, sampleCode } from '$lib/tmp';
+	import { sampleCode } from '$lib/tmp';
 
 	let canvas:HTMLCanvasElement;
-	let k:kanvas;
-	let CURRENT_STEPS_PARSED:instruction[] = [];
+	let k:Kanvas;
+	let CURRENT_STEPS_PARSED:string;
 	let CURRENT_STATISTICS:object;
 	let SELECTED_FIELD:fields = -1;
 	let startStopButton:HTMLDivElement;
-	let editor:any;
+	let editor:monaco.editor.IStandaloneCodeEditor;
+
 	export let STARTING_POINT:point = {x:5, y:5};
 	export let STARTING_ROTATION:rotations = rotations.up;
 	export let MAP_SIZE:number = 20;
-
-	export let STEP_INDEX = 0;
-	export let RUNNING_STATE = 0;
-	export let PLAYBACK_SPEED = 100;
+	export let STEP_INDEX:number = 0;
+	export let RUNNING_STATE:boolean = false;
+	export let PLAYBACK_SPEED:number = 100;
 	export let CURRENT_POSITION:string;
 	export let CURRENT_ROTATION:number;
 
@@ -31,16 +31,16 @@
 	onMount(() => {
 		adjustOnResize(false);
 		// create new karesz canvas, fill default editor and test instuctions
-		k = new kanvas(20, 20, canvas, (p, r, i, running) => {
-			CURRENT_POSITION = `${p.x}:${p.y}`;
-			CURRENT_ROTATION = r * 90;
+		k = new Kanvas(20, 20, canvas, (position, rotation, i, running) => {
+			CURRENT_POSITION = `${position.x}:${position.y}`;
+			CURRENT_ROTATION = rotation * 90;
 			RUNNING_STATE = running;
 			STEP_INDEX = i;
 		});
 		adjustOnResize();
 		k.render();
 		// set up test env
-		parseCommands(sampleCommands);
+		// parseCommands(sampleCommands);
 		// dynamically set tick speed 
 		document.getElementById('speedrange').oninput = () => 
 			k.setTickSpeed(PLAYBACK_SPEED);
@@ -82,7 +82,7 @@
 
 	// wrapper for events
 	const startStop = ():void =>{ 
-		k.play(CURRENT_STEPS_PARSED, true, changeButtonState, flashCommand);
+		k.play(true, changeButtonState, flashCommand);
 		changeButtonState(k.running);
 	}
 
@@ -105,16 +105,16 @@
 		k.reset();
 
 	// parse string commands to an array of instructions (global => CURRENT_STEPS_PARSED)
-	const parseCommands = (commands:string):void => {
-		CURRENT_STEPS_PARSED = k.parseCommands(commands);
-		listCommands(CURRENT_STEPS_PARSED);
+	const parseCommands = (steps:string):void => {
+		k.set(steps);
+		listCommands(k.getStepsDisplay());
 		k.toStart();
 	}
 
 	const saveStartingState = ():void => {
 		k.setStartingState();
-		STARTING_POINT = k.kareszes[0].position;
-		STARTING_ROTATION = k.kareszes[0].rotation;
+		STARTING_POINT = k.karesz.position;
+		STARTING_ROTATION = k.karesz.rotation;
 	}
 
 	// send code to server
@@ -130,16 +130,17 @@
 			method:'post',
 		});
 		if(!result.ok) return;
-		const { results } = await result.json();
+		const results = await result.json();
 		console.log(results);
-		parseCommands(results.steps);
-		CURRENT_STATISTICS = { exec_time: results.exec_time, ...results.statistics };
+		if(results.steps)
+			parseCommands(results.steps);
+		CURRENT_STATISTICS = { exec_time: results.exec_time };
 	}
 
 	// populate $commandStore 
-	const listCommands = (commands: instruction[]) => {
+	const listCommands = (commands: string[]) => {
 		for (let i = 0; i < commands.length; i++) 
-			$commandStore[i] = { index:i, command:commands[i].command, value:commands[i].value };
+			$commandStore[i] = { index:i, command:commands[i] };
 	}
 
 </script>
