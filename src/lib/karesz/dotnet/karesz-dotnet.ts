@@ -46,7 +46,7 @@ export class KareszDotnet {
             spwn('mcs', `${this.filename}.cs`)
                 .onError(e => err += e)
                 .onExit((code, signal) => {
-                    console.log(`EXIT ${code} - ${signal}`);    // DEBUG
+                    // console.log(`EXIT ${code} - ${signal}`);    // DEBUG
                     if(code != 0)
                         rej(`Compile failed. Exit code is not 0.\n${err}`);
                     res();
@@ -60,7 +60,7 @@ export class KareszDotnet {
             spwn('mono', '--aot=full', `${this.filename}.exe`)
                 .onError(e => err += e)
                 .onExit((code, signal) => {
-                    console.log(`EXIT ${code} - ${signal}`);    // DEBUG
+                    // console.log(`EXIT ${code} - ${signal}`);    // DEBUG
                     if(code != 0)
                         rej(`Precompile failed. Exit code is not 0.\n${err}`);
                     res();
@@ -70,7 +70,6 @@ export class KareszDotnet {
 
     private prepare():void {
         this.options.code = replaceKareszFunctions(this.options.code, BASE_CONFIG);
-        console.log(this.options.code);
     }
 
     private parseLines (s:string, karesz:Karesz, write:(s:string)=>void):object|number|boolean {

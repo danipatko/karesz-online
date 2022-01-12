@@ -7,11 +7,10 @@
 	import Command from '$lib/svelte-components/command.svelte';
 	import { commandStore } from '$lib/svelte-components/store';
 	import { sampleCode } from '$lib/tmp';
+	import { createDependencyProposals } from '$lib/front/autocomplete';
 
 	let canvas:HTMLCanvasElement;
 	let k:Kanvas;
-	let CURRENT_STEPS_PARSED:string;
-	let CURRENT_STATISTICS:object;
 	let SELECTED_FIELD:fields = -1;
 	let startStopButton:HTMLDivElement;
 	let editor:monaco.editor.IStandaloneCodeEditor;
@@ -46,11 +45,26 @@
 			k.setTickSpeed(PLAYBACK_SPEED);
 		// subscribe to index change event
 		currentCommandIndex.subscribe(index => {
-			if(index != -1) k.jumpToStep(CURRENT_STEPS_PARSED, index);
+			if(index != -1) k.jumpToStep(index);
 		});
 		// enable darkmode
 		document.body.classList.add('dark');
 		canvas.onclick = canvasInteract;
+
+		monaco.languages.registerCompletionItemProvider('csharp', {
+			provideCompletionItems: function (model, position) {
+				var word = model.getWordUntilPosition(position);
+				var range = {
+					startLineNumber: position.lineNumber,
+					endLineNumber: position.lineNumber,
+					startColumn: word.startColumn,
+					endColumn: word.endColumn
+				};
+				return {
+					suggestions: createDependencyProposals(range)
+				};
+			}
+		});
 
 		editor = monaco.editor.create(document.getElementById('editor'), {
 			value: sampleCode,
@@ -134,7 +148,7 @@
 		console.log(results);
 		if(results.steps)
 			parseCommands(results.steps);
-		CURRENT_STATISTICS = { exec_time: results.exec_time };
+		console.log(`Finished in: ${results.exec_time}ms`);
 	}
 
 	// populate $commandStore 

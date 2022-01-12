@@ -14,12 +14,11 @@ export const post = async(req:any) => {
         .runRemove()
         .then(x => { 
             const { results, error } = x;
-            console.log(x);
             if(error || !results)
                 res(R( error ));
             else 
                 res(R(results))
         })
-        .catch(error => { console.log(error); res(R({ error })); });
+        .catch(error => res(R({ error })));
     });
 }

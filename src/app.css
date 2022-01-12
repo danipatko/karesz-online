@@ -52,7 +52,7 @@ border-gray-400 m-1 p-2 rounded-md hover:shadow-sm hover:shadow-green-400 hover:
 
 @layer components {
     .command-box {
-        @apply cursor-pointer border-2 hover:shadow-sm hover:shadow-green-400 border-gray-400 m-1 p-1 rounded-md bg-opacity-5 hover:bg-green-600 hover:border-green-400;
+        @apply cursor-pointer border-b border-gray-400 mx-1 p-1 bg-opacity-5 hover:bg-green-600 hover:border-green-400;
     }
 
     .button-start {

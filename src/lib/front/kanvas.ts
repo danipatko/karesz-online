@@ -158,10 +158,10 @@ export class Kanvas {
                 this.karesz.position = this.forward();
                 break;
             case 'r':
-                this.karesz.rotation++;
+                this.karesz.rotation = modulo(this.karesz.rotation+1, 4);
                 break;
             case 'l':
-                this.karesz.rotation--;
+                this.karesz.rotation = modulo(this.karesz.rotation-1, 4);
                 break;
             case 'u':
                 this.matrix[this.karesz.position.x][this.karesz.position.y] = 0;
@@ -244,11 +244,11 @@ export class Kanvas {
         });
     }
 
-    public jumpToStep(instructions:string, index:number):void {
+    public jumpToStep(index:number):void {
         this.reset(false);
-        if(index > instructions.length || this.running) return;
+        if(index > this.steps.length || this.running) return;
         for (let i = 0; i <= index; i++) 
-            this.run(instructions[i], i, false);
+            this.run(this.steps[i], i, false);
         this.i = index;
         this.resumeState.position = this.karesz.position;
         this.resumeState.rotation = this.karesz.rotation;

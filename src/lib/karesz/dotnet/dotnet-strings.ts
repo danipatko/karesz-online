@@ -7,7 +7,6 @@ export interface KareszFunctions {
 }
 
 const functionsToInject = (stdin:string, stdout:string):string => {
-    console.log(`in: ${stdin}\nout: ${stdout}`); // DEBUG
     return `\npublic static bool ${stdin}(string c,string m){System.Console.WriteLine($"in:{c}");string v=System.Console.ReadLine();return v==m;}
     public static int ${stdin}(string c){System.Console.WriteLine($"in:{c}");string v=System.Console.ReadLine();return int.Parse(v);}
     public static void ${stdout}(string c){System.Console.WriteLine($"out:{c}");}\n`;
@@ -48,7 +47,6 @@ const sel:RegExp = /(?<=\()(.*?)(?=\))/gm;
 export const replaceKareszFunctions = (str:string, config:Array<KareszFunctions>):string|undefined => {
     const stdout = `_${randstr(30)}`;
     const stdin = `_${randstr(30)}`;
-    console.log(`in: ${stdin}\nout: ${stdout}`);
 
     const toReplace = { ...FORM_REFORMAT };
     for(const key in config) 
@@ -59,7 +57,7 @@ export const replaceKareszFunctions = (str:string, config:Array<KareszFunctions>
     // Unable to locate Program class
     if(! match)
         return;
-    console.log(FORM_REFORMAT);
+    
     // insert util functions to start of script
     return insert(str, functionsToInject(stdin, stdout), str.indexOf(match[0]) + match[0].length);
 }
