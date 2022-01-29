@@ -33,6 +33,7 @@ export default class KareszRunner extends KareszCore {
         console.log(`Received input: ${input}`);
         if(input == this.key) {
             this.makeSteps();
+            this.makeRemovals();
             return;     // TODO: return kill signal if player was eliminated so that thread doesn't keep running 
         }
 
@@ -62,6 +63,12 @@ export default class KareszRunner extends KareszCore {
                 return this.radar(player).toString();
             case 'c':
                 return this.isRockUnder(player) ? '1' : '0';
+            case 'k': 
+                return this.direction(player).toString();
+            case 'v':
+                return player.rotation == parseInt(value) ? '1' : '0';
+            case 't':
+                return this.turn(player, parseInt(index), clamp(parseInt(value), -1, 1));
         }
     }
 

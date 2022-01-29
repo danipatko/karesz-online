@@ -5,7 +5,6 @@ import path from 'path/posix';
 import { rotations } from '../../util/karesz';
 import { spwn } from '$lib/util/command';
 import { randstr } from '$lib/util/util';
-import { BASE_CONFIG, replaceKareszFunctions } from '../languages/csharp/template';
 
 export interface KareszDotnetOptions {
     code:string;
@@ -69,7 +68,7 @@ export class KareszDotnet {
     }
 
     private prepare():void {
-        this.options.code = replaceKareszFunctions(this.options.code, BASE_CONFIG);
+        
     }
 
     private logs:string = '';   // logs created by user

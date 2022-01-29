@@ -1,151 +1,128 @@
 import { randstr } from '$lib/util/util';
+import { Template } from './template';
+import type { ReplacementRules } from './config';
 
-export interface KareszSyncVariableNames {
-    stdin:string;
-    stdout:string;
-    WaitAndReset:string;
-    Command:{
-        self:string;
-        command:string;    
-        match:string;
-        IO:string;
-        IsMatch:string;
-    };
-    Commands:string;
-    WH:string;
-    Results:string;
-    CanContinueEvent:string;
-    ExecuteCommands:string;
-    STDIN:string;
-    ResetWaitHandlers:string;
-    KillAfter:string;
-}
+export class SyncTemplate extends Template {
+    public threads:{ code:string; caller?:string; }[] = []; 
+    public timeout:number = 2000;
 
-export interface Thread {
-    caller:string;
-    functions:string;
-}
-
-export const randomVariableNames = ():KareszSyncVariableNames => {
-    return {
-        stdin:randstr(10),
-        stdout:randstr(10),
-        WaitAndReset:randstr(10),
-        Command:{
-            self:randstr(10),
-            command:randstr(10),    
-            match:randstr(10),
-            IO:randstr(10),
-            IsMatch:randstr(10),
-        },
-        Commands:randstr(10),
-        WH:randstr(10),
-        Results:randstr(10),
-        CanContinueEvent:randstr(10),
-        ExecuteCommands:randstr(10),
-        STDIN:randstr(10),
-        ResetWaitHandlers:randstr(10),
-        KillAfter:randstr(10),
+    constructor(rawCode:string[], ruleSet:Array<ReplacementRules>) {
+        // irrelevant
+        super(rawCode.join('\n\n'), ruleSet);
+        for (let i = 0; i < rawCode.length; i++) {
+            const { code, caller, error } = this.replaceCode(rawCode[i]);
+            if(error !== undefined) console.log(`An error occured while preparing script: ${error}`);
+            this.threads.push({ code, caller });        
+        }
     }
-} 
 
-export const getCode = (threads:Array<Thread>) => {
-    const names = randomVariableNames();
-    return `
-using System;
+    public replaceCode(raw:string):{ code?:string; caller?:string; error?:string; } {
+        const caller = `_${randstr(20)}`;
+        // change FELADAT function name to 'caller'
+        var code = raw.replaceAll(/void\s+FELADAT\s*\((\s*|.*)\)/gm, `void ${caller}()`);
+        if(code == raw)
+            return { error:'Unable to find FELADAT function' };
+        code = this._replace(code);
+        return { caller, code };
+    }
+
+    public override get _code(): string {
+        return `using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Karesz
 {
     class Program
     {
-        static bool ${names.stdin}(int i, string c, string m)
+        static bool stdin_${this.rand}(int i, string c, string m)
         {
-            ${names.Commands}[i] = new ${names.Command.self}($"in:{c}", m);
-            ${names.WaitAndReset}(i);
-            return ${names.Results}[i] == 1;
+            Commands_${this.rand}[i] = new Command_${this.rand}($"in:{c}", m);
+            WaitAndReset_${this.rand}(i);
+            return Results_${this.rand}[i] == 1;
         }
-        static int ${names.stdin}(int i, string c)
+        static int stdin_${this.rand}(int i, string c)
         {
-            ${names.Commands}[i] = new ${names.Command.self}($"in:{c}");
-            ${names.WaitAndReset}(i);
-            return ${names.Results}[i];
+            Commands_${this.rand}[i] = new Command_${this.rand}($"in:{c}");
+            WaitAndReset_${this.rand}(i);
+            return Results_${this.rand}[i];
         }
-        static void ${names.stdout}(int i, string c)
+        static void stdout_${this.rand}(int i, string c)
         {
-            ${names.Commands}[i] = new ${names.Command.self}($"out:{c}");
-            ${names.WaitAndReset}(i);
+            Commands_${this.rand}[i] = new Command_${this.rand}($"out:{c}");
+            WaitAndReset_${this.rand}(i);
         }
-        static void ${names.WaitAndReset}(int i)
+        static void WaitAndReset_${this.rand}(int i)
         {
-            ((ManualResetEvent)${names.WH}[i]).Set();
-            ${names.CanContinueEvent}.WaitOne(1000);
-            ${names.CanContinueEvent}.Reset();
+            ((ManualResetEvent)WH_${this.rand}[i]).Set();
+            CanContinueEvent_${this.rand}.WaitOne(1000);
+            CanContinueEvent_${this.rand}.Reset();
         }
-        public struct ${names.Command.self}
+        public struct Command_${this.rand}
         {
-            public string ${names.Command.command};
-            public string ${names.Command.match};
-            public ${names.Command.self}(string _c, string _m ="")
+            public string command_${this.rand};
+            public string match_${this.rand};
+            public Command_${this.rand}(string _c, string _m ="")
             {
-                ${names.Command.command} = _c; ${names.Command.match} = _m;
+                command_${this.rand} = _c; match_${this.rand} = _m;
             }
-            public bool ${names.Command.IsMatch} { get => ${names.Command.match} != ""; }
-            public bool ${names.Command.IO} { get => ${names.Command.command}.StartsWith("in:"); }
+            public bool isMatch_${this.rand} { get => match_${this.rand} != ""; }
+            public bool IO_${this.rand} { get => command_${this.rand}.StartsWith("in:"); }
         }
-        static Dictionary<int, ${names.Command.self}> ${names.Commands} = new Dictionary<int, ${names.Command.self}>();
-        static Dictionary<int, int> ${names.Results} = new Dictionary<int, int>();
-        static ManualResetEvent ${names.CanContinueEvent} = new ManualResetEvent(false);
-        static void ${names.ExecuteCommands}()
+        static Dictionary<int, Command_${this.rand}> Commands_${this.rand} = new Dictionary<int, Command_${this.rand}>();
+        static Dictionary<int, int> Results_${this.rand} = new Dictionary<int, int>();
+        static ManualResetEvent CanContinueEvent_${this.rand} = new ManualResetEvent(false);
+        static void ExecuteCommands_${this.rand}()
         {
-            ${names.Results}.Clear();
-            foreach(int key in ${names.Commands}.Keys)
+            Results_${this.rand}.Clear();
+            foreach(int key in Commands_${this.rand}.Keys)
             {
-                if (${names.Commands}[key].${names.Command.IO}) ${names.Results}[key] = ${names.STDIN}(${names.Commands}[key]);
-                else Console.WriteLine(${names.Commands}[key].${names.Command.command});
+                if (Commands_${this.rand}[key].IO_${this.rand}) Results_${this.rand}[key] = stdin_${this.rand}(Commands_${this.rand}[key]);
+                else Console.WriteLine(Commands_${this.rand}[key].command_${this.rand});
             }
-            ${names.Commands}.Clear();
-            ${names.CanContinueEvent}.Set();
+            Commands_${this.rand}.Clear();
+            CanContinueEvent_${this.rand}.Set();
         }
-        static int ${names.STDIN}(${names.Command.self} c)
+        static int stdin_${this.rand}(Command_${this.rand} c)
         {
-            Console.WriteLine(c.${names.Command.command});
+            Console.WriteLine(c.command_${this.rand});
             string input = Console.ReadLine();
-            return c.${names.Command.IsMatch} ? input == c.${names.Command.match} ? 1 : 0 : int.Parse(input);
+            return c.isMatch_${this.rand} ? input == c.match_${this.rand} ? 1 : 0 : int.Parse(input);
         }
-        static void ${names.ResetWaitHandlers}()
+        static void ResetWaitHandlers_${this.rand}()
         {
-            foreach (ManualResetEvent mre in ${names.WH})
+            foreach (ManualResetEvent mre in WH_${this.rand})
                 mre.Reset();
         }
-        static void ${names.KillAfter}(int ms)
+        static void KillAfter_${this.rand}(int ms)
         {
             Thread.Sleep(ms);
             Environment.Exit(0);
         }
-        static WaitHandle[] ${names.WH} =
+        static WaitHandle[] WH_${this.rand} =
         {
-            ${threads.map(x => 'new ManualResetEvent(false),').join('\n')}
+            ${this.threads.map(x => 'new ManualResetEvent(false),').join('\n')}
         };
         static void Main(string[] args)
         {
-            ${ threads.map(x => `new Thread(new ThreadStart(${x.caller})).Start();`).join('\n')}
-            new Thread(new ThreadStart(() => KillAfter(2000))).Start();
+            ${this.threads.map(x => `new Thread(new ThreadStart(${x.caller})).Start();`).join('\n')}
+            new Thread(new ThreadStart(() => KillAfter_${this.rand}(${this.timeout}))).Start();
             while (true)
             {
-                WaitHandle.WaitAll(${names.WH});
-                ${names.ResetWaitHandlers}();
-                ${names.ExecuteCommands}();
+                WaitHandle.WaitAll(WH_${this.rand});
+                ResetWaitHandlers_${this.rand}();
+                ExecuteCommands_${this.rand}();
             }
         }
 
         /* USER CODE HERE */
 
-        ${threads.map(x => x.functions).join('\n\n\n')}
+        ${this.threads.map(x => x.code).join('\n\n\n')}
     }
 }
 `;
+    }
 }
 
 

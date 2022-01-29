@@ -125,7 +125,7 @@ export default class KareszCore {
      * Directions: LEFT = -1 | RIGHT = 1  
      * C#: `Fordulj()`
      */
-    protected turn(player:Karesz, index:number, direction:-1|1):void {
+    protected turn(player:Karesz, index:number, direction:number):void {
         player.rotation = modulo(player.rotation + direction, 4);
         this.players.set(index, player);
     }
@@ -199,6 +199,13 @@ export default class KareszCore {
             });
         }
         return -1;
+    }
+
+    /**
+     * Get what direction is karesz looking at (0-3)
+     */
+    protected direction(player:Karesz):number {
+        return player.rotation;
     }
 }
 
