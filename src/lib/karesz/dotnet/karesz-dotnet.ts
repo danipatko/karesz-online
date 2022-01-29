@@ -1,11 +1,11 @@
 import fs from 'fs';
-import Kontext from '../kontext';
-import Karesz from '../karesz';
+import Kontext from '../old/kontext';
+import Karesz from '../old/karesz';
 import path from 'path/posix';
 import { rotations } from '../../util/karesz';
 import { spwn } from '$lib/util/command';
 import { randstr } from '$lib/util/util';
-import { BASE_CONFIG, replaceKareszFunctions } from './dotnet-strings';
+import { BASE_CONFIG, replaceKareszFunctions } from '../languages/csharp/template';
 
 export interface KareszDotnetOptions {
     code:string;

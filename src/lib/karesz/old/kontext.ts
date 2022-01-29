@@ -1,5 +1,5 @@
 import type Karesz from "./karesz";
-import { fields } from "../util/karesz";
+import { fields } from "../../util/karesz";
 
 export default class Kontext {
     sizeX:number = 10;

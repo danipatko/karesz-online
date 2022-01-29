@@ -1,6 +1,6 @@
 // import type kontext from './kontext';
 // import { compress } from '$lib/util/util';
-import { fields, point, directions, rotations, modulo } from '../util/karesz';
+import { fields, point, directions, rotations, modulo } from '../util';
 import type Kontext from './kontext';
 
 /**
