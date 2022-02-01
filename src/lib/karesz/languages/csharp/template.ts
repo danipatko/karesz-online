@@ -15,6 +15,7 @@ interface ReplaceRules {
 export class Template {
     public rand:string = `_${randstr(20)}`;
     public readCode:string = randstr(10);
+    public writeCode:string = randstr(10);
     protected code:string;
     private readonly betweenParanthesis:RegExp = /(?<=\()(.*?)(?=\))/gm;
     private rules:ReplaceRules;
@@ -83,9 +84,9 @@ namespace Karesz
 {
     class Program
     {
-        static bool stdin_${this.rand}(string c,string m){Console.WriteLine($"${this.readCode} {c}");string l=Console.ReadLine();return l==m;}
-        static int stdin_${this.rand}(string c){Console.WriteLine($"${this.readCode} {c}");string l=Console.ReadLine();return int.Parse(l);}
-        static void stdout_${this.rand}(string c){Console.WriteLine($"${this.readCode} {c}");}
+        static bool stdin_${this.rand}(string c,string m){Console.WriteLine($"${this.readCode} 0 {c}");string l=Console.ReadLine();return l==m;}
+        static int stdin_${this.rand}(string c){Console.WriteLine($"${this.readCode} 0 {c}");string l=Console.ReadLine();return int.Parse(l);}
+        static void stdout_${this.rand}(string c){Console.WriteLine($"${this.writeCode} 0 {c}");}
         
         ${this.code}
     }

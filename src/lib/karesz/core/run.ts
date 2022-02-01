@@ -4,7 +4,9 @@ import type { Karesz, KareszMap } from './types';
 
 export default class KareszRunner extends KareszCore {
     public lang:'CSHARP';   // future support in case new languages are added
-    public key:string = randstr(20);    // the process should write this string out if every player made a move
+    public readonly key:string = randstr(20);    // after all players finished their move
+    public readonly readKey:string = randstr(10);    // before every command in stdin
+    public readonly writeKey:string = randstr(10);   // before every command in stdout
 
     constructor(lang:'CSHARP'='CSHARP', players:Map<number, Karesz>, map?:KareszMap) {
         super(players, map);
@@ -31,14 +33,16 @@ export default class KareszRunner extends KareszCore {
      */
     public parse(input:string):void|string {
         console.log(`Received input: ${input}`);
-        if(input == this.key) {
+        if(input.trim() == this.key) {
             this.makeSteps();
             this.makeRemovals();
             return;     // TODO: return kill signal if player was eliminated so that thread doesn't keep running 
         }
 
-        // INPUT PATTERN: "[index] [command] [...value?]"
-        const [index, command, value] = input.split(/\s+/gm);
+        // INPUT PATTERN: "[key] [index] [command] [...value?]"
+        const [rwKey, index, command, value] = input.trim().split(/\s+/gm);
+        // ignore debug logs
+        if(rwKey !== this.readKey || rwKey !== this.writeKey || index === undefined) return;
         const player = this.players.get(parseInt(index));
         // invalid or removed player, return
         if(player === undefined) return;

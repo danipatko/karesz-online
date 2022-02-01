@@ -11,8 +11,9 @@ export class SyncTemplate extends Template {
         super(rawCode.join('\n\n'), ruleSet);
         for (let i = 0; i < rawCode.length; i++) {
             const { code, caller, error } = this.replaceCode(rawCode[i]);
-            if(error !== undefined) console.log(`An error occured while preparing script: ${error}`);
-            this.threads.push({ code, caller });        
+            if(error !== undefined) 
+                console.log(`An error occured while preparing script: ${error}`);
+            this.threads.push({ code, caller });
         }
     }
 
@@ -38,19 +39,19 @@ namespace Karesz
     {
         static bool stdin_${this.rand}(int i, string c, string m)
         {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"in:{c}", m);
+            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.readCode} {i} {c}", m);
             WaitAndReset_${this.rand}(i);
             return Results_${this.rand}[i] == 1;
         }
         static int stdin_${this.rand}(int i, string c)
         {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"in:{c}");
+            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.readCode} {i} {c}");
             WaitAndReset_${this.rand}(i);
             return Results_${this.rand}[i];
         }
         static void stdout_${this.rand}(int i, string c)
         {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"out:{c}");
+            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.writeCode} {i} {c}");
             WaitAndReset_${this.rand}(i);
         }
         static void WaitAndReset_${this.rand}(int i)
