@@ -132,7 +132,7 @@ export class KareszDotnet {
                         rej(`Exit code is not zero.`);
                     res({ results: { steps: k.getSteps(), logs:this.logs, exec_time:Date.now()-startTime }});
                 })
-                .run({ cwd:this.location, std:{ encoding:'utf-8', use_stdbuf:this.options.use_stdbuf } });
+                .run({ cwd:this.location, std:{ encoding:'utf-8' } });
         });
     }
 }

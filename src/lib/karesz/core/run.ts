@@ -29,23 +29,24 @@ export default class KareszRunner extends KareszCore {
 
     /**
      * Parse a line of input from the process's stdout 
+     * INPUT PATTERN: "[key] [index] [command] [...value?]"
      * @param input 
      */
     public parse(input:string):void|string {
-        console.log(`Received input: ${input}`);
+        console.log(`Received input: '${input}'`);
         if(input.trim() == this.key) {
             this.makeSteps();
             this.makeRemovals();
             return;     // TODO: return kill signal if player was eliminated so that thread doesn't keep running 
         }
 
-        // INPUT PATTERN: "[key] [index] [command] [...value?]"
         const [rwKey, index, command, value] = input.trim().split(/\s+/gm);
         // ignore debug logs
-        if(rwKey !== this.readKey || rwKey !== this.writeKey || index === undefined) return;
+        if(!(rwKey === this.readKey || rwKey === this.writeKey) || index === undefined) return;
         const player = this.players.get(parseInt(index));
         // invalid or removed player, return
         if(player === undefined) return;
+
         switch(command) {
             case 'f': 
                 return this.proposeStep(player, parseInt(index));

@@ -1,7 +1,6 @@
 import { ChildProcess, spawn, ProcessEnvOptions, Serializable } from 'child_process';
 
-const STDBUF:Array<string> = ['stdbuf', '-i0', '-o0', '-e0'];
-
+// resource usage limiter
 const prlimit = (command:Array<string>, { cputime=0.3, nproc=1, stack=128 }={}) => 
     [ 'prlimit', `-t=${cputime}`, `-u=${nproc}`, `-s=${stack}`, '--noheadings', ...command ];
 
@@ -10,7 +9,6 @@ export interface CommandOptions extends ProcessEnvOptions {
         write ?: boolean | undefined;
         read ?: boolean | undefined;
         encoding ?:BufferEncoding | undefined;
-        use_stdbuf ?: boolean | undefined;
         pipe?: boolean | undefined;
     } | undefined;
     limit?: {
@@ -35,7 +33,7 @@ export class Command {
     public running:boolean = false;
     private isLinux:boolean = false;
 
-    public dataHandler:(s:string|Serializable, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void = () => {};
+    public dataHandler:(s:string, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void = () => {};
     public errorHandler:(s:Error, kill:(signal:NodeJS.Signals)=>void)=>void = () => {};
     public exitHandler:(code:number|null, signal:NodeJS.Signals|null) => void = () => {};
 
@@ -59,9 +57,7 @@ export class Command {
      * @returns {Command} self
      */
     public run(commandOptions: CommandOptions={}):Command {
-        // add stdbuf in front of command
-        if(this.isLinux && commandOptions.std?.use_stdbuf)
-            this.args.unshift(...STDBUF);
+
         // limit resource usage
         if(this.isLinux && commandOptions.limit)
             this.args = prlimit(this.args, { nproc:commandOptions.limit.nproc, stack:commandOptions.limit.stack, cputime:commandOptions.limit.cputime });
@@ -78,7 +74,7 @@ export class Command {
         this.process.stderr?.addListener('data', e => this.errorHandler(e, x => this.kill(x)));
         // set data handlers
         this.process.stdout?.addListener('data',  s => this.dataHandler(s, x => this.write(x), x => this.kill(x)));
-        this.process.addListener('message', s => this.dataHandler(s, x => this.write(x), x => this.kill(x)));
+        this.process.addListener('message', s => this.dataHandler(s.toString(), x => this.write(x), x => this.kill(x)));
         // set exit handler
         this.process.addListener('exit', this.exitHandler);
 
@@ -94,7 +90,7 @@ export class Command {
     /**
      * Called on message, or stdout.data
      */
-    public onData(handler:(s:string|number|Serializable, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void):Command {
+    public onData(handler:(s:string, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void) => void):Command {
         this.dataHandler = handler;
         return this;
     }

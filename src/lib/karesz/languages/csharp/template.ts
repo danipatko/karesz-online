@@ -61,14 +61,14 @@ export class Template {
     /**
      * Replace a series of strings/matches in a string
      */
-    public _replace(code?:string):string {
+    protected _replace(code?:string):string {
         var s = code ?? this.code;
         for(const key in this.rules) 
             s = this.rules[key].x ? this.replaceX(s, this.rules[key].match, key) : s.replaceAll(this.rules[key].match, key);
        return s;
     }
 
-    public replace():{ error?:string; }|undefined {
+    protected replace():{ error?:string; }|undefined {
         const { error } = this.replaceMain();
         if(error) return { error };
         this.code = this._replace();
