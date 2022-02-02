@@ -1,4 +1,4 @@
-import { randstr } from '$lib/util/util';
+import { randstr } from '$lib/karesz/util';
 import { Template } from './template';
 import type { ReplacementRules } from './config';
 
@@ -10,19 +10,18 @@ export class SyncTemplate extends Template {
         // irrelevant
         super(rawCode.join('\n\n'), ruleSet);
         for (let i = 0; i < rawCode.length; i++) {
-            const { code, caller, error } = this.replaceCode(rawCode[i]);
-            if(error !== undefined) 
-                console.log(`An error occured while preparing script: ${error}`);
+            const { code, caller } = this.replaceCode(rawCode[i]);
             this.threads.push({ code, caller });
         }
     }
 
-    public replaceCode(raw:string):{ code?:string; caller?:string; error?:string; } {
+    public replaceCode(raw:string):{ code?:string; caller?:string; } {
         const caller = `_${randstr(20)}`;
         // change FELADAT function name to 'caller'
         var code = raw.replaceAll(/void\s+FELADAT\s*\((\s*|.*)\)/gm, `void ${caller}()`);
-        if(code == raw)
-            return { error:'Unable to find FELADAT function' };
+        if(code == raw) { 
+            this.error = 'Unable to find FELADAT function'; return;
+        }
         code = this._replace(code);
         return { caller, code };
     }
@@ -39,19 +38,19 @@ namespace Karesz
     {
         static bool stdin_${this.rand}(int i, string c, string m)
         {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.readCode} {i} {c}", m);
+            Commands_${this.rand}[i] = new Command_${this.rand}($"> ${this.key} {i} {c}", m);
             WaitAndReset_${this.rand}(i);
             return Results_${this.rand}[i] == 1;
         }
         static int stdin_${this.rand}(int i, string c)
         {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.readCode} {i} {c}");
+            Commands_${this.rand}[i] = new Command_${this.rand}($"> ${this.key} {i} {c}");
             WaitAndReset_${this.rand}(i);
             return Results_${this.rand}[i];
         }
         static void stdout_${this.rand}(int i, string c)
         {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.writeCode} {i} {c}");
+            Commands_${this.rand}[i] = new Command_${this.rand}($"< ${this.key} {i} {c}");
             WaitAndReset_${this.rand}(i);
         }
         static void WaitAndReset_${this.rand}(int i)
@@ -69,7 +68,7 @@ namespace Karesz
                 command_${this.rand} = _c; match_${this.rand} = _m;
             }
             public bool isMatch_${this.rand} { get => match_${this.rand} != ""; }
-            public bool IO_${this.rand} { get => command_${this.rand}.StartsWith("in:"); }
+            public bool IO_${this.rand} { get => command_${this.rand}.StartsWith(">"); }
         }
         static Dictionary<int, Command_${this.rand}> Commands_${this.rand} = new Dictionary<int, Command_${this.rand}>();
         static Dictionary<int, int> Results_${this.rand} = new Dictionary<int, int>();

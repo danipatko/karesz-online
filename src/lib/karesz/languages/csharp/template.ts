@@ -1,4 +1,4 @@
-import { randstr } from '$lib/util/util';
+import { randstr } from '$lib/karesz/util';
 import type { ReplacementRules } from './config';
 
 const ALLOWED_IMPORTS_CSHARP = [
@@ -13,12 +13,12 @@ interface ReplaceRules {
 }
 
 export class Template {
-    public rand:string = `_${randstr(20)}`;
-    public readCode:string = randstr(10);
-    public writeCode:string = randstr(10);
+    public readonly rand:string = `_${randstr(20)}`;
+    public readonly key:string = randstr(10);
     protected code:string;
     private readonly betweenParanthesis:RegExp = /(?<=\()(.*?)(?=\))/gm;
-    private rules:ReplaceRules;
+    private rules:ReplaceRules = {};
+    public error:string|undefined;
     
     constructor(rawCode:string, ruleSet:Array<ReplacementRules>) {
         this.code = rawCode;
@@ -26,23 +26,28 @@ export class Template {
         for(const key in ruleSet) {
             this.rules[ 
                 ruleSet[key].std == 'none' ? 
-                '' 
+                ruleSet[key].cmd 
                 : 
                 `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${this.rand}(${ruleSet[key].cmd.includes('"') ? ruleSet[key].cmd : `"${ruleSet[key].cmd}"` })` 
-            ] = { match:ruleSet[key].match, x:ruleSet[key].x !== undefined };
+            ] = { match:ruleSet[key].match, x:ruleSet[key].x };
         }
+        console.log('RULES --- \n');
+        console.log(this.rules);
     }
 
     /**
      * Replaces the `FELADAT` function with `Main`
      */
-    protected replaceMain():undefined|{ error?:string; } {
+    protected replaceMain():void {
         // main already exists
-        if(this.code.match(/void\s+Main\s*\((.*|\s*)\)/gm))
-            return { error:'Main function already exists in user submitted code. Aborting.' };        
+        if(this.code.match(/void\s+Main\s*\((.*|\s*)\)/gm)) {
+            this.error = 'Main function already exists in user submitted code.'; return;
+        }
         const newCode = this.code.replaceAll(/void\s+FELADAT\s*\((.*|\s*)\)/gm, 'static void Main(string[] args)');
         // no replacements occured
-        if(newCode == this.code) return { error:'Unable to find FELADAT function in user submitted code. Aborting.' };
+        if(newCode == this.code) {
+            this.error = 'Unable to find FELADAT function in user submitted code. Aborting.'; return;
+        }
         this.code = newCode;
     }
 
@@ -68,9 +73,8 @@ export class Template {
        return s;
     }
 
-    protected replace():{ error?:string; }|undefined {
-        const { error } = this.replaceMain();
-        if(error) return { error };
+    public replace():void {
+        this.replaceMain();
         this.code = this._replace();
     }
 
@@ -84,9 +88,9 @@ namespace Karesz
 {
     class Program
     {
-        static bool stdin_${this.rand}(string c,string m){Console.WriteLine($"${this.readCode} 0 {c}");string l=Console.ReadLine();return l==m;}
-        static int stdin_${this.rand}(string c){Console.WriteLine($"${this.readCode} 0 {c}");string l=Console.ReadLine();return int.Parse(l);}
-        static void stdout_${this.rand}(string c){Console.WriteLine($"${this.writeCode} 0 {c}");}
+        static bool stdin_${this.rand}(string c,string m){Console.WriteLine($"> ${this.key} 0 {c}");string l=Console.ReadLine();return l==m;}
+        static int stdin_${this.rand}(string c){Console.WriteLine($"> ${this.key} 0 {c}");string l=Console.ReadLine();return int.Parse(l);}
+        static void stdout_${this.rand}(string c){Console.WriteLine($"< ${this.key} 0 {c}");}
         
         ${this.code}
     }

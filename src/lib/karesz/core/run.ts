@@ -1,12 +1,14 @@
 import KareszCore from './karesz';
 import { randstr, clamp } from '../util';
 import type { Karesz, KareszMap } from './types';
+import run from '../languages/csharp/runner';
+
+// const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';
+const BASE_PATH = 'C://Users/Dani/home/Projects/karesz-online/testing';
 
 export default class KareszRunner extends KareszCore {
     public lang:'CSHARP';   // future support in case new languages are added
-    public readonly key:string = randstr(20);    // after all players finished their move
-    public readonly readKey:string = randstr(10);    // before every command in stdin
-    public readonly writeKey:string = randstr(10);   // before every command in stdout
+    public readonly key:string = randstr(10);    // before every command in stdin
 
     constructor(lang:'CSHARP'='CSHARP', players:Map<number, Karesz>, map?:KareszMap) {
         super(players, map);
@@ -29,10 +31,10 @@ export default class KareszRunner extends KareszCore {
 
     /**
      * Parse a line of input from the process's stdout 
-     * INPUT PATTERN: "[key] [index] [command] [...value?]"
+     * INPUT PATTERN: "[key] [i/o] [index] [command] [...value?]"
      * @param input 
      */
-    public parse(input:string):void|string {
+    public parse(input:string, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void):void|string {
         console.log(`Received input: '${input}'`);
         if(input.trim() == this.key) {
             this.makeSteps();
@@ -40,9 +42,10 @@ export default class KareszRunner extends KareszCore {
             return;     // TODO: return kill signal if player was eliminated so that thread doesn't keep running 
         }
 
-        const [rwKey, index, command, value] = input.trim().split(/\s+/gm);
+        // io: one character, either '<' for stdout or '>' for stdin
+        const [io, key, index, command, value] = input.trim().split(/\s+/gm);
         // ignore debug logs
-        if(!(rwKey === this.readKey || rwKey === this.writeKey) || index === undefined) return;
+        if(key !== this.key  || index === undefined) return;
         const player = this.players.get(parseInt(index));
         // invalid or removed player, return
         if(player === undefined) return;
@@ -77,8 +80,12 @@ export default class KareszRunner extends KareszCore {
         }
     }
 
-    public async run():Promise<void> {
+    public async run({ code }:{ code:string|string[] }):Promise<void> {
+        // for future languages
+        // if(this.lang == 'CSHARP') {
+        run({ code, basePath:BASE_PATH, dataParser:this.parse, key:this.key });
 
+        // }
     }
 
 }

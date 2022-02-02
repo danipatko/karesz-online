@@ -1,4 +1,5 @@
-import { KareszDotnet } from '$lib/karesz/dotnet/karesz-dotnet';
+import KareszRunner from '$lib/karesz/core/run';
+import type { Karesz } from '$lib/karesz/core/types';
 import { R } from '$lib/util/util';
 
 export const post = async(req:any) => {
@@ -9,16 +10,10 @@ export const post = async(req:any) => {
             res(R(undefined, 'Code or karesz field missing from request body.', 400));
             return;
         }
+
+        const inst = new KareszRunner('CSHARP', new Map<number, Karesz>());
+        inst.run({ code:[code, code] });
         
-        new KareszDotnet('testing', { code, karesz, use_stdbuf:true, limit:{ max_ticks:5000, cpu_time:5, max_stack:128_000_000 } })
-        .runRemove()
-        .then(x => { 
-            const { results, error } = x;
-            if(error || !results)
-                res(R( error ));
-            else 
-                res(R(results))
-        })
-        .catch(error => res(R({ error })));
+        R({ error:'asdsadalksdafnbéjbhagweiusédfjbneékjsbgykabefísiébgieépf' });
     });
 }

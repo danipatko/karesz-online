@@ -9,7 +9,7 @@ export const clamp = (val:number, min:number, max:number) => {
 }
 
 export const randstr = (length:number):string => {
-    return randomBytes(length/2).toString('ascii');
+    return randomBytes(length/2).toString('hex');
 }
 
 export const modulo = (a:number, b:number):number => a < 0 ? b + a%b : a%b;

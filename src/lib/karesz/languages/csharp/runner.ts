@@ -18,16 +18,22 @@ const run = async({
     basePath:string;
 }):Promise<{ error?:string; output:string; compilerOutput:string; exitCode:number; }> => {
     return new Promise<{ error?:string; output:string; compilerOutput:string; exitCode:number; }>(res => {
-
         const template = typeof code == 'string' ? new Template(code, RULES) : new SyncTemplate(code, RULES);
+        template.replace();
+        if(template.error !== undefined)
+            console.log(`Error: ${template.error}`);
         // write template to file
+        console.log(template._code);
+        
         const filename = randstr(10);
         const cwd = path.join(basePath, filename);
         fs.mkdirSync(cwd);
         fs.writeFileSync(path.join(cwd, `${filename}.cs`), template._code);
-    
+        
+        return;
         const compileFinishCode = randstr(10);
         let compilerOutput = '', error = '', output = '', compiled = false, lines:string[] = [];
+
 
         spwn('mcs', `${filename}.cs`, '&&', 'mono', '--aot=full', `${filename}.exe`, '&&', `echo ${compileFinishCode}`, '&&', 'mono', `${filename}.exe`)
             .onData((out, write, kill) => {
@@ -40,7 +46,7 @@ const run = async({
                         else 
                             compilerOutput += `${lines[i]}\n`;
                     } else if(lines[i].startsWith(key)) 
-                        dataParser(lines[i], write, kill)
+                        dataParser(lines[i], write, kill);
                     else 
                         output += `${lines[i]}\n`;
                 }
@@ -52,3 +58,4 @@ const run = async({
     });
 }
 
+export default run;
