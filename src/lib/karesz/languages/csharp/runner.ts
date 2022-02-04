@@ -19,7 +19,6 @@ const run = async({
 }):Promise<{ error?:string; output:string; compilerOutput:string; exitCode:number; }> => {
     return new Promise<{ error?:string; output:string; compilerOutput:string; exitCode:number; }>(res => {
         const template = typeof code == 'string' ? new Template(code, RULES) : new SyncTemplate(code, RULES);
-        template.replace();
         if(template.error !== undefined)
             console.log(`Error: ${template.error}`);
         // write template to file
@@ -30,13 +29,12 @@ const run = async({
         fs.mkdirSync(cwd);
         fs.writeFileSync(path.join(cwd, `${filename}.cs`), template._code);
         
-        return;
         const compileFinishCode = randstr(10);
         let compilerOutput = '', error = '', output = '', compiled = false, lines:string[] = [];
 
-
         spwn('mcs', `${filename}.cs`, '&&', 'mono', '--aot=full', `${filename}.exe`, '&&', `echo ${compileFinishCode}`, '&&', 'mono', `${filename}.exe`)
             .onData((out, write, kill) => {
+                console.log(`Recv:'${out}'`);
                 lines = out.trim().split('\n');
                 for (let i = 0; i < lines.length; i++) {
                     // handle compiler logs
@@ -53,6 +51,7 @@ const run = async({
             }).onError(x => 
                 error += x
             ).onExit((exitCode, signal) => {
+                console.log(`--- EXITED ---\nCompiler output\n${compilerOutput}\n${output}\n${exitCode}`);
                 res(exitCode == 0 ? { output, compilerOutput, exitCode } : { output, error, compilerOutput, exitCode }); 
             }).run({ cwd });
     });

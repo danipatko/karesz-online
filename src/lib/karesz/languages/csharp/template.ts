@@ -26,13 +26,12 @@ export class Template {
         for(const key in ruleSet) {
             this.rules[ 
                 ruleSet[key].std == 'none' ? 
-                ruleSet[key].cmd 
+                ruleSet[key].cmd // colors
                 : 
-                `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${this.rand}(${ruleSet[key].cmd.includes('"') ? ruleSet[key].cmd : `"${ruleSet[key].cmd}"` })` 
+                `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${this.rand}(:i:, ${ruleSet[key].cmd.includes('"') ? ruleSet[key].cmd : `"${ruleSet[key].cmd}"` })` 
             ] = { match:ruleSet[key].match, x:ruleSet[key].x };
         }
-        console.log('RULES --- \n');
-        console.log(this.rules);
+        this.replace(0, this.code);
     }
 
     /**
@@ -66,16 +65,17 @@ export class Template {
     /**
      * Replace a series of strings/matches in a string
      */
-    protected _replace(code?:string):string {
+    protected _replace(index:number, code?:string):string {
         var s = code ?? this.code;
         for(const key in this.rules) 
-            s = this.rules[key].x ? this.replaceX(s, this.rules[key].match, key) : s.replaceAll(this.rules[key].match, key);
+            s = this.rules[key].x ? this.replaceX(s, this.rules[key].match, key.replaceAll(':i:', index.toString())) : s.replaceAll(this.rules[key].match, key.replaceAll(':i:', index.toString()));
        return s;
     }
 
-    public replace():void {
+    public replace(index:number, code?:string|undefined):{ code?:string; caller?:string; } {
         this.replaceMain();
-        this.code = this._replace();
+        this.code = this._replace(index, code ?? this.code);
+        return {};
     }
 
     /**

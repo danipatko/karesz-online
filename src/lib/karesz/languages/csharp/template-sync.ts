@@ -10,19 +10,19 @@ export class SyncTemplate extends Template {
         // irrelevant
         super(rawCode.join('\n\n'), ruleSet);
         for (let i = 0; i < rawCode.length; i++) {
-            const { code, caller } = this.replaceCode(rawCode[i]);
+            const { code, caller } = this.replace(i, rawCode[i]);
             this.threads.push({ code, caller });
         }
     }
 
-    public replaceCode(raw:string):{ code?:string; caller?:string; } {
+    public override replace(index:number, raw:string):{ code?:string; caller?:string; } {
         const caller = `_${randstr(20)}`;
         // change FELADAT function name to 'caller'
-        var code = raw.replaceAll(/void\s+FELADAT\s*\((\s*|.*)\)/gm, `void ${caller}()`);
+        var code = raw.replaceAll(/void\s+FELADAT\s*\((\s*|.*)\)/gm, `static void ${caller}()`);
         if(code == raw) { 
             this.error = 'Unable to find FELADAT function'; return;
         }
-        code = this._replace(code);
+        code = this._replace(index, code);
         return { caller, code };
     }
 
@@ -78,13 +78,13 @@ namespace Karesz
             Results_${this.rand}.Clear();
             foreach(int key in Commands_${this.rand}.Keys)
             {
-                if (Commands_${this.rand}[key].IO_${this.rand}) Results_${this.rand}[key] = stdin_${this.rand}(Commands_${this.rand}[key]);
+                if (Commands_${this.rand}[key].IO_${this.rand}) Results_${this.rand}[key] = _stdin_${this.rand}(Commands_${this.rand}[key]);
                 else Console.WriteLine(Commands_${this.rand}[key].command_${this.rand});
             }
             Commands_${this.rand}.Clear();
             CanContinueEvent_${this.rand}.Set();
         }
-        static int stdin_${this.rand}(Command_${this.rand} c)
+        static int _stdin_${this.rand}(Command_${this.rand} c)
         {
             Console.WriteLine(c.command_${this.rand});
             string input = Console.ReadLine();
