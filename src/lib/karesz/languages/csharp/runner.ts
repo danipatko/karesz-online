@@ -30,15 +30,13 @@ const run = async({
         fs.writeFileSync(path.join(cwd, `${filename}.cs`), template._code);
         
         const compileResults = await compile({ filename, cwd });
-        console.log(`Compiled ${filename}. \nOutput:${compileResults.output}\n`);
-        if(compileResults.exitCode != 0) 
-            res({ ...compileResults });
+        console.log(`Compiled ${filename} (${compileResults.exitCode}). \nOutput:${compileResults.output}\n\n`);
+        if(compileResults.exitCode != 0) { res({ ...compileResults }); return; }
 
         const preCompileResults = await preCompile({ filename, cwd });
-        console.log(`Compiled ${filename}. \nOutput:${preCompileResults.output}\n`);
-        if(preCompileResults.exitCode != 0) 
-            res({ ...preCompileResults });
-
+        console.log(`Compiled ${filename} (${preCompileResults.exitCode}). \nOutput:${preCompileResults.output}\n\n`);
+        if(preCompileResults.exitCode != 0) { res({ ...preCompileResults }); return; }
+        
         let lines:string[] = [], output:string = '', error:string = '';
         spwn('mono', `${filename}.exe`)
             .onData((out, write, kill) => {
@@ -55,7 +53,11 @@ const run = async({
                 console.log(`ERROR: ${x}`);
                 error += x;
             })
-            .onExit(exitCode => res({ output, error, exitCode }));
+            .onExit(exitCode => {
+                console.log(`\n\n\n EXITED WITH CODE ${exitCode}`);
+                res({ output, error, exitCode })
+            })
+            .run({ cwd });
     });
 }
 

@@ -3,10 +3,10 @@ import { randstr, clamp } from '../util';
 import type { Karesz, KareszMap } from './types';
 import run from '../languages/csharp/runner';
 
-// const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';
-// const BASE_PATH = 'C://Users/Dani/home/Projects/karesz-online/testing';
-// const BASE_PATH = '/home/dapa/Projects/karesz-online/testing';
-const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';
+const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';  // WSL
+// const BASE_PATH = 'C://Users/Dani/home/Projects/karesz-online/testing';  // WINDOWS
+// const BASE_PATH = '/home/dapa/Projects/karesz-online/testing';   // NOTEBOOK
+// const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';   // PENDRIVE
 
 export default class KareszRunner extends KareszCore {
     public lang:'CSHARP';   // future support in case new languages are added

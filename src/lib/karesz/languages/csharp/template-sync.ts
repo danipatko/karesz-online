@@ -29,102 +29,127 @@ export class SyncTemplate extends Template {
     public override get _code(): string {
         return `using System;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Numerics;
 
-namespace Karesz
+class Program
 {
-    class Program
+    struct Command_${this.rand}
     {
-        public struct Command_${this.rand}
+        public string Str_${this.rand} { get; set; }
+        public bool Input_${this.rand} { get; set; }
+        public Command_${this.rand}(string s, bool io)
         {
-            public string command_${this.rand};
-            public string match_${this.rand};
-            public Command_${this.rand}(string _c, string _m ="")
-            {
-                command_${this.rand} = _c; match_${this.rand} = _m;
-            }
-            public bool isMatch_${this.rand} { get => match_${this.rand} != ""; }
-            public bool IO_${this.rand} { get => command_${this.rand}.StartsWith(">"); }
+            Str_${this.rand} = s;
+            Input_${this.rand} = io;
         }
-        static Dictionary<int, Command_${this.rand}> Commands_${this.rand} = new Dictionary<int, Command_${this.rand}>();
-        static Dictionary<int, int> Results_${this.rand} = new Dictionary<int, int>();
-        static ManualResetEvent CanContinueEvent_${this.rand} = new ManualResetEvent(false);
-        static WaitHandle[] WH_${this.rand} =
-        {
-            ${this.threads.map(x => 'new ManualResetEvent(false),').join('\n')}
-        };
-
-        static bool stdin_${this.rand}(int i, string c, string m)
-        {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.key} > {i} {c}", m);
-            WaitAndReset_${this.rand}(i);
-            return Results_${this.rand}[i] == 1;
-        }
-        static int stdin_${this.rand}(int i, string c)
-        {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.key} > {i} {c}");
-            WaitAndReset_${this.rand}(i);
-            return Results_${this.rand}[i];
-        }
-        static void stdout_${this.rand}(int i, string c)
-        {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.key} < {i} {c}");
-            WaitAndReset_${this.rand}(i);
-        }
-        static void WaitAndReset_${this.rand}(int i)
-        {
-            ((ManualResetEvent)WH_${this.rand}[i]).Set();
-            CanContinueEvent_${this.rand}.WaitOne();
-            CanContinueEvent_${this.rand}.Reset();
-        }
-        static void ExecuteCommands_${this.rand}()
-        {
-            Results_${this.rand}.Clear();
-            foreach(int key in Commands_${this.rand}.Keys)
-            {
-                if (Commands_${this.rand}[key].IO_${this.rand}) Results_${this.rand}[key] = _stdin_${this.rand}(Commands_${this.rand}[key]);
-                else Console.WriteLine(Commands_${this.rand}[key].command_${this.rand});
-            }
-            Commands_${this.rand}.Clear();
-            CanContinueEvent_${this.rand}.Set();
-        }
-        static int _stdin_${this.rand}(Command_${this.rand} c)
-        {
-            Console.WriteLine(c.command_${this.rand});
-            string input = Console.ReadLine();
-            return c.isMatch_${this.rand} ? input == c.match_${this.rand} ? 1 : 0 : int.Parse(input);
-        }
-        static void ResetWaitHandlers_${this.rand}()
-        {
-            foreach (ManualResetEvent mre in WH_${this.rand})
-                mre.Reset();
-        }
-        static void KillAfter_${this.rand}(int ms)
-        {
-            Thread.Sleep(ms);
-            Environment.Exit(0);
-        }
-        static void Main(string[] args)
-        {
-            ${this.threads.map(x => `new Thread(new ThreadStart(${x.caller})).Start();`).join('\n')}
-            // new Thread(new ThreadStart(() => KillAfter_${this.rand}(${this.timeout}))).Start();
-            while (true)
-            {
-                WaitHandle.WaitAll(WH_${this.rand});
-                ResetWaitHandlers_${this.rand}();
-                ExecuteCommands_${this.rand}();
-                Console.WriteLine("---------");
-            }
-        }
-
-        /* USER CODE HERE */
-
-        ${this.threads.map(x => x.code).join('\n\n\n')}
     }
+    static Dictionary<int, Command_${this.rand}> Commands_${this.rand} = new Dictionary<int, Command_${this.rand}>();
+    static Dictionary<int, string> Results_${this.rand} = new Dictionary<int, string>();
+    static Barrier Bar_${this.rand} = new Barrier(${this.threads.length}, (b) =>
+    {
+        Results_${this.rand}.Clear();
+        foreach(int key in Commands_${this.rand}.Keys)
+        {
+            Console.WriteLine($"${this.key} key {(Commands_${this.rand}[key].Input_${this.rand} ? '>' : '<')} {Commands_${this.rand}[key].Str_${this.rand}}");
+            if (Commands_${this.rand}[key].Input_${this.rand}) Results_${this.rand}[key] = Console.ReadLine();
+        }
+        Commands_${this.rand}.Clear();
+    });
+
+    static bool stdin_${this.rand}(int i, string c, string m)
+    {
+        Commands_${this.rand}[i] = new Command_${this.rand}(c, true);
+        Bar_${this.rand}.SignalAndWait();
+        return Results_${this.rand}[i] == m;
+    }
+
+    static int stdin_${this.rand}(int i, string c)
+    {
+        Commands_${this.rand}[i] = new Command_${this.rand}(c, true);
+        Bar_${this.rand}.SignalAndWait();
+        return int.Parse(Results_${this.rand}[i]);
+    }
+
+    static void stdout_${this.rand}(int i, string c)
+    {
+        Commands_${this.rand}[i] = new Command_${this.rand}(c, false);
+        Bar_${this.rand}.SignalAndWait();
+    }
+
+    static void Main()
+    {
+        Parallel.Invoke(${this.threads.map(x => x.caller).join(',')});
+        Bar_${this.rand}.Dispose();
+    }
+
+    /* USER CODE */
+
+    ${this.threads.map(x => x.code).join('\n\n')}
 }
 `;
     }
 }
 
 
+/* 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+class Program
+{
+    struct Command_${this.rand}
+    {
+        public string Str_${this.rand} { get; set; }
+        public bool Input_${this.rand} { get; set; }
+        public Command_${this.rand}(string s, bool io)
+        {
+            Str_${this.rand} = s;
+            Input_${this.rand} = io;
+        }
+    }
+    static Dictionary<int, Command> Commands_${this.rand} = new Dictionary<int, Command>();
+    static Dictionary<int, string> Results_${this.rand} = new Dictionary<int, string>();
+    static Barrier Bar_${this.rand} = new Barrier(COUNT HERE, (b) =>
+    {
+        Results_${this.rand}.Clear();
+        foreach(int key in Commands.Keys)
+        {
+            Console.WriteLine($"key {(Commands_${this.rand}[key].Input_${this.rand} ? '>' : '<')} {Commands_${this.rand}[key].Str_${this.rand}}");
+            if (Commands_${this.rand}[key].Input_${this.rand}) Results_${this.rand}[key] = Console.ReadLine();
+        }
+        Commands_${this.rand}.Clear();
+    });
+
+    static bool stdin_${this.rand}(int i, string c, string m)
+    {
+        Commands_${this.rand}[i] = new Command_${this.rand}(c, true);
+        Bar_${this.rand}.SignalAndWait(10000);
+        return Results_${this.rand}[i] == m;
+    }
+
+    static int stdin_${this.rand}(int i, string c)
+    {
+        Commands_${this.rand}[i] = new Command_${this.rand}(c, true);
+        Bar_${this.rand}.SignalAndWait(10000);
+        return int.Parse(Results_${this.rand}[i]);
+    }
+
+    static void stdout_${this.rand}(int i, string c)
+    {
+        Commands_${this.rand}[i] = new Command_${this.rand}(c, false);
+        Bar_${this.rand}.SignalAndWait(10000);
+    }
+
+    static void Main()
+    {
+        Parallel.Invoke(action, action1, action2);
+        Bar_${this.rand}.Dispose();
+    }
+
+    
+}
+
+*/
