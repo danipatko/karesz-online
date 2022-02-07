@@ -36,29 +36,6 @@ namespace Karesz
 {
     class Program
     {
-        static bool stdin_${this.rand}(int i, string c, string m)
-        {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"> ${this.key} {i} {c}", m);
-            WaitAndReset_${this.rand}(i);
-            return Results_${this.rand}[i] == 1;
-        }
-        static int stdin_${this.rand}(int i, string c)
-        {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"> ${this.key} {i} {c}");
-            WaitAndReset_${this.rand}(i);
-            return Results_${this.rand}[i];
-        }
-        static void stdout_${this.rand}(int i, string c)
-        {
-            Commands_${this.rand}[i] = new Command_${this.rand}($"< ${this.key} {i} {c}");
-            WaitAndReset_${this.rand}(i);
-        }
-        static void WaitAndReset_${this.rand}(int i)
-        {
-            ((ManualResetEvent)WH_${this.rand}[i]).Set();
-            CanContinueEvent_${this.rand}.WaitOne(1000);
-            CanContinueEvent_${this.rand}.Reset();
-        }
         public struct Command_${this.rand}
         {
             public string command_${this.rand};
@@ -73,6 +50,34 @@ namespace Karesz
         static Dictionary<int, Command_${this.rand}> Commands_${this.rand} = new Dictionary<int, Command_${this.rand}>();
         static Dictionary<int, int> Results_${this.rand} = new Dictionary<int, int>();
         static ManualResetEvent CanContinueEvent_${this.rand} = new ManualResetEvent(false);
+        static WaitHandle[] WH_${this.rand} =
+        {
+            ${this.threads.map(x => 'new ManualResetEvent(false),').join('\n')}
+        };
+
+        static bool stdin_${this.rand}(int i, string c, string m)
+        {
+            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.key} > {i} {c}", m);
+            WaitAndReset_${this.rand}(i);
+            return Results_${this.rand}[i] == 1;
+        }
+        static int stdin_${this.rand}(int i, string c)
+        {
+            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.key} > {i} {c}");
+            WaitAndReset_${this.rand}(i);
+            return Results_${this.rand}[i];
+        }
+        static void stdout_${this.rand}(int i, string c)
+        {
+            Commands_${this.rand}[i] = new Command_${this.rand}($"${this.key} < {i} {c}");
+            WaitAndReset_${this.rand}(i);
+        }
+        static void WaitAndReset_${this.rand}(int i)
+        {
+            ((ManualResetEvent)WH_${this.rand}[i]).Set();
+            CanContinueEvent_${this.rand}.WaitOne();
+            CanContinueEvent_${this.rand}.Reset();
+        }
         static void ExecuteCommands_${this.rand}()
         {
             Results_${this.rand}.Clear();
@@ -100,19 +105,16 @@ namespace Karesz
             Thread.Sleep(ms);
             Environment.Exit(0);
         }
-        static WaitHandle[] WH_${this.rand} =
-        {
-            ${this.threads.map(x => 'new ManualResetEvent(false),').join('\n')}
-        };
         static void Main(string[] args)
         {
             ${this.threads.map(x => `new Thread(new ThreadStart(${x.caller})).Start();`).join('\n')}
-            new Thread(new ThreadStart(() => KillAfter_${this.rand}(${this.timeout}))).Start();
+            // new Thread(new ThreadStart(() => KillAfter_${this.rand}(${this.timeout}))).Start();
             while (true)
             {
                 WaitHandle.WaitAll(WH_${this.rand});
                 ResetWaitHandlers_${this.rand}();
                 ExecuteCommands_${this.rand}();
+                Console.WriteLine("---------");
             }
         }
 

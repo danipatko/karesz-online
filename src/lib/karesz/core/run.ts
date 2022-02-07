@@ -5,7 +5,8 @@ import run from '../languages/csharp/runner';
 
 // const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';
 // const BASE_PATH = 'C://Users/Dani/home/Projects/karesz-online/testing';
-const BASE_PATH = '/home/dapa/Projects/karesz-online/testing';
+// const BASE_PATH = '/home/dapa/Projects/karesz-online/testing';
+const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';
 
 export default class KareszRunner extends KareszCore {
     public lang:'CSHARP';   // future support in case new languages are added
@@ -45,6 +46,10 @@ export default class KareszRunner extends KareszCore {
 
         // io: one character, either '<' for stdout or '>' for stdin
         const [io, key, index, command, value] = input.trim().split(/\s+/gm);
+
+        console.log('HEHEHEHEHAH');
+        console.log(command);
+
         // ignore debug logs
         if(key !== this.key  || index === undefined) return;
         const player = this.players.get(parseInt(index));
