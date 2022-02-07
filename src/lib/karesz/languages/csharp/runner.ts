@@ -13,7 +13,7 @@ const run = async({
     basePath
 }:{ 
     code:string|string[]; 
-    dataParser: (line:string, write: (s: string) => void, kill: (signal: NodeJS.Signals) => void) => void;
+    dataParser: (line:string, write: (s: string) => void, kill: (signal: NodeJS.Signals) => void) => string|undefined;
     key:string;
     basePath:string;
 }):Promise<{ error?:string; output:string; exitCode:number; }> => {
@@ -40,22 +40,26 @@ const run = async({
         let lines:string[] = [], output:string = '', error:string = '';
         spwn('mono', `${filename}.exe`)
             .onData((out, write, kill) => {
-                console.log(`STDOUT: '${out}'`);
+                console.log(`OUT: ${out}`);     // DEBUG
+
                 lines = out.trim().split('\n');
                 for (let i = 0; i < lines.length; i++) {
-                    if(lines[i].startsWith(key)) 
-                        dataParser(lines[i], write, kill);
-                    else 
+                    // parse command
+                    if(lines[i].startsWith(key)) {
+                        const result = dataParser(lines[i], write, kill);
+                        if(result !== undefined) write(result);
+                    // add to user logs
+                    } else 
                         output += `${lines[i]}\n`;
                 }
             })
             .onError(x => {
-                console.log(`ERROR: ${x}`);
+                console.log(`ERROR: ${x}`);     // DEBUG
                 error += x;
             })
             .onExit(exitCode => {
-                console.log(`\n\n\n EXITED WITH CODE ${exitCode}`);
-                res({ output, error, exitCode })
+                console.log(`\n\n\n EXITED WITH CODE ${exitCode}`);     // DEBUG
+                res({ output, error, exitCode }); 
             })
             .run({ cwd });
     });

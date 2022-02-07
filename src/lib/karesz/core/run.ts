@@ -3,7 +3,9 @@ import { randstr, clamp } from '../util';
 import type { Karesz, KareszMap } from './types';
 import run from '../languages/csharp/runner';
 
-const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';  // WSL
+// bruh xd
+// const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';  // WSL
+const BASE_PATH = '/home/karesz-online/testing';  // WSL ROOT
 // const BASE_PATH = 'C://Users/Dani/home/Projects/karesz-online/testing';  // WINDOWS
 // const BASE_PATH = '/home/dapa/Projects/karesz-online/testing';   // NOTEBOOK
 // const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';   // PENDRIVE
@@ -36,19 +38,17 @@ export default class KareszRunner extends KareszCore {
      * INPUT PATTERN: "[key] [i/o] [index] [command] [...value?]"
      * @param input 
      */
-    public parse(input:string, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void):void|string {
+    public parse(input:string, write:(s:string)=>void, kill:(signal:NodeJS.Signals)=>void):undefined|string {
         console.log(`Received input: '${input}'`);
         if(input.trim() == this.key) {
             this.makeSteps();
             this.makeRemovals();
             return;     // TODO: return kill signal if player was eliminated so that thread doesn't keep running 
         }
+        console.log(`RECEIVED: ${input}`);
 
         // io: one character, either '<' for stdout or '>' for stdin
-        const [io, key, index, command, value] = input.trim().split(/\s+/gm);
-
-        console.log('HEHEHEHEHAH');
-        console.log(command);
+        const [key, index, command, value] = input.trim().split(/\s+/gm);
 
         // ignore debug logs
         if(key !== this.key  || index === undefined) return;
@@ -58,11 +58,11 @@ export default class KareszRunner extends KareszCore {
 
         switch(command) {
             case 'f': 
-                return this.proposeStep(player, parseInt(index));
+                this.proposeStep(player, parseInt(index));
             case 'r':
-                return this.turn(player, parseInt(index), 1);
+                this.turn(player, parseInt(index), 1);
             case 'l':
-                return this.turn(player, parseInt(index), -1);
+                this.turn(player, parseInt(index), -1);
             case 'w':
                 return this.wallAhead(player) ? '1' : '0';
             case 'o':
@@ -70,9 +70,9 @@ export default class KareszRunner extends KareszCore {
             case 'i':
                 return this.whatIsUnder(player).toString();
             case 'd':
-                return this.placeRock(player, clamp(parseInt(value), 2, 5));
+                this.placeRock(player, clamp(parseInt(value), 2, 5));
             case 'u':
-                return this.pickUpRock(player);
+                this.pickUpRock(player);
             case 's':
                 return this.radar(player).toString();
             case 'c':
@@ -82,7 +82,7 @@ export default class KareszRunner extends KareszCore {
             case 'v':
                 return player.rotation == parseInt(value) ? '1' : '0';
             case 't':
-                return this.turn(player, parseInt(index), clamp(parseInt(value), -1, 1));
+                this.turn(player, parseInt(index), clamp(parseInt(value), -1, 1));
         }
     }
 

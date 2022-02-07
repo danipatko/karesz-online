@@ -51,7 +51,7 @@ class Program
         Results_${this.rand}.Clear();
         foreach(int key in Commands_${this.rand}.Keys)
         {
-            Console.WriteLine($"${this.key} key {(Commands_${this.rand}[key].Input_${this.rand} ? '>' : '<')} {Commands_${this.rand}[key].Str_${this.rand}}");
+            Console.WriteLine($"${this.key} {key} {(Commands_${this.rand}[key].Input_${this.rand} ? '>' : '<')} {Commands_${this.rand}[key].Str_${this.rand}}");
             if (Commands_${this.rand}[key].Input_${this.rand}) Results_${this.rand}[key] = Console.ReadLine();
         }
         Commands_${this.rand}.Clear();
