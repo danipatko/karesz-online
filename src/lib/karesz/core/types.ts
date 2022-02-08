@@ -26,10 +26,7 @@ export const FIELD_VALUES = {
 
 export type Karesz = {
     id:string;
-    position:{ 
-        x:number;
-        y:number;
-    };
+    position:Point;
     rotation:Rotation;
     steps:string;
 }
@@ -43,4 +40,40 @@ export type KareszMap = {
 export type Point = {
     x:number;
     y:number;
+}
+
+/*
+// typescript doesn't have a hexadecimal type :(
+
+export enum Command {
+    forward = 0x0,
+    turn_left = 0x1,
+    turn_right = 0x2,
+    check_wall = 0x3,
+    check_bounds = 0x4,
+    check_direction = 0x5,
+    check_field = 0x6,
+    pick_up_rock = 0x7,
+    radar = 0x8,
+    check_under = 0x9,
+    place_rock = 0xa,
+    turn_direction = 0xb,
+    looking_at = 0xc
+}
+*/
+
+export enum Command {
+    forward = '0',
+    turn_left = '1',
+    turn_right = '2',
+    check_wall = '3',
+    check_bounds = '4',
+    check_direction = '5',
+    check_field = '6',
+    pick_up_rock = '7',
+    radar = '8',
+    check_under = '9',
+    place_rock = 'a',
+    turn_direction = 'b',
+    looking_at = 'c'
 }

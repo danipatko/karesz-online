@@ -1,14 +1,13 @@
 import KareszCore from './karesz';
 import { randstr, clamp } from '../util';
-import type { Karesz, KareszMap } from './types';
+import { Command, Karesz, KareszMap } from './types';
 import run from '../languages/csharp/runner';
 
-// bruh xd
 // const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';  // WSL
-// const BASE_PATH = '/home/karesz-online/testing';  // WSL ROOT
+const BASE_PATH = '/home/karesz-online/testing';  // WSL ROOT
 // const BASE_PATH = 'C://Users/Dani/home/Projects/karesz-online/testing';  // WINDOWS
 // const BASE_PATH = '/home/dapa/Projects/karesz-online/testing';   // NOTEBOOK
-const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';   // PENDRIVE
+// const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';   // PENDRIVE
 
 export default class KareszRunner extends KareszCore {
     public lang:'CSHARP';   // future support in case new languages are added
@@ -17,20 +16,6 @@ export default class KareszRunner extends KareszCore {
         super(players, map);
         this.lang = lang;
     }
-
-    /**
-     * BASE COMMANDS
-     * f - forward
-     * r - turn right
-     * l - turn left
-     * w - check if wall is ahead
-     * o - check if out of bounds
-     * i - get field value
-     * d - place rock | values: rock colors [2-5]
-     * u - pick up rock
-     * s - radar
-     * c - check if rock is under
-     */
 
     /**
      * Parse a line of input from the process's stdout 
@@ -56,31 +41,31 @@ export default class KareszRunner extends KareszCore {
         player.steps += command;
 
         switch(command) {
-            case 'f': 
+            case Command.forward: 
                 this.proposeStep(player, parseInt(index));
-            case 'r':
+            case Command.turn_right:
                 this.turn(player, parseInt(index), 1);
-            case 'l':
+            case Command.turn_left:
                 this.turn(player, parseInt(index), -1);
-            case 'w':
+            case Command.check_wall:
                 write(this.wallAhead(player) ? '1' : '0');
-            case 'o':
+            case Command.check_bounds:
                 write(this.edgeOfMap(player) ? '1' : '0');
-            case 'i':
+            case Command.check_field:
                 write(this.whatIsUnder(player).toString());
-            case 'd':
+            case Command.place_rock:
                 this.placeRock(player, clamp(parseInt(value), 2, 5));
-            case 'u':
+            case Command.pick_up_rock:
                 this.pickUpRock(player);
-            case 's':
+            case Command.radar:
                 write(this.radar(player).toString());
-            case 'c':
+            case Command.check_under:
                 write(this.isRockUnder(player) ? '1' : '0');
-            case 'k': 
+            case Command.looking_at: 
                 write(this.direction(player).toString());
-            case 'v':
+            case Command.check_direction:
                 write(player.rotation == parseInt(value) ? '1' : '0');
-            case 't':
+            case Command.turn_direction:
                 this.turn(player, parseInt(index), clamp(parseInt(value), -1, 1));
         }
     }

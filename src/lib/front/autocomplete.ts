@@ -87,7 +87,7 @@ export const createDependencyProposals = (range) => {
             documentation: 'Karesz megnézi, hogy északra néz-e.',
             insertText: 'Nyugatra_néz()',
             range: range
-        }, // 
+        }, 
         {
             label: 'Merre_néz',
             kind: monaco.languages.CompletionItemKind.Function,

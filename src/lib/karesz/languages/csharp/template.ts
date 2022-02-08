@@ -28,7 +28,7 @@ export class Template {
                 ruleSet[key].std == 'none' ? 
                 ruleSet[key].cmd // colors
                 : 
-                `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${this.rand}(:i:, ${ruleSet[key].cmd.includes('"') ? ruleSet[key].cmd : `"${ruleSet[key].cmd}"` })` 
+                `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${this.rand}(:i:, ${ruleSet[key].cmd.toString().includes('"') ? ruleSet[key].cmd : `"${ruleSet[key].cmd}"` })` 
             ] = { match:ruleSet[key].match, x:ruleSet[key].x };
         }
         this.replace(0, this.code);

@@ -1,27 +1,26 @@
-import { fields, modulo, rotations } from '$lib/util/karesz';
+import type { Point, Karesz, KareszMap, Rotation, Field } from '$lib/karesz/core/types';
 
-export interface point {
-    x: number;
-    y: number;
+type State = {
+    position:Point;
+    rotation:Rotation;
 }
 
-export interface karesz {
-    position: point;
-    rotation: rotations;
-    id: string;
-    hidden:boolean;
+export default class KareszRenderer {
+   
+    protected map:KareszMap;
+    public players:Map<number, Karesz> = new Map<number, Karesz>();
+    public readonly ctx: CanvasRenderingContext2D;
+    public readonly canvas: HTMLCanvasElement;
+    public onUpdate:({ state, index }:{ state:State, index:number }) => void;
+
+    constructor({ map, canvas, onUpdate }:{ map?:KareszMap, canvas:HTMLCanvasElement, onUpdate:({ state, index }:{ state:State, index:number })=>void }) {
+        this.map = map === undefined ? {  matrix: Array(10).fill(0).map(() => Array(10).fill(0)), sizeX:10, sizeY:10 } : map;
+        this.canvas = canvas;
+        this.onUpdate = onUpdate;
+    } 
 }
 
-export const ROCK_COLORS = {
-    2: '#000',
-    3: '#f00',
-    4: '#0f0',
-    5: '#ff0',
-    'b':2,
-    't':3,
-    'g':4,
-    'y':5,
-}
+/*import { fields, modulo, rotations } from '$lib/util/karesz';
 
 export class Kanvas {
 
@@ -118,7 +117,7 @@ export class Kanvas {
 
     /**
      * Draw the surroundings (walls and rocks)
-     */
+     /
      private drawMap():void {
         for (let x = 0; x < this.matrix.length; x++) {
             for (let y = 0; y < this.matrix[x].length; y++) {
@@ -173,7 +172,7 @@ export class Kanvas {
         if (render) this.render();
     }
 
-    /* run specific variables */
+    /* run specific variables 
     private lastTickIndex:number = 0;
     private i:number = 0;
     public running:boolean = false;
@@ -346,4 +345,4 @@ const sleep = (ms:number):Promise<void> =>
 export interface instruction {
     command:string,
     value?:any
-}
+}*/

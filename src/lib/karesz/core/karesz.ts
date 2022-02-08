@@ -1,5 +1,5 @@
 import { modulo, compareTo } from '../util';
-import { KareszMap, Point, Karesz, Field, Rotation, FIELD_VALUES } from './types';
+import { KareszMap, Point, Karesz, Field, Rotation, FIELD_VALUES, Command } from './types';
 
 export default class KareszCore {
     private map: KareszMap;
@@ -135,7 +135,7 @@ export default class KareszCore {
      * Check if there's a rock at karesz's position  
      * C#: `Van_e_alattam_kavics()`
      */
-    protected isRockUnder(player:Karesz):boolean {        
+    protected isRockUnder(player:Karesz):boolean {
         return this.map.matrix[player.position.x][player.position.y] != Field.empty;
     }
 
@@ -211,3 +211,4 @@ export default class KareszCore {
 }
 
 
+// xd

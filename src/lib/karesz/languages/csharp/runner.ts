@@ -38,9 +38,7 @@ const run = async({
         spwn('mono', `${filename}.exe`)
             .onData((out, write, kill) => {
                 lines = out.trim().split('\n');
-                
                 for (let i = 0; i < lines.length; i++) {
-                    console.log(`Line: '${lines[i]}'`);     // DEBUG
                     // parse command
                     if(lines[i].startsWith(template.key))
                         dataParser(lines[i], x => write(x), x => kill(x));
@@ -49,11 +47,9 @@ const run = async({
                 }
             })
             .onError(x => {
-                console.log(`ERROR: ${x}`);     // DEBUG
                 error += x;
             })
             .onExit(exitCode => {
-                console.log(`\n\n\n EXITED WITH CODE ${exitCode}`);     // DEBUG
                 res({ output, error, exitCode }); 
             })
             .run({ cwd });
