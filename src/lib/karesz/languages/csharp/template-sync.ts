@@ -76,9 +76,13 @@ class Program
         Commands_${this.rand}[i] = new Command_${this.rand}(c, false);
         Bar_${this.rand}.SignalAndWait();
     }
-
+    static void Kill_${this.rand}() {
+        Thread.Sleep(2000);
+        Environment.Exit(0);
+    }
     static void Main()
     {
+        new Thread(Kill_${this.rand}).Start();
         Parallel.Invoke(${this.threads.map(x => x.caller).join(',')});
         Bar_${this.rand}.Dispose();
     }

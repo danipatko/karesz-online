@@ -4,8 +4,8 @@ import { KareszMap, Point, Karesz, Field, Rotation, FIELD_VALUES } from './types
 export default class KareszCore {
     private map: KareszMap;
     public players: Map<number, Karesz>;
-    private proposedPositions: Map<Point, Array<number>>;
-    private removeList: Array<number>;
+    private proposedPositions: Map<Point, Array<number>> = new Map<Point, Array<number>>();
+    private removeList: Array<number> = [];
     public multiPlayer:boolean;
 
     constructor(players:Map<number, Karesz>, map?:KareszMap){
@@ -117,7 +117,8 @@ export default class KareszCore {
         const p = this.forward(player);
         // if attempts to step out the map or into a wall, just simply don't step
         if(!p || !this.canStep(p)) return;
-        this.proposedPositions.set(p, [index, ...this.proposedPositions.get(p)]);
+        const prev = this.proposedPositions.get(p);
+        this.proposedPositions.set(p, prev === undefined ? [index] : prev.concat(index));
     }
 
     /**
