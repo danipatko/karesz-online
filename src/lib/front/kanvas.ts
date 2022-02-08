@@ -1,23 +1,21 @@
-import type { Point, Karesz, KareszMap, Rotation, Field } from '$lib/karesz/core/types';
+import { Point, Karesz, KareszMap, Rotation, Field, State } from '$lib/karesz/core/types';
 
-type State = {
-    position:Point;
-    rotation:Rotation;
-}
+
 
 export default class KareszRenderer {
    
     protected map:KareszMap;
     public players:Map<number, Karesz> = new Map<number, Karesz>();
-    public readonly ctx: CanvasRenderingContext2D;
-    public readonly canvas: HTMLCanvasElement;
-    public onUpdate:({ state, index }:{ state:State, index:number }) => void;
+    protected readonly ctx: CanvasRenderingContext2D;
+    protected readonly canvas: HTMLCanvasElement;
 
-    constructor({ map, canvas, onUpdate }:{ map?:KareszMap, canvas:HTMLCanvasElement, onUpdate:({ state, index }:{ state:State, index:number })=>void }) {
-        this.map = map === undefined ? {  matrix: Array(10).fill(0).map(() => Array(10).fill(0)), sizeX:10, sizeY:10 } : map;
+    constructor({ map, size, canvas }:{ map?:KareszMap, size?:Point, canvas:HTMLCanvasElement }) {
+        this.map = map === undefined ? { matrix: Array(size.x ?? 10).fill(size.y ?? Field.empty).map(() => Array(10).fill(Field.empty)), sizeX:10, sizeY:10 } : map;
         this.canvas = canvas;
-        this.onUpdate = onUpdate;
-    } 
+        this.ctx = canvas.getContext('2d');
+    }
+
+
 }
 
 /*import { fields, modulo, rotations } from '$lib/util/karesz';

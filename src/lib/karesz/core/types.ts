@@ -5,6 +5,11 @@ export enum Rotation {
     left = 3
 }
 
+export type State = {
+    position:Point;
+    rotation:Rotation;
+}
+
 export enum Field {
     null = -1,
     empty = 0,
