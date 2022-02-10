@@ -1,20 +1,117 @@
-import { Point, Karesz, KareszMap, Rotation, Field, State } from '$lib/karesz/core/types';
-
-
+import { Point, KareszMap, Rotation, Field, State, RockColor, IKaresz } from '$lib/karesz/core/types';
 
 export default class KareszRenderer {
    
     protected map:KareszMap;
-    public players:Map<number, Karesz> = new Map<number, Karesz>();
-    protected readonly ctx: CanvasRenderingContext2D;
-    protected readonly canvas: HTMLCanvasElement;
+    protected cellSize:number;
+    public players:Map<number, IKaresz> = new Map<number, IKaresz>();
+    private readonly ctx: CanvasRenderingContext2D;
+    private readonly canvas: HTMLCanvasElement;
+    public onRender:()=>void;
 
-    constructor({ map, size, canvas }:{ map?:KareszMap, size?:Point, canvas:HTMLCanvasElement }) {
-        this.map = map === undefined ? { matrix: Array(size.x ?? 10).fill(size.y ?? Field.empty).map(() => Array(10).fill(Field.empty)), sizeX:10, sizeY:10 } : map;
+    constructor({ map, size, canvas, players, onRender }:{ map?:KareszMap, size?:Point, canvas:HTMLCanvasElement, players?:Map<number, IKaresz>; onRender?:()=>void }) {
+        this.map = map === undefined ? { matrix: Array(size?.x ?? 10).fill(size?.y ?? Field.empty).map(() => Array(10).fill(Field.empty)), sizeX:10, sizeY:10 } : map;
         this.canvas = canvas;
+        this.players = players ?? new Map<number, IKaresz>();
         this.ctx = canvas.getContext('2d');
+        this.onRender = onRender ?? (() => {});
+        this.resize();
     }
 
+    /**
+     * Resets the rendered cell size 
+     * Use when canvas is resized or number of cells have changed
+     */
+    public resize():void {
+        this.cellSize = Math.min(Math.floor(this.canvas.width / this.map.sizeX), Math.floor(this.canvas.height / this.map.sizeY));
+        this.render();
+    }
+
+    /**
+     * Set the number of cells to render
+     */
+    public setCells({ x, y }:{ x:number; y:number; }):void {
+        this.map.sizeX = x;
+        this.map.sizeY = y;
+        this.resize();
+    }
+
+    /**
+     * Render the next frame
+     */
+    public render():void {
+        this.drawGrid();
+        this.drawMap();
+        this.drawPlayers();
+    }
+
+    /* Draw functions */
+
+    /**
+     * Draw the white background and black stripes
+     */
+    private drawGrid():void {
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(0, 0, this.map.sizeX * this.cellSize, this.map.sizeY * this.cellSize);
+        this.ctx.fillStyle = '#000';
+        // horizontal
+        for (let y = 0; y < this.map.sizeY * this.cellSize + 1; y += this.cellSize) 
+            this.ctx.fillRect(0, y, this.map.sizeX * this.cellSize, 1);
+        // vertical
+        for (let x = 0; x < this.map.sizeX * this.cellSize + 1; x+=this.cellSize) 
+            this.ctx.fillRect(x, 0, 1, this.map.sizeY * this.cellSize);
+    }
+
+    /**
+     * Draw a square at a position
+     */
+    private drawSquare(position:Point, color:string='#000'):void {
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect((position.x * this.cellSize) + 1, (position.y * this.cellSize) + 1, this.cellSize - 1, this.cellSize - 1);
+    }
+
+    /**
+     * Draw a circle at a position
+     */
+    private drawCircle(position:Point, color:string='#000'):void{
+        this.ctx.beginPath();
+        this.ctx.arc((position.x * this.cellSize) + (this.cellSize / 2), (position.y * this.cellSize) + (this.cellSize / 2), (this.cellSize / 2) - 2, 0, 2 * Math.PI, false);
+        this.ctx.fillStyle = color;
+        this.ctx.fill(); 
+    }
+
+    /**
+     * Draw an image at a point
+     */
+    private drawIMG(position:Point, source:string):void {
+        var img = new Image();
+        img.onload = () => 
+            this.ctx.drawImage(img, (position.x * this.cellSize) + 2, (position.y * this.cellSize) + 2, this.cellSize - 3, this.cellSize - 3);
+        img.src = source;
+    }
+
+    /**
+     * Draw map objects
+     */
+    private drawMap():void {
+        for (let x = 0; x < this.map.matrix.length; x++) {
+            for (let y = 0; y < this.map.matrix[x].length; y++) {
+                if (this.map.matrix[x][y] == Field.wall)
+                    this.drawSquare({x, y}, '#f00');
+                else if (this.map.matrix[x][y] > 1) 
+                    this.drawCircle({x,y}, RockColor[this.map.matrix[x][y]] ?? '#000');
+            }
+        }
+    }
+
+    /**
+     * Draw the players on the canvas
+     */
+    private drawPlayers():void {
+        this.players.forEach(x => {
+            this.drawIMG(x.position, `/karesz/Karesz${x.rotation}.png`);
+        });
+    }
 
 }
 
@@ -116,7 +213,7 @@ export class Kanvas {
     /**
      * Draw the surroundings (walls and rocks)
      /
-     private drawMap():void {
+    private drawMap():void {
         for (let x = 0; x < this.matrix.length; x++) {
             for (let y = 0; y < this.matrix[x].length; y++) {
                 if(this.matrix[x][y] == fields.empty) 

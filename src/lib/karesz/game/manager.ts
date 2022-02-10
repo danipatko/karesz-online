@@ -45,7 +45,7 @@ export default class KareszManager {
         rotation:Rotation;
         name:string; 
     }) {
-        this.players.set(this.players.size, { id:name, position:{ x, y }, rotation, steps:'' });
+        this.players.set(this.players.size, { id:name, position:{ x, y }, rotation, steps:'', startState:{ position:{ x:0, y:0 }, rotation:Rotation.up } });
         return this.players.size - 1;
     }
 

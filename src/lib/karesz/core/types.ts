@@ -30,10 +30,15 @@ export const FIELD_VALUES = {
 }
 
 export type Karesz = {
+    startState:State;
     id:string;
     position:Point;
     rotation:Rotation;
     steps:string;
+}
+
+export interface IKaresz extends Karesz {
+    stepStates:State[];
 }
 
 export type KareszMap = {
@@ -81,4 +86,18 @@ export enum Command {
     place_rock = 'a',
     turn_direction = 'b',
     looking_at = 'c'
+}
+
+export enum Rock {
+    black = '#000',
+    red = '#f00',
+    yellow = '#0ff',
+    green = '#0f0',
+}
+
+export const RockColor = {
+    2: Rock.black,
+    3: Rock.red,
+    4: Rock.green,
+    5: Rock.yellow,
 }
