@@ -1,4 +1,4 @@
-import { Point, KareszMap, Rotation, Field, State, RockColor, IKaresz } from '$lib/karesz/core/types';
+import { Point, KareszMap, Field, RockColor, IKaresz } from '../karesz/core/types';
 
 export default class KareszRenderer {
    

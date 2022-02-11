@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { Kanvas } from '$lib/front/kanvas';
+	import KareszPlayback from '$lib/front/playback';
 	import { fields, point, rotations } from '$lib/util/karesz';
 	import { currentCommandIndex } from '$lib/svelte-components/store';
 	import Command from '$lib/svelte-components/command.svelte';
@@ -10,7 +10,7 @@
 	import { createDependencyProposals } from '$lib/front/autocomplete';
 
 	let canvas:HTMLCanvasElement;
-	let k:Kanvas;
+	let k:KareszPlayback;
 	let SELECTED_FIELD:fields = -1;
 	let startStopButton:HTMLDivElement;
 	let editor:monaco.editor.IStandaloneCodeEditor;
@@ -30,23 +30,18 @@
 	onMount(() => {
 		adjustOnResize(false);
 		// create new karesz canvas, fill default editor and test instuctions
-		k = new Kanvas(20, 20, canvas, (position, rotation, i, running) => {
-			CURRENT_POSITION = `${position.x}:${position.y}`;
-			CURRENT_ROTATION = rotation * 90;
-			RUNNING_STATE = running;
-			STEP_INDEX = i;
-		});
+		k = new KareszPlayback({ size:{ x:10, y:10 }, canvas });
 		adjustOnResize();
 		k.render();
 		// set up test env
 		// parseCommands(sampleCommands);
 		// dynamically set tick speed 
-		document.getElementById('speedrange').oninput = () => 
-			k.setTickSpeed(PLAYBACK_SPEED);
+		/*document.getElementById('speedrange').oninput = () => 
+			k.setTickSpeed(PLAYBACK_SPEED);*/
 		// subscribe to index change event
-		currentCommandIndex.subscribe(index => {
+		/*currentCommandIndex.subscribe(index => {
 			if(index != -1) k.jumpToStep(index);
-		});
+		});*/
 		// enable darkmode
 		document.body.classList.add('dark');
 		canvas.onclick = canvasInteract;
@@ -72,17 +67,17 @@
 			theme: 'vs-dark'
 		});
 
-		document.getElementById('mapsize-range').oninput = () => 
-			k.resetCells(MAP_SIZE);
+		/*document.getElementById('mapsize-range').oninput = () => 
+			k.resetCells(MAP_SIZE);*/
 	});
 
 	window.onresize = () => adjustOnResize();
 
 	const canvasInteract = (e:MouseEvent):void => {
-		if(SELECTED_FIELD == fields.null)
+		/*if(SELECTED_FIELD == fields.null)
 			k.changeKareszPosition(k.getClickPoint(e));
 		else 
-			k.changeField(k.getClickPoint(e), SELECTED_FIELD);
+			k.changeField(k.getClickPoint(e), SELECTED_FIELD);*/
 	}
 
 	// resize canvas on window resize
@@ -96,8 +91,8 @@
 
 	// wrapper for events
 	const startStop = ():void =>{ 
-		k.play(true, changeButtonState, flashCommand);
-		changeButtonState(k.running);
+		/*k.play(true, changeButtonState, flashCommand);
+		changeButtonState(k.running);*/
 	}
 
 	const flashCommand = (index:number):void => {
@@ -120,15 +115,15 @@
 
 	// parse string commands to an array of instructions (global => CURRENT_STEPS_PARSED)
 	const parseCommands = (steps:string):void => {
-		k.set(steps);
+		/*k.set(steps);
 		listCommands(k.getStepsDisplay());
-		k.toStart();
+		k.toStart();*/
 	}
 
 	const saveStartingState = ():void => {
-		k.setStartingState();
+		/*k.setStartingState();
 		STARTING_POINT = k.karesz.position;
-		STARTING_ROTATION = k.karesz.rotation;
+		STARTING_ROTATION = k.karesz.rotation;*/
 	}
 
 	// send code to server
@@ -139,7 +134,7 @@
 		const result = await fetch(`/run/dotnet`, {
 			body: JSON.stringify({
 				code:editor.getValue(), 
-				karesz: k.generateMapData()
+				// karesz: k.generateMapData()
 			}),
 			method:'post',
 		});

@@ -8,6 +8,7 @@ export enum Rotation {
 export type State = {
     position:Point;
     rotation:Rotation;
+    tag?:string;
 }
 
 export enum Field {
@@ -51,26 +52,6 @@ export type Point = {
     x:number;
     y:number;
 }
-
-/*
-// typescript doesn't have a hexadecimal type :(
-
-export enum Command {
-    forward = 0x0,
-    turn_left = 0x1,
-    turn_right = 0x2,
-    check_wall = 0x3,
-    check_bounds = 0x4,
-    check_direction = 0x5,
-    check_field = 0x6,
-    pick_up_rock = 0x7,
-    radar = 0x8,
-    check_under = 0x9,
-    place_rock = 0xa,
-    turn_direction = 0xb,
-    looking_at = 0xc
-}
-*/
 
 export enum Command {
     forward = '0',

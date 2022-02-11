@@ -1,5 +1,6 @@
 import KareszRenderer from './render';
-import type { IKaresz, KareszMap, Point, State } from '$lib/karesz/core/types';
+import { Command, KareszMap, Point, Rotation } from '$lib/karesz/core/types';
+import { compareTo, modulo } from '$lib/karesz/util';
 
 export default class KareszPlayback extends KareszRenderer {
 
@@ -21,18 +22,39 @@ export default class KareszPlayback extends KareszRenderer {
         super({ map, size, canvas, onRender });
     }
 
-    public calculateSteps(index:number):void {
+    private forward(position:Point, rotation:Rotation):Point {
+        return {
+            x: position.x + compareTo(rotation, rotation % 2 + 1),
+            y: position.y + compareTo(rotation, rotation % 2 + 1),
+        }
+    }
 
+    protected calculateSteps(index:number):void {
+        const player = this.players.get(index);
+        if(player === undefined) return;
+
+        let position:Point = player.position, rotation:Rotation = player.rotation;
+        
+        for (let i = 0; i < player.steps.length; i++) {
+            if(player.steps[i] == Command.forward) 
+                position = this.forward(position, rotation);
+            else if(player.steps[i] == Command.turn_left)
+                rotation = modulo(rotation - 1, 4);
+            else if(player.steps[i] == Command.turn_right)
+                rotation = modulo(rotation + 1, 4);
+            
+            player.stepStates.push({ position, rotation, tag:player.steps[i] });
+        }
+
+        this.players.set(index, player);
+        console.log(player.stepStates);
     }
 
     /* -------- */ 
 
     public update():void {
         this.state.currentStep++;
-        this.players.forEach(player => {
-            player.steps[this.state.currentStep]
-            
-        });
+        this.render();
     }
 
     public reset():void {
@@ -41,10 +63,14 @@ export default class KareszPlayback extends KareszRenderer {
     }
 
     public play():void {
+        if(this.state.running) return;
+        this.state.running = true;
         this.interval = setInterval(this.update, this.state.playbackSpeed);
     }
 
     public stop():void {
+        if(!this.state.running) return;
+        this.state.running = false;
         clearInterval(this.interval);
         this.state.lastStep = this.state.currentStep;
     }
