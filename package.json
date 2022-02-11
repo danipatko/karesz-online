@@ -29,6 +29,7 @@
   },
   "type": "module",
   "dependencies": {
+    "expess": "^0.0.1-security",
     "monaco-editor": "^0.31.1",
     "vite": "^2.7.2"
   }
