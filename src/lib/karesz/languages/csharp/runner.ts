@@ -1,9 +1,9 @@
-import { spwn } from '$lib/util/command';
+import { spwn } from '../../../util/command';
 import { RULES } from './config';
 import { Template } from './template';
 import fs from 'fs';
 import path from 'path/posix';
-import { randstr } from '$lib/karesz/util';
+import { randstr } from '../../../karesz/util';
 import { SyncTemplate } from './template-sync';
 
 const run = async({ 

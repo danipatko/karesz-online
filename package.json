@@ -1,36 +1,25 @@
 {
-  "name": "karesz-online",
-  "version": "0.0.1",
+  "name": "karesz-next",
+  "private": true,
   "scripts": {
-    "dev": "svelte-kit dev",
-    "build": "svelte-kit build",
-    "package": "svelte-kit package",
-    "preview": "svelte-kit preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-    "lint": "eslint --ignore-path .gitignore ."
+    "dev": "ts-node src/server",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "12.0.10",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "socket.io": "^4.4.1",
+    "socket.io-client": "^4.4.1"
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "^1.0.0-next.3",
-    "@sveltejs/kit": "next",
-    "@tsconfig/svelte": "^3.0.0",
-    "@typescript-eslint/eslint-plugin": "^4.31.1",
-    "@typescript-eslint/parser": "^4.31.1",
-    "autoprefixer": "^10.4.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-svelte3": "^3.2.1",
-    "postcss": "^8.4.5",
-    "svelte": "^3.45.0",
-    "svelte-check": "^2.2.6",
-    "svelte-preprocess": "^4.9.4",
-    "tailwindcss": "^3.0.7",
-    "tslib": "^2.3.1",
-    "typescript": "^4.5.2"
-  },
-  "type": "module",
-  "dependencies": {
-    "expess": "^0.0.1-security",
-    "monaco-editor": "^0.31.1",
-    "vite": "^2.7.2"
+    "@types/express": "^4.17.13",
+    "@types/node": "17.0.17",
+    "@types/react": "17.0.39",
+    "eslint": "8.8.0",
+    "eslint-config-next": "12.0.10",
+    "typescript": "4.5.5"
   }
 }

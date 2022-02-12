@@ -1,4 +1,4 @@
-import { randstr } from '$lib/karesz/util';
+import { randstr } from '../../../karesz/util';
 import type { ReplacementRules } from './config';
 
 const ALLOWED_IMPORTS_CSHARP = [

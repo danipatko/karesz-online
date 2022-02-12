@@ -1,4 +1,4 @@
-import { Command } from '$lib/karesz/core/types';
+import { Command } from '../../../karesz/core/types';
 
 export interface ReplacementRules {
     std:'in'|'out'|'none';

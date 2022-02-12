@@ -115,7 +115,7 @@ export default class KareszRenderer {
 
 }
 
-/*import { fields, modulo, rotations } from '$lib/util/karesz';
+/*import { fields, modulo, rotations } from  il/karesz';
 
 export class Kanvas {
 

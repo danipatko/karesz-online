@@ -1,4 +1,4 @@
-import { randstr } from '$lib/karesz/util';
+import { randstr } from '../../../karesz/util';
 import { Template } from './template';
 import type { ReplacementRules } from './config';
 

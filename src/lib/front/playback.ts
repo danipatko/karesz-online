@@ -1,6 +1,6 @@
 import KareszRenderer from './render';
-import { Command, KareszMap, Point, Rotation } from '$lib/karesz/core/types';
-import { compareTo, modulo } from '$lib/karesz/util';
+import { Command, KareszMap, Point, Rotation } from '../karesz/core/types';
+import { compareTo, modulo } from '../karesz/util';
 
 export default class KareszPlayback extends KareszRenderer {
 
