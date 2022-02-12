@@ -6,12 +6,12 @@ import {
     Field,
     Rotation,
     FIELD_VALUES,
-    Command,
 } from './types';
 
 export default class KareszCore {
     private map: KareszMap;
     public players: Map<number, Karesz>;
+    public playersDisqualified: Map<number, Karesz> = new Map<number, Karesz>();
     private proposedPositions: Map<Point, Array<number>> = new Map<
         Point,
         Array<number>
@@ -95,7 +95,7 @@ export default class KareszCore {
     }
 
     /**
-     * Make steps for all players. Only relevant in karesz-sync.  Rules: if two players
+     * Make steps for all players. Only relevant in karesz-sync. Rules: if two players
      * attempt to step on the same field or they try to step over each other (by stepping
      * on each other's position) both of them get eliminated.
      * It is also possible to eliminate other players by stepping on their fields while they
@@ -103,7 +103,7 @@ export default class KareszCore {
      */
     protected makeSteps(): void {
         this.proposedPositions.forEach((players, point) => {
-            // two (or more) players simply colliding
+            // two (or more) players stepping on the same field
             if (players.length > 1) {
                 players.forEach((x) => this.removeList.push(x));
                 return;
@@ -113,8 +113,13 @@ export default class KareszCore {
             // right away, so if they are facing each other and stepping
             // to each other's positions they will both die eventually
             this.players.forEach((x, i) => {
-                if (x.position == point) this.removeList.push(i);
+                if (x.position == point && x.proposedPosition === undefined)
+                    this.removeList.push(i);
             });
+            // actually step
+            const p = this.players.get(players[0]);
+            if (p === undefined) return;
+            this.players.set(players[0], { ...p, position: point });
         });
         this.proposedPositions.clear();
     }
@@ -123,7 +128,10 @@ export default class KareszCore {
      * Remove all players included in `this.removeList` and reset.
      */
     protected makeRemovals(): void {
-        this.removeList.forEach((x) => this.players.delete(x));
+        this.removeList.forEach((x, i) => {
+            this.playersDisqualified.set(x, this.players.get(x) as any);
+            this.players.delete(x);
+        });
         this.removeList = [];
     }
 
@@ -133,15 +141,19 @@ export default class KareszCore {
      * Make one step forward
      * C#: `Lépj()`
      */
-    protected proposeStep(player: Karesz, index: number): void {
+    protected proposeStep(player: Karesz, index: number): Karesz {
         const p = this.forward(player);
-        // if attempts to step out the map or into a wall, just simply don't step
-        if (!p || !this.canStep(p)) return;
+        // if attempts to step out the map or into a wall, just simply die
+        if (!p || !this.canStep(p)) {
+            this.removeList.push(index);
+            return player;
+        }
         const prev = this.proposedPositions.get(p);
         this.proposedPositions.set(
             p,
             prev === undefined ? [index] : prev.concat(index)
         );
+        return { ...player, proposedPosition: p };
     }
 
     /**
@@ -149,9 +161,9 @@ export default class KareszCore {
      * Directions: LEFT = -1 | RIGHT = 1
      * C#: `Fordulj()`
      */
-    protected turn(player: Karesz, index: number, direction: number): void {
+    protected turn(player: Karesz, direction: number): Karesz {
         player.rotation = modulo(player.rotation + direction, 4);
-        this.players.set(index, player);
+        return player;
     }
 
     /**

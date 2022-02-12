@@ -20,8 +20,7 @@ interface Player {
 
 enum SessionState {
     waiting = 0, // on finished/initted, wait for people to write their code
-    compiling = 1, // on host start, compile
-    running = 2, // on compile finished
+    running = 1, // on compile finished
 }
 
 export default class SessionManager {
@@ -29,6 +28,7 @@ export default class SessionManager {
     protected players: Map<string, Player> = new Map<string, Player>();
     protected state: SessionState = SessionState.waiting;
     protected host: string;
+    protected lastWinner: string = '';
     public destroy: () => void;
 
     constructor({
@@ -45,7 +45,7 @@ export default class SessionManager {
         this.addPlayer({ name, socket, host: true });
     }
 
-    private setHost(id: string) {
+    protected setHost(id: string) {
         const host = this.players.get(id);
         if (host === undefined) return;
 
@@ -68,9 +68,8 @@ export default class SessionManager {
         ev:
             | 'left'
             | 'joined'
-            | 'update_player'
-            | 'update_env'
-            | 'results'
+            | 'player_update'
+            | 'state_update'
             | 'host_change',
         params?: object
     ): void {
@@ -104,7 +103,7 @@ export default class SessionManager {
     }
 
     /**
-     * Get karesz objects from players
+     * Get karesz objects aligned evenly on the x axis
      */
     private getKareszes({
         x,
@@ -122,7 +121,7 @@ export default class SessionManager {
                 rotation: Rotation.up,
             };
             map.set(i++, {
-                name: player.name,
+                name: player.id,
                 startState,
                 steps: '',
                 ...startState,
@@ -155,16 +154,41 @@ export default class SessionManager {
 
         // handle user submitting code
         socket.on('submit', ({ code }: { code: string }) => {
+            if (this.state == SessionState.running) return;
             const p = this.players.get(socket.id);
-            if (p !== undefined) this.players.set(p.id, { ...p, code });
+            if (p === undefined) return;
+            this.players.set(p.id, { ...p, code, ready: true });
+            this.announce('player_update', { id: p.id, ready: true });
+        });
+
+        // unsubmit code
+        socket.on('unsubmit', () => {
+            if (this.state == SessionState.running) return;
+            const p = this.players.get(socket.id);
+            if (p === undefined) return;
+            this.players.set(p.id, { ...p, code: '', ready: false });
+            this.announce('player_update', { id: p.id, ready: false });
         });
 
         this.players.set(player.id, player);
-        this.announce('joined', { name: player.name, ready: false });
+        if (host) this.setHost(player.id);
+
+        // emit data about other players when joining
+        const players: Array<{ name: string; id: string; ready: boolean }> = [];
+        this.players.forEach((x, i) => {
+            players.push({ name: x.name, id: x.id, ready: x.ready });
+        });
+        socket.emit('fetch', { players, host: this.host });
+
+        this.announce('joined', {
+            id: player.id,
+            name: player.name,
+            ready: false,
+        });
     }
 
     /**
-     * Remove a player by it's index
+     * Remove a player by it's id
      */
     public removePlayer(id: string): void {
         const player = this.players.get(id);
@@ -184,27 +208,45 @@ export default class SessionManager {
         mapType: 'parse' | 'empty' | 'load';
         mapSize?: { x: number; y: number };
     }): Promise<{ error?: string; output: string; exitCode: number }> {
-        switch (mapType) {
-            // create an empty map of size ...
-            case 'empty':
-                this.fillMap({ ...(mapSize ?? { x: 10, y: 10 }) });
-            // parse map made by user ...
-            case 'parse':
-                if (map !== undefined) this.parseMapAsString(map);
-            // load an existing map
-            case 'load':
-                break;
-        }
-        // create new runner instance
-        const game = new KareszRunner(
-            'csharp',
-            this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
-            this.map
-        );
+        return new Promise<{
+            error?: string;
+            output: string;
+            exitCode: number;
+        }>((res) => {
+            this.state = SessionState.running;
+            this.announce('state_update', { state: SessionState.running });
 
-        const code = new Map<number, string>();
-        let i = 0;
-        this.players.forEach((player) => code.set(i++, player.code));
-        return await game.run({ code });
+            switch (mapType) {
+                // create an empty map of size ...
+                case 'empty':
+                    this.fillMap({ ...(mapSize ?? { x: 10, y: 10 }) });
+                // parse map made by user ...
+                case 'parse':
+                    if (map !== undefined) this.parseMapAsString(map);
+                // load an existing map
+                case 'load': // TODO: import maps from karesz
+                    break;
+                default:
+                    res({
+                        error: 'Invalid map type',
+                        exitCode: 1,
+                        output: 'Invalid map type',
+                    });
+            }
+
+            // create new runner instance
+            const game = new KareszRunner(
+                'csharp',
+                this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
+                this.map
+            );
+
+            const code = new Map<number, string>();
+            let i = 0;
+            this.players.forEach((player) => code.set(i++, player.code));
+            game.run({ code }).then(({ exitCode, output, error }) => {
+                res({ exitCode, output, error });
+            });
+        });
     }
 }

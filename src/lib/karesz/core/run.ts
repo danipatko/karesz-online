@@ -40,22 +40,20 @@ export default class KareszRunner extends KareszCore {
         if (index === undefined || io === undefined || command === undefined)
             return;
 
-        const player = this.players.get(parseInt(index));
+        let player = this.players.get(parseInt(index));
         // invalid or removed player, return
-        if (player === undefined) {
-            console.log(`player ${index} was undefined`);
-            return;
-        }
+        if (player === undefined) return;
 
         player.steps += command;
+        player.proposedPosition = undefined;
 
         switch (command) {
             case Command.forward:
-                this.proposeStep(player, parseInt(index));
+                player = this.proposeStep(player, parseInt(index));
             case Command.turn_right:
-                this.turn(player, parseInt(index), 1);
+                player = this.turn(player, 1);
             case Command.turn_left:
-                this.turn(player, parseInt(index), -1);
+                player = this.turn(player, -1);
             case Command.check_wall:
                 write(this.wallAhead(player) ? '1' : '0');
             case Command.check_bounds:
@@ -75,26 +73,43 @@ export default class KareszRunner extends KareszCore {
             case Command.check_direction:
                 write(player.rotation == parseInt(value) ? '1' : '0');
             case Command.turn_direction:
-                this.turn(
-                    player,
-                    parseInt(index),
-                    clamp(parseInt(value), -1, 1)
-                );
+                player = this.turn(player, clamp(parseInt(value), -1, 1));
         }
+        this.players.set(parseInt(index), player);
     };
+
+    protected tick(): void {
+        this.makeSteps();
+        this.makeRemovals();
+    }
 
     public async run({
         code,
     }: {
         code: Map<number, string>;
     }): Promise<{ error?: string; output: string; exitCode: number }> {
-        if (this.players.size == 0)
-            return { error: 'No players.', exitCode: 1, output: 'No players.' };
+        return new Promise<{
+            error?: string;
+            output: string;
+            exitCode: number;
+        }>((res) => {
+            // check players
+            if (this.players.size <= 1) {
+                res({
+                    error: 'Not enough players',
+                    exitCode: 1,
+                    output: 'Not enough players',
+                });
+            }
 
-        return await run({
-            code,
-            basePath: BASE_PATH,
-            dataParser: this.parse,
+            run({
+                code,
+                basePath: BASE_PATH,
+                dataParser: this.parse,
+                onTick: this.tick,
+            }).then(({ output, exitCode, error }) => {
+                res({ output, exitCode, error });
+            });
         });
     }
 }

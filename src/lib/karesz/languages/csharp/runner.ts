@@ -10,6 +10,7 @@ const run = async ({
     code,
     dataParser,
     basePath,
+    onTick,
 }: {
     code: Map<number, string>;
     dataParser: (
@@ -17,6 +18,7 @@ const run = async ({
         write: (s: string) => void,
         kill: (signal: NodeJS.Signals) => void
     ) => void;
+    onTick: () => void;
     basePath: string;
 }): Promise<{ error?: string; output: string; exitCode: number }> => {
     return new Promise<{ error?: string; output: string; exitCode: number }>(
@@ -35,18 +37,12 @@ const run = async ({
             fs.writeFileSync(path.join(cwd, `${filename}.cs`), template._code);
 
             const compileResults = await compile({ filename, cwd });
-            console.log(
-                `Compiled ${filename} (${compileResults.exitCode}). \nOutput:${compileResults.output}\n\n`
-            );
             if (compileResults.exitCode != 0) {
                 res({ ...compileResults });
                 return;
             }
 
             const preCompileResults = await preCompile({ filename, cwd });
-            console.log(
-                `Compiled ${filename} (${preCompileResults.exitCode}). \nOutput:${preCompileResults.output}\n\n`
-            );
             if (preCompileResults.exitCode != 0) {
                 res({ ...preCompileResults });
                 return;
@@ -66,6 +62,8 @@ const run = async ({
                                 (x) => write(x),
                                 (x) => kill(x)
                             );
+                        else if (lines[i].startsWith(template.roundKey))
+                            onTick();
                         else output += `${lines[i]}\n`;
                     }
                 })

@@ -34,6 +34,7 @@ export type Karesz = {
     startState: State;
     name: string;
     position: Point;
+    proposedPosition?: Point;
     rotation: Rotation;
     steps: string;
 };

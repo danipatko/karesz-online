@@ -77,6 +77,7 @@ class Program
             this.rand
         }[key] = Console.ReadLine();
         }
+        Console.WriteLine("${this.roundKey}");
         Commands_${this.rand}.Clear();
     });
 

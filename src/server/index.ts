@@ -46,6 +46,7 @@ io.on('connection', (socket) => {
                 new SessionManager({
                     name,
                     socket,
+                    remove: () => gameManager.delete(code),
                 })
             );
 

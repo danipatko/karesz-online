@@ -15,6 +15,7 @@ interface ReplaceRules {
 export class Template {
     public readonly rand: string = `_${randstr(20)}`;
     public readonly key: string = randstr(10);
+    public readonly roundKey: string = randstr(10);
     protected code: string;
     private readonly betweenParanthesis: RegExp = /(?<=\()(.*?)(?=\))/gm;
     private rules: ReplaceRules = {};
