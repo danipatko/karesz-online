@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import next from 'next';
-import { Server } from "socket.io";
+import { Server } from 'socket.io';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -11,12 +11,12 @@ const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 const httpserver = createServer(async (req, res) => {
-    return handle(req, res);
+    return await handle(req, res);
 });
 
 app.prepare().then(() => {
     httpserver.listen(port, () => {
-        console.log(`> Ready on http://${hostname}:${port}`)
+        console.log(`> Ready on http://${hostname}:${port}`);
     });
 });
 
@@ -32,5 +32,5 @@ io.on('connection', (socket) => {
 
     socket.on('join', () => {
         console.log('JOIN INVOKED');
-    }); 
+    });
 });

@@ -2,14 +2,14 @@ export enum Rotation {
     up = 0,
     right = 1,
     down = 2,
-    left = 3
+    left = 3,
 }
 
 export type State = {
-    position:Point;
-    rotation:Rotation;
-    tag?:string;
-}
+    position: Point;
+    rotation: Rotation;
+    tag?: string;
+};
 
 export enum Field {
     null = -1,
@@ -18,40 +18,40 @@ export enum Field {
     rock_black = 2,
     rock_red = 3,
     rock_green = 4,
-    rock_yellow = 5
+    rock_yellow = 5,
 }
 
-export const FIELD_VALUES = { 
+export const FIELD_VALUES = {
     0: Field.empty,
     1: Field.wall,
     2: Field.rock_black,
     3: Field.rock_red,
     4: Field.rock_green,
-    5: Field.rock_yellow
-}
+    5: Field.rock_yellow,
+};
 
 export type Karesz = {
-    startState:State;
-    id:string;
-    position:Point;
-    rotation:Rotation;
-    steps:string;
-}
+    startState: State;
+    name: string;
+    position: Point;
+    rotation: Rotation;
+    steps: string;
+};
 
 export interface IKaresz extends Karesz {
-    stepStates:State[];
+    stepStates: State[];
 }
 
 export type KareszMap = {
-    sizeX:number;
-    sizeY:number;
-    matrix:Array<Array<Field>>;
-}
+    sizeX: number;
+    sizeY: number;
+    matrix: Array<Array<Field>>;
+};
 
 export type Point = {
-    x:number;
-    y:number;
-}
+    x: number;
+    y: number;
+};
 
 export enum Command {
     forward = '0',
@@ -66,7 +66,7 @@ export enum Command {
     check_under = '9',
     place_rock = 'a',
     turn_direction = 'b',
-    looking_at = 'c'
+    looking_at = 'c',
 }
 
 export enum Rock {
@@ -81,4 +81,4 @@ export const RockColor = {
     3: Rock.red,
     4: Rock.green,
     5: Rock.yellow,
-}
+};

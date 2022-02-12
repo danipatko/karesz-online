@@ -3,24 +3,34 @@ import { Template } from './template';
 import type { ReplacementRules } from './config';
 
 export class SyncTemplate extends Template {
-    public threads:{ code:string; caller?:string; }[] = []; 
-    public timeout:number = 2000;
+    public threads: { code: string; caller?: string }[] = [];
+    public timeout: number = 2000;
 
-    constructor(rawCode:string[], ruleSet:Array<ReplacementRules>) {
+    constructor(
+        rawCode: Map<number, string>,
+        ruleSet: Array<ReplacementRules>
+    ) {
         // irrelevant
-        super(rawCode.join('\n\n'), ruleSet);
-        for (let i = 0; i < rawCode.length; i++) {
-            const { code, caller } = this.replace(i, rawCode[i]);
+        super('', ruleSet);
+        rawCode.forEach((c, i) => {
+            const { code, caller } = this.replace(i, c);
             this.threads.push({ code, caller });
-        }
+        });
     }
 
-    public override replace(index:number, raw:string):{ code?:string; caller?:string; } {
+    public override replace(
+        index: number,
+        raw: string
+    ): { code?: string; caller?: string } {
         const caller = `_${randstr(20)}`;
         // change FELADAT function name to 'caller'
-        var code = raw.replaceAll(/void\s+FELADAT\s*\((\s*|.*)\)/gm, `static void ${caller}()`);
-        if(code == raw) { 
-            this.error = 'Unable to find FELADAT function'; return;
+        var code = raw.replaceAll(
+            /void\s+FELADAT\s*\((\s*|.*)\)/gm,
+            `static void ${caller}()`
+        );
+        if (code == raw) {
+            this.error = 'Unable to find FELADAT function';
+            return;
         }
         code = this._replace(index, code);
         return { caller, code };
@@ -44,15 +54,25 @@ class Program
             Input_${this.rand} = io;
         }
     }
-    static Dictionary<int, Command_${this.rand}> Commands_${this.rand} = new Dictionary<int, Command_${this.rand}>();
-    static Dictionary<int, string> Results_${this.rand} = new Dictionary<int, string>();
+    static Dictionary<int, Command_${this.rand}> Commands_${
+            this.rand
+        } = new Dictionary<int, Command_${this.rand}>();
+    static Dictionary<int, string> Results_${
+        this.rand
+    } = new Dictionary<int, string>();
     static Barrier Bar_${this.rand} = new Barrier(${this.threads.length}, (b) =>
     {
         Results_${this.rand}.Clear();
         foreach(int key in Commands_${this.rand}.Keys)
         {
-            Console.WriteLine($"${this.key} {key} {(Commands_${this.rand}[key].Input_${this.rand} ? '>' : '<')} {Commands_${this.rand}[key].Str_${this.rand}}");
-            if (Commands_${this.rand}[key].Input_${this.rand}) Results_${this.rand}[key] = Console.ReadLine();
+            Console.WriteLine($"${this.key} {key} {(Commands_${
+            this.rand
+        }[key].Input_${this.rand} ? '>' : '<')} {Commands_${
+            this.rand
+        }[key].Str_${this.rand}}");
+            if (Commands_${this.rand}[key].Input_${this.rand}) Results_${
+            this.rand
+        }[key] = Console.ReadLine();
         }
         Commands_${this.rand}.Clear();
     });
@@ -83,18 +103,17 @@ class Program
     static void Main()
     {
         new Thread(Kill_${this.rand}).Start();
-        Parallel.Invoke(${this.threads.map(x => x.caller).join(',')});
+        Parallel.Invoke(${this.threads.map((x) => x.caller).join(',')});
         Bar_${this.rand}.Dispose();
     }
 
     /* USER CODE */
 
-    ${this.threads.map(x => x.code).join('\n\n')}
+    ${this.threads.map((x) => x.code).join('\n\n')}
 }
 `;
     }
 }
-
 
 /* 
 using System;

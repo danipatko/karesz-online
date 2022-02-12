@@ -1,31 +1,31 @@
 // coordinate defined by the x and y axis
 export interface point {
-    x: number,
-    y: number
+    x: number;
+    y: number;
 }
 // some stats
 export interface statistics {
-    numSteps:number,
-    numTurns:number,
-    numWallchecks:number,
-    numCrashes:number,
-    numPickups:number,
-    numColor:number,
-    rocksCollected:number,
-    rocksPlaced:number
+    numSteps: number;
+    numTurns: number;
+    numWallchecks: number;
+    numCrashes: number;
+    numPickups: number;
+    numColor: number;
+    rocksCollected: number;
+    rocksPlaced: number;
 }
 
 // Basic turning directions
 export enum directions {
     right = 1,
-    left = -1
-};
+    left = -1,
+}
 // rotation degrees
 export enum rotations {
     up = 0,
     right = 1,
     down = 2,
-    left = 3
+    left = 3,
 }
 // possible field values in matrix
 export enum fields {
@@ -35,7 +35,8 @@ export enum fields {
     rock_black = 2,
     rock_red = 3,
     rock_green = 4,
-    rock_yellow = 5
+    rock_yellow = 5,
 }
 
-export const modulo = (a:number, b:number):number => a < 0 ? b + a%b : a%b;
+export const modulo = (a: number, b: number): number =>
+    a < 0 ? b + (a % b) : a % b;

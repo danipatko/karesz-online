@@ -5,31 +5,36 @@ const ALLOWED_IMPORTS_CSHARP = [
     'System',
     'System.Threading',
     'System.Collections.Generic',
-    'System.Numerics'
-]
+    'System.Numerics',
+];
 
 interface ReplaceRules {
-    [replaceTo:string]: { match:RegExp, x:boolean };
+    [replaceTo: string]: { match: RegExp; x: boolean };
 }
 
 export class Template {
-    public readonly rand:string = `_${randstr(20)}`;
-    public readonly key:string = randstr(10);
-    protected code:string;
-    private readonly betweenParanthesis:RegExp = /(?<=\()(.*?)(?=\))/gm;
-    private rules:ReplaceRules = {};
-    public error:string|undefined;
-    
-    constructor(rawCode:string, ruleSet:Array<ReplacementRules>) {
+    public readonly rand: string = `_${randstr(20)}`;
+    public readonly key: string = randstr(10);
+    protected code: string;
+    private readonly betweenParanthesis: RegExp = /(?<=\()(.*?)(?=\))/gm;
+    private rules: ReplaceRules = {};
+    public error: string | undefined;
+
+    constructor(rawCode: string, ruleSet: Array<ReplacementRules>) {
         this.code = rawCode;
         // generate replacement rules
-        for(const key in ruleSet) {
-            this.rules[ 
-                ruleSet[key].std == 'none' ? 
-                ruleSet[key].cmd // colors
-                : 
-                `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${this.rand}(:i:, ${ruleSet[key].cmd.toString().includes('"') ? ruleSet[key].cmd : `"${ruleSet[key].cmd}"` })` 
-            ] = { match:ruleSet[key].match, x:ruleSet[key].x };
+        for (const key in ruleSet) {
+            this.rules[
+                ruleSet[key].std == 'none'
+                    ? ruleSet[key].cmd // colors
+                    : `${ruleSet[key].std == 'in' ? 'stdin' : 'stdout'}_${
+                          this.rand
+                      }(:i:, ${
+                          ruleSet[key].cmd.toString().includes('"')
+                              ? ruleSet[key].cmd
+                              : `"${ruleSet[key].cmd}"`
+                      })`
+            ] = { match: ruleSet[key].match, x: ruleSet[key].x };
         }
         this.replace(0, this.code);
     }
@@ -37,15 +42,21 @@ export class Template {
     /**
      * Replaces the `FELADAT` function with `Main`
      */
-    protected replaceMain():void {
+    protected replaceMain(): void {
         // main already exists
-        if(this.code.match(/void\s+Main\s*\((.*|\s*)\)/gm)) {
-            this.error = 'Main function already exists in user submitted code.'; return;
+        if (this.code.match(/void\s+Main\s*\((.*|\s*)\)/gm)) {
+            this.error = 'Main function already exists in user submitted code.';
+            return;
         }
-        const newCode = this.code.replaceAll(/void\s+FELADAT\s*\((.*|\s*)\)/gm, 'static void Main(string[] args)');
+        const newCode = this.code.replaceAll(
+            /void\s+FELADAT\s*\((.*|\s*)\)/gm,
+            'static void Main(string[] args)'
+        );
         // no replacements occured
-        if(newCode == this.code) {
-            this.error = 'Unable to find FELADAT function in user submitted code. Aborting.'; return;
+        if (newCode == this.code) {
+            this.error =
+                'Unable to find FELADAT function in user submitted code. Aborting.';
+            return;
         }
         this.code = newCode;
     }
@@ -53,11 +64,17 @@ export class Template {
     /**
      * Replace :x: with the content between two paranthesis
      */
-    private replaceX(s:string, match:RegExp, key:string):string {
+    private replaceX(s: string, match: RegExp, key: string): string {
         const r = s.match(match);
         if (!r) return s;
-        r.map(x => {
-            s = s.replaceAll(x, key.replaceAll(':x:', x.match(this.betweenParanthesis)[0].trim()));
+        r.map((x) => {
+            s = s.replaceAll(
+                x,
+                key.replaceAll(
+                    ':x:',
+                    x.match(this.betweenParanthesis)[0].trim()
+                )
+            );
         });
         return s;
     }
@@ -65,14 +82,26 @@ export class Template {
     /**
      * Replace a series of strings/matches in a string
      */
-    protected _replace(index:number, code?:string):string {
+    protected _replace(index: number, code?: string): string {
         var s = code ?? this.code;
-        for(const key in this.rules) 
-            s = this.rules[key].x ? this.replaceX(s, this.rules[key].match, key.replaceAll(':i:', index.toString())) : s.replaceAll(this.rules[key].match, key.replaceAll(':i:', index.toString()));
-       return s;
+        for (const key in this.rules)
+            s = this.rules[key].x
+                ? this.replaceX(
+                      s,
+                      this.rules[key].match,
+                      key.replaceAll(':i:', index.toString())
+                  )
+                : s.replaceAll(
+                      this.rules[key].match,
+                      key.replaceAll(':i:', index.toString())
+                  );
+        return s;
     }
 
-    public replace(index:number, code?:string|undefined):{ code?:string; caller?:string; } {
+    public replace(
+        index: number,
+        code?: string | undefined
+    ): { code?: string; caller?: string } {
         this.replaceMain();
         this.code = this._replace(index, code ?? this.code);
         return {};
@@ -81,16 +110,24 @@ export class Template {
     /**
      * Get the template code with the imports, namespace, main class
      */
-    public get _code():string {
+    public get _code(): string {
         return `
-${ALLOWED_IMPORTS_CSHARP.map(x => `using ${x};`).join('\n')}
+${ALLOWED_IMPORTS_CSHARP.map((x) => `using ${x};`).join('\n')}
 namespace Karesz
 {
     class Program
     {
-        static bool stdin_${this.rand}(string c,string m){Console.WriteLine($"> ${this.key} 0 {c}");string l=Console.ReadLine();return l==m;}
-        static int stdin_${this.rand}(string c){Console.WriteLine($"> ${this.key} 0 {c}");string l=Console.ReadLine();return int.Parse(l);}
-        static void stdout_${this.rand}(string c){Console.WriteLine($"< ${this.key} 0 {c}");}
+        static bool stdin_${
+            this.rand
+        }(string c,string m){Console.WriteLine($"> ${
+            this.key
+        } 0 {c}");string l=Console.ReadLine();return l==m;}
+        static int stdin_${this.rand}(string c){Console.WriteLine($"> ${
+            this.key
+        } 0 {c}");string l=Console.ReadLine();return int.Parse(l);}
+        static void stdout_${this.rand}(string c){Console.WriteLine($"< ${
+            this.key
+        } 0 {c}");}
         
         ${this.code}
     }
