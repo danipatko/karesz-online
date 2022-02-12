@@ -14,3 +14,5 @@ export const randstr = (length: number): string => {
 
 export const modulo = (a: number, b: number): number =>
     a < 0 ? b + (a % b) : a % b;
+
+export const randCode = () => Math.floor(1000 + Math.random() * 9000);

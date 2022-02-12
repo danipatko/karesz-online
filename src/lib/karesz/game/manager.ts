@@ -7,7 +7,7 @@ import {
     State,
 } from '../core/types';
 import KareszRunner from '../core/run';
-import type { Socket } from 'socket.io';
+import { Socket } from 'socket.io';
 
 interface Player {
     socket: Socket;
@@ -15,26 +15,63 @@ interface Player {
     id: string;
     name: string;
     code: string;
+    spectator: boolean;
 }
 
 enum SessionState {
-    waiting_for_host = 0,
-    compiling = 1,
-    running = 2,
-    results = 3,
+    waiting = 0, // on finished/initted, wait for people to write their code
+    compiling = 1, // on host start, compile
+    running = 2, // on compile finished
 }
 
 export default class SessionManager {
-    private map: KareszMap;
-    protected players: Map<number, Player> = new Map<number, Player>();
-    protected state: SessionState = SessionState.waiting_for_host;
-    protected code: number = Math.random() * 8999 + 1000; // TODO: random int
+    private map: KareszMap | undefined;
+    protected players: Map<string, Player> = new Map<string, Player>();
+    protected state: SessionState = SessionState.waiting;
+    protected host: string;
+    public destroy: () => void;
+
+    constructor({
+        name,
+        socket,
+        remove,
+    }: {
+        socket: Socket;
+        name: string;
+        remove: () => void;
+    }) {
+        this.host = socket.id;
+        this.destroy = remove;
+        this.addPlayer({ name, socket, host: true });
+    }
+
+    private setHost(id: string) {
+        const host = this.players.get(id);
+        if (host === undefined) return;
+
+        this.host = id;
+        // handle host leaving (find new host or delete session)
+        host.socket.on('disconnect', () => {
+            this.players.delete(host.socket.id);
+            if (this.players.size === 0) this.destroy();
+
+            this.announce('left', { id: host.socket.id });
+            this.host = this.players.keys().next().value;
+            this.announce('host_change', { host: this.host });
+        });
+    }
 
     /**
      * Emit an event for every player
      */
     private announce(
-        ev: 'left' | 'joined' | 'update_player' | 'update_env' | 'results',
+        ev:
+            | 'left'
+            | 'joined'
+            | 'update_player'
+            | 'update_env'
+            | 'results'
+            | 'host_change',
         params?: object
     ): void {
         this.players.forEach((x) => x.socket.emit(ev, { ...params }));
@@ -57,6 +94,8 @@ export default class SessionManager {
      * Parse a string as a matrix.
      */
     private parseMapAsString(s: string, separator: string = '\n'): void {
+        if (this.map === undefined) return;
+
         this.map.matrix = s
             .split(separator)
             .map((x) =>
@@ -74,14 +113,15 @@ export default class SessionManager {
         x: number;
         y: number;
     }): Map<number, Karesz> {
-        const map = new Map<number, Karesz>();
-        const gap = Math.floor(x / (this.players.size + 1));
-        this.players.forEach((player, key) => {
+        const map = new Map<number, Karesz>(),
+            gap = Math.floor(x / (this.players.size + 1));
+        let i = 0;
+        this.players.forEach((player) => {
             const startState: State = {
-                position: { x: (key + 1) * gap, y: Math.floor(y / 2) },
+                position: { x: (i + 1) * gap, y: Math.floor(y / 2) },
                 rotation: Rotation.up,
             };
-            map.set(key, {
+            map.set(i++, {
                 name: player.name,
                 startState,
                 steps: '',
@@ -95,23 +135,41 @@ export default class SessionManager {
      * Append a new player.
      * @returns the index of the current player
      */
-    public addPlayer({ name, socket }: { name: string; socket: Socket }): void {
+    public addPlayer({
+        name,
+        socket,
+        host,
+    }: {
+        name: string;
+        socket: Socket;
+        host: boolean;
+    }): void {
         const player: Player = {
             name,
             socket,
             id: socket.id,
             ready: false,
             code: '',
+            spectator: this.state !== SessionState.waiting,
         };
-        this.players.set(this.players.size, player);
+
+        // handle user submitting code
+        socket.on('submit', ({ code }: { code: string }) => {
+            const p = this.players.get(socket.id);
+            if (p !== undefined) this.players.set(p.id, { ...p, code });
+        });
+
+        this.players.set(player.id, player);
         this.announce('joined', { name: player.name, ready: false });
     }
 
     /**
      * Remove a player by it's index
      */
-    public removePlayer(index: number): void {
-        this.players.delete(index);
+    public removePlayer(id: string): void {
+        const player = this.players.get(id);
+        this.players.delete(id);
+        this.announce('left', { name: player?.name });
     }
 
     /**
@@ -124,26 +182,29 @@ export default class SessionManager {
     }: {
         map?: string;
         mapType: 'parse' | 'empty' | 'load';
-        mapSize: { x: number; y: number };
+        mapSize?: { x: number; y: number };
     }): Promise<{ error?: string; output: string; exitCode: number }> {
         switch (mapType) {
             // create an empty map of size ...
             case 'empty':
-                this.fillMap({ ...mapSize });
+                this.fillMap({ ...(mapSize ?? { x: 10, y: 10 }) });
             // parse map made by user ...
             case 'parse':
-                this.parseMapAsString(map);
+                if (map !== undefined) this.parseMapAsString(map);
             // load an existing map
             case 'load':
                 break;
         }
         // create new runner instance
         const game = new KareszRunner(
-            'CSHARP',
-            this.getKareszes({ ...mapSize }),
+            'csharp',
+            this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
             this.map
         );
 
-        return await game.run({ code: '' });
+        const code = new Map<number, string>();
+        let i = 0;
+        this.players.forEach((player) => code.set(i++, player.code));
+        return await game.run({ code });
     }
 }

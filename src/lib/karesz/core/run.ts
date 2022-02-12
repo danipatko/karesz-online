@@ -10,10 +10,10 @@ const BASE_PATH = '/home/karesz-online/testing'; // WSL ROOT
 // const BASE_PATH = '/home/liveuser/Projects/karesz-online/testing';   // PENDRIVE
 
 export default class KareszRunner extends KareszCore {
-    public lang: 'CSHARP'; // future support in case new languages are added
+    public lang: 'csharp'; // future support in case new languages are added
 
     constructor(
-        lang: 'CSHARP' = 'CSHARP',
+        lang: 'csharp' = 'csharp',
         players: Map<number, Karesz>,
         map?: KareszMap
     ) {
@@ -86,9 +86,10 @@ export default class KareszRunner extends KareszCore {
     public async run({
         code,
     }: {
-        code: string | string[];
+        code: Map<number, string>;
     }): Promise<{ error?: string; output: string; exitCode: number }> {
-        if (this.players.size == 0) return;
+        if (this.players.size == 0)
+            return { error: 'No players.', exitCode: 1, output: 'No players.' };
 
         return await run({
             code,

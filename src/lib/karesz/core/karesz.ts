@@ -21,16 +21,21 @@ export default class KareszCore {
 
     constructor(players: Map<number, Karesz>, map?: KareszMap) {
         this.players = players;
-        if (map) this.map = map;
-        else this.fillMap({ sizeX: 10, sizeY: 10 });
+        this.map = map ?? this.fillMap({ sizeX: 10, sizeY: 10 });
         this.multiPlayer = Object.keys(players).length > 1;
     }
 
     /**
      * fill map with empty fields
      */
-    protected fillMap({ sizeX, sizeY }: { sizeX: number; sizeY: number }) {
-        this.map = {
+    protected fillMap({
+        sizeX,
+        sizeY,
+    }: {
+        sizeX: number;
+        sizeY: number;
+    }): KareszMap {
+        return {
             sizeX,
             sizeY,
             matrix: Array(sizeX)
@@ -107,7 +112,7 @@ export default class KareszCore {
             // NOTE: the player is not getting removed from `this.players` map
             // right away, so if they are facing each other and stepping
             // to each other's positions they will both die eventually
-            this.forEachPlayer((x, i) => {
+            this.players.forEach((x, i) => {
                 if (x.position == point) this.removeList.push(i);
             });
         });
@@ -120,17 +125,6 @@ export default class KareszCore {
     protected makeRemovals(): void {
         this.removeList.forEach((x) => this.players.delete(x));
         this.removeList = [];
-    }
-
-    /**
-     * Check if a one or more players match the predicate.
-     * @returns the index of the first matching player, undefined if there are no matches.
-     */
-    protected forEachPlayer(
-        callbackfn: (player: Karesz, index: number) => void
-    ): void {
-        for (const key in this.players.keys())
-            callbackfn(this.players[key], parseInt(key));
     }
 
     /* ---------- KARESZ FUNCTIONS ---------- */
@@ -224,12 +218,16 @@ export default class KareszCore {
         while (++steps <= 10) {
             position = this.forward({ position, rotation });
             // check wall
-            if (this.map.matrix[position.x][position.y] == Field.wall)
+            if (this.map.matrix[position.x][position.y] == Field.wall) {
                 return steps;
+            }
             // don't check other players in multiplayer
-            if (!this.multiPlayer) return -1;
+            if (!this.multiPlayer) {
+                return -1;
+            }
             // check player
-            this.forEachPlayer((x) => {
+            // TODO: iterate map object and return steps
+            this.players.forEach((x) => {
                 if (x.position == position) return steps;
             });
         }

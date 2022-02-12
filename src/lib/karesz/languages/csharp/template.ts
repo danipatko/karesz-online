@@ -34,7 +34,7 @@ export class Template {
                               ? ruleSet[key].cmd
                               : `"${ruleSet[key].cmd}"`
                       })`
-            ] = { match: ruleSet[key].match, x: ruleSet[key].x };
+            ] = { match: ruleSet[key].match, x: ruleSet[key].x === true };
         }
         this.replace(0, this.code);
     }
@@ -48,7 +48,7 @@ export class Template {
             this.error = 'Main function already exists in user submitted code.';
             return;
         }
-        const newCode = this.code.replaceAll(
+        const newCode = this.code.replace(
             /void\s+FELADAT\s*\((.*|\s*)\)/gm,
             'static void Main(string[] args)'
         );
@@ -67,13 +67,14 @@ export class Template {
     private replaceX(s: string, match: RegExp, key: string): string {
         const r = s.match(match);
         if (!r) return s;
+        let parenthesisMatch: RegExpMatchArray | null;
         r.map((x) => {
+            parenthesisMatch = x.match(this.betweenParanthesis);
+            if (parenthesisMatch === null) return;
+            // @ts-ignore
             s = s.replaceAll(
                 x,
-                key.replaceAll(
-                    ':x:',
-                    x.match(this.betweenParanthesis)[0].trim()
-                )
+                key.replace(/\:x\:/g, parenthesisMatch[0].trim())
             );
         });
         return s;
@@ -89,11 +90,12 @@ export class Template {
                 ? this.replaceX(
                       s,
                       this.rules[key].match,
-                      key.replaceAll(':i:', index.toString())
+                      key.replace(/\:i\:/gm, index.toString())
                   )
-                : s.replaceAll(
+                : // @ts-ignore
+                  s.replaceAll(
                       this.rules[key].match,
-                      key.replaceAll(':i:', index.toString())
+                      key.replace(/\:i\:/gm, index.toString())
                   );
         return s;
     }

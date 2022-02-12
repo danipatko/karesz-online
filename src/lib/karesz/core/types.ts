@@ -21,7 +21,7 @@ export enum Field {
     rock_yellow = 5,
 }
 
-export const FIELD_VALUES = {
+export const FIELD_VALUES: { [key: number]: Field } = {
     0: Field.empty,
     1: Field.wall,
     2: Field.rock_black,

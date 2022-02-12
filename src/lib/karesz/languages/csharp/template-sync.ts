@@ -14,6 +14,7 @@ export class SyncTemplate extends Template {
         super('', ruleSet);
         rawCode.forEach((c, i) => {
             const { code, caller } = this.replace(i, c);
+            if (code === undefined) return;
             this.threads.push({ code, caller });
         });
     }
@@ -24,13 +25,15 @@ export class SyncTemplate extends Template {
     ): { code?: string; caller?: string } {
         const caller = `_${randstr(20)}`;
         // change FELADAT function name to 'caller'
+
+        // @ts-ignore
         var code = raw.replaceAll(
             /void\s+FELADAT\s*\((\s*|.*)\)/gm,
             `static void ${caller}()`
         );
         if (code == raw) {
             this.error = 'Unable to find FELADAT function';
-            return;
+            return {};
         }
         code = this._replace(index, code);
         return { caller, code };

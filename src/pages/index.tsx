@@ -4,40 +4,42 @@ import { io, Socket } from 'socket.io-client';
 import { useEffect, useState } from 'react';
 
 const Home: NextPage = () => {
+    const [socket, setSocket] = useState<Socket>(null as any);
 
-  const [socket, setSocket] = useState<Socket>(null as any);
+    useEffect(() => {
+        const socket = io();
 
-  useEffect(() => {
-    const socket = io();
-    
-    socket.on('a', () => {
-        console.log('a');
-    });
+        // @ts-ignore
+        const a = 'sadsadsad'.replaceAll('a', 'asdf');
 
-    socket.on('b', () => {
-        console.log('b');
-    });
+        console.log(a);
 
-    socket.on('c', () => {
-        console.log('c');
-    });
+        socket.on('a', () => {
+            console.log('a');
+        });
 
-    socket.emit('join', { hehe:'heha' });
+        socket.on('b', () => {
+            console.log('b');
+        });
 
-    setSocket(socket);
-  }, []);
+        socket.on('c', () => {
+            console.log('c');
+        });
 
-  const join = () => socket.emit('join');
+        socket.emit('join', { hehe: 'heha' });
 
-  return (
-    <div className={styles.container}>
-        <div>
-            {socket?.connected ? 'connected' : 'not connected'}
+        setSocket(socket);
+    }, []);
+
+    const join = () => socket.emit('join');
+
+    return (
+        <div className={styles.container}>
+            <div>{socket?.connected ? 'connected' : 'not connected'}</div>
+
+            <button onClick={join}>invoke join</button>
         </div>
+    );
+};
 
-      <button onClick={join}>invoke join</button>
-    </div>
-  )
-}
-
-export default Home
+export default Home;

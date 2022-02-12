@@ -1,6 +1,8 @@
 import { createServer } from 'http';
 import next from 'next';
 import { Server } from 'socket.io';
+import SessionManager from '../lib/karesz/game/manager';
+import { randCode } from '../lib/karesz/util';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -20,6 +22,7 @@ app.prepare().then(() => {
     });
 });
 
+const gameManager = new Map<number, SessionManager>();
 const io = new Server(httpserver);
 
 io.on('connection', (socket) => {
@@ -27,10 +30,28 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => console.log(`${socket.id} disconnected`));
 
-    socket.emit('a');
-    socket.emit('b');
+    socket.on('join', ({ name, code }: { name: string; code: number }) => {
+        if (!(name && code)) return;
 
-    socket.on('join', () => {
-        console.log('JOIN INVOKED');
+        const game = gameManager.get(code);
+
+        if (game !== undefined) {
+            game.addPlayer({ name, socket, host: false });
+        } else {
+            let code = randCode();
+            while (gameManager.has(code)) code = randCode();
+
+            gameManager.set(
+                code,
+                new SessionManager({
+                    name,
+                    socket,
+                })
+            );
+
+            socket.on('disconnect', () => {
+                gameManager.get(code);
+            });
+        }
     });
 });

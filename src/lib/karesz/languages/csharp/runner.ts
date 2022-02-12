@@ -23,7 +23,7 @@ const run = async ({
         async (res) => {
             const template =
                 code.size == 1
-                    ? new Template(code.get(0), RULES)
+                    ? new Template(code.get(0) ?? '', RULES)
                     : new SyncTemplate(code, RULES);
             if (template.error !== undefined)
                 console.log(`Error: ${template.error}`);
@@ -73,7 +73,7 @@ const run = async ({
                     error += x;
                 })
                 .onExit((exitCode) => {
-                    res({ output, error, exitCode });
+                    res({ output, error, exitCode: exitCode ?? 0 });
                 })
                 .run({ cwd });
         }
@@ -94,7 +94,9 @@ const compile = async ({
             spwn('mcs', `${filename}.cs`)
                 .onData((x) => (output += x))
                 .onError((x) => (error += x))
-                .onExit((exitCode) => res({ output, error, exitCode }))
+                .onExit((exitCode) =>
+                    res({ output, error, exitCode: exitCode ?? 0 })
+                )
                 .run({ cwd });
         }
     );
@@ -114,7 +116,9 @@ const preCompile = async ({
             spwn('mono', '--aot=full', `${filename}.exe`)
                 .onData((x) => (output += x))
                 .onError((x) => (error += x))
-                .onExit((exitCode) => res({ output, error, exitCode }))
+                .onExit((exitCode) =>
+                    res({ output, error, exitCode: exitCode ?? 0 })
+                )
                 .run({ cwd });
         }
     );
