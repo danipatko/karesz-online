@@ -9,35 +9,73 @@ const Home: NextPage = () => {
     useEffect(() => {
         const socket = io();
 
-        // @ts-ignore
-        const a = 'sadsadsad'.replaceAll('a', 'asdf');
+        socket.on(
+            'fetch',
+            ({
+                players,
+                host,
+                code,
+            }: {
+                host: string;
+                players: any;
+                code: number;
+            }) => {
+                console.log(
+                    `host: ${host} | code: ${code} \nPlayers: ${JSON.stringify(
+                        players
+                    )}`
+                );
+            }
+        );
 
-        console.log(a);
-
-        socket.on('a', () => {
-            console.log('a');
+        socket.on('state_update', ({ state }: { state: number }) => {
+            console.log(`new state: ${state}`);
         });
 
-        socket.on('b', () => {
-            console.log('b');
+        socket.on(
+            'joined',
+            ({
+                name,
+                id,
+                ready,
+            }: {
+                name: string;
+                id: string;
+                ready: boolean;
+            }) => {
+                console.log(`a new player joined: ${name}`);
+            }
+        );
+
+        socket.on('left', ({ id }: { id: string }) => {
+            console.log(`${id} left the game`);
         });
 
-        socket.on('c', () => {
-            console.log('c');
-        });
-
-        socket.emit('join', { hehe: 'heha' });
+        socket.on(
+            'player_update',
+            ({ id, ready }: { id: string; ready: boolean }) => {
+                console.log(`${id} is ${ready ? '' : 'not'} ready`);
+            }
+        );
 
         setSocket(socket);
     }, []);
 
-    const join = () => socket.emit('join');
+    const join = () =>
+        socket.emit('join', {
+            name: 'bofa',
+            code: parseInt(
+                (document.getElementById('code') as HTMLInputElement).value
+            ),
+        });
 
     return (
         <div className={styles.container}>
             <div>{socket?.connected ? 'connected' : 'not connected'}</div>
-
-            <button onClick={join}>invoke join</button>
+            <div>
+                <input type='number' id='code' />
+            </div>
+            <button onClick={join}>join</button>
         </div>
     );
 };

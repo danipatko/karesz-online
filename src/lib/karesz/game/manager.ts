@@ -28,18 +28,22 @@ export default class SessionManager {
     protected players: Map<string, Player> = new Map<string, Player>();
     protected state: SessionState = SessionState.waiting;
     protected host: string;
+    protected code: number;
     protected lastWinner: string = '';
     public destroy: () => void;
 
     constructor({
+        code,
         name,
         socket,
         remove,
     }: {
         socket: Socket;
+        code: number;
         name: string;
         remove: () => void;
     }) {
+        this.code = code;
         this.host = socket.id;
         this.destroy = remove;
         this.addPlayer({ name, socket, host: true });
@@ -170,21 +174,21 @@ export default class SessionManager {
             this.announce('player_update', { id: p.id, ready: false });
         });
 
-        this.players.set(player.id, player);
-        if (host) this.setHost(player.id);
-
-        // emit data about other players when joining
-        const players: Array<{ name: string; id: string; ready: boolean }> = [];
-        this.players.forEach((x, i) => {
-            players.push({ name: x.name, id: x.id, ready: x.ready });
-        });
-        socket.emit('fetch', { players, host: this.host });
-
         this.announce('joined', {
             id: player.id,
             name: player.name,
             ready: false,
         });
+
+        this.players.set(player.id, player);
+        if (host) this.setHost(player.id);
+
+        // emit data about every players when joining first time
+        const players: Array<{ name: string; id: string; ready: boolean }> = [];
+        this.players.forEach((x, i) => {
+            players.push({ name: x.name, id: x.id, ready: x.ready });
+        });
+        socket.emit('fetch', { players, host: this.host, code: this.code });
     }
 
     /**

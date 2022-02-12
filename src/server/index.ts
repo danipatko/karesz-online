@@ -28,31 +28,28 @@ const io = new Server(httpserver);
 io.on('connection', (socket) => {
     console.log(`${socket.id} connected`);
 
-    socket.on('disconnect', () => console.log(`${socket.id} disconnected`));
-
     socket.on('join', ({ name, code }: { name: string; code: number }) => {
+        console.log(`name: ${name} | code: ${code}`);
         if (!(name && code)) return;
 
         const game = gameManager.get(code);
 
         if (game !== undefined) {
+            console.log('adding to existing game...');
             game.addPlayer({ name, socket, host: false });
         } else {
+            console.log('creating new game');
             let code = randCode();
             while (gameManager.has(code)) code = randCode();
-
             gameManager.set(
                 code,
                 new SessionManager({
+                    code,
                     name,
                     socket,
                     remove: () => gameManager.delete(code),
                 })
             );
-
-            socket.on('disconnect', () => {
-                gameManager.get(code);
-            });
         }
     });
 });
