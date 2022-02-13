@@ -4,6 +4,17 @@ import { useEffect, useRef, useState } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
 import { getCompletionItems } from '../lib/front/autocomplete';
 import { useGame } from '../lib/front/game';
+import { SessionState } from '../lib/karesz/core/types';
+import { io, Socket } from 'socket.io-client';
+
+export interface Game {
+    connected: boolean;
+    players: { [key: string]: { name: string; id: string; ready: boolean } };
+    code: number;
+    host: string;
+    lastWinner: string;
+    state: SessionState;
+}
 
 const Home: NextPage = () => {
     const [game, { join, fetchState }] = useGame();
@@ -18,7 +29,7 @@ const Home: NextPage = () => {
         });
     };
 
-    const handleEditorWillMount = (monaco: Monaco) => {
+    /*const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.registerCompletionItemProvider('csharp', {
             provideCompletionItems: () => {
                 return {
@@ -26,7 +37,7 @@ const Home: NextPage = () => {
                 };
             },
         });
-    };
+    };*/
 
     return (
         <div className={styles.container}>

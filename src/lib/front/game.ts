@@ -10,6 +10,7 @@ export interface Game {
     lastWinner: string;
     state: SessionState;
 }
+
 export const useGame = (): [
     Game,
     {
@@ -18,6 +19,14 @@ export const useGame = (): [
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
+    const [state, setState] = useState<Game>({
+        connected: false,
+        state: SessionState.waiting,
+        code: -1,
+        host: '',
+        lastWinner: '',
+        players: {},
+    });
 
     useEffect(() => {
         const socket = io();
@@ -33,53 +42,50 @@ export const useGame = (): [
                 lastWinner: string;
                 state: SessionState;
             }) => {
-                console.log(data);
-
-                setState({
-                    ...data,
-                    connected: true,
+                setState((s) => {
+                    return { ...data, connected: true };
                 });
                 // */
             }
         );
         // called on phase update
         socket.on('state_update', ({ state: _state }: { state: number }) =>
-            setState({ ...state, state: _state })
+            setState((s) => {
+                return { ...s, state: _state };
+            })
         );
         // called when a player joins
         socket.on(
             'joined',
             (p: { name: string; id: string; ready: boolean }) => {
                 console.log(`--------- Player join ---------`);
-                console.log(state);
-                state.players = { ...state.players, [p.id]: p };
-                setState({ ...state });
+                setState((s) => {
+                    console.log(s);
+                    s.players[p.id] = p;
+                    return { ...s };
+                });
             }
         );
         // called when a player leaves
         socket.on('left', ({ id }: { id: string }) => {
-            delete state.players[id];
-            setState({ ...state });
+            setState((s) => {
+                delete s.players[id];
+                return { ...s };
+            });
         });
         // called when a player signals ready (or unready)
         socket.on(
             'player_update',
             ({ id, ready }: { id: string; ready: boolean }) => {
-                state.players[id] = { ...state.players[id], ready };
+                setState((s) => {
+                    s.players[id].ready = ready;
+                    return { ...s };
+                });
             }
         );
 
         setSocket(socket);
     }, [setSocket]);
-
-    const [state, setState] = useState<Game>({
-        connected: false,
-        state: SessionState.waiting,
-        code: 0,
-        host: '',
-        lastWinner: '',
-        players: {},
-    });
 
     const join = (data: { name: string; code: number }) => {
         if (socket !== null) socket.emit('join', data);
