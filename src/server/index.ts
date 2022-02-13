@@ -26,19 +26,19 @@ const gameManager = new Map<number, SessionManager>();
 const io = new Server(httpserver);
 
 io.on('connection', (socket) => {
-    console.log(`${socket.id} connected`);
+    console.log(`${socket.id} connected`); // debug
 
     socket.on('join', ({ name, code }: { name: string; code: number }) => {
-        console.log(`name: ${name} | code: ${code}`);
+        console.log(`name: ${name} | code: ${code}`); // debug
         if (!(name && code)) return;
 
         const game = gameManager.get(code);
 
         if (game !== undefined) {
-            console.log('adding to existing game...');
+            console.log('adding to existing game...'); // debug
             game.addPlayer({ name, socket, host: false });
         } else {
-            console.log('creating new game');
+            console.log('creating new game'); // debug
             let code = randCode();
             while (gameManager.has(code)) code = randCode();
             gameManager.set(

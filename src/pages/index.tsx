@@ -1,7 +1,9 @@
 import type { NextPage } from 'next';
 import styles from '../styles/Home.module.css';
 import { io, Socket } from 'socket.io-client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Editor, { Monaco } from '@monaco-editor/react';
+import { getCompletionItems } from '../lib/front/autocomplete';
 
 const Home: NextPage = () => {
     const [socket, setSocket] = useState<Socket>(null as any);
@@ -69,6 +71,23 @@ const Home: NextPage = () => {
             ),
         });
 
+    const monacoDidMount = (editor, monaco) => {
+        console.log(editor);
+        console.log(monaco);
+    };
+
+    function handleEditorWillMount(monaco: Monaco) {
+        // here is the monaco instance
+        // do something before editor is mounted
+        monaco.languages.registerCompletionItemProvider('csharp', {
+            provideCompletionItems: () => {
+                return {
+                    suggestions: getCompletionItems(monaco),
+                };
+            },
+        });
+    }
+
     return (
         <div className={styles.container}>
             <div>{socket?.connected ? 'connected' : 'not connected'}</div>
@@ -76,6 +95,16 @@ const Home: NextPage = () => {
                 <input type='number' id='code' />
             </div>
             <button onClick={join}>join</button>
+            <div>
+                <Editor
+                    height='90vh'
+                    defaultLanguage='csharp'
+                    defaultValue="console.log('hello world');"
+                    theme='vs-dark'
+                    onMount={monacoDidMount}
+                    beforeMount={handleEditorWillMount}
+                />
+            </div>
         </div>
     );
 };
