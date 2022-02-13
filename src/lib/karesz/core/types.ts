@@ -21,6 +21,11 @@ export enum Field {
     rock_yellow = 5,
 }
 
+export enum SessionState {
+    waiting = 0, // on finished/initted, wait for people to write their code
+    running = 1, // on compile finished
+}
+
 export const FIELD_VALUES: { [key: number]: Field } = {
     0: Field.empty,
     1: Field.wall,

@@ -5,6 +5,7 @@ import {
     Karesz,
     Rotation,
     State,
+    SessionState,
 } from '../core/types';
 import KareszRunner from '../core/run';
 import { Socket } from 'socket.io';
@@ -16,11 +17,6 @@ interface Player {
     name: string;
     code: string;
     spectator: boolean;
-}
-
-enum SessionState {
-    waiting = 0, // on finished/initted, wait for people to write their code
-    running = 1, // on compile finished
 }
 
 export default class SessionManager {
@@ -184,11 +180,21 @@ export default class SessionManager {
         if (host) this.setHost(player.id);
 
         // emit data about every players when joining first time
-        const players: Array<{ name: string; id: string; ready: boolean }> = [];
-        this.players.forEach((x, i) => {
-            players.push({ name: x.name, id: x.id, ready: x.ready });
+        const players: {
+            [key: string]: { name: string; id: string; ready: boolean };
+        } = {};
+
+        this.players.forEach(
+            (x, i) => (players[i] = { name: x.name, id: x.id, ready: x.ready })
+        );
+
+        socket.emit('fetch', {
+            players,
+            host: this.host,
+            code: this.code,
+            lastWinner: this.lastWinner,
+            state: this.state,
         });
-        socket.emit('fetch', { players, host: this.host, code: this.code });
     }
 
     /**
