@@ -16,6 +16,7 @@ export const useGame = (): [
     {
         join: (data: { name: string; code: number }) => void;
         fetchState: () => void;
+        submit: (s: string) => void;
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
@@ -58,7 +59,6 @@ export const useGame = (): [
         socket.on(
             'joined',
             (p: { name: string; id: string; ready: boolean }) => {
-                console.log(`--------- Player join ---------`);
                 setState((s) => {
                     console.log(s);
                     s.players[p.id] = p;
@@ -95,5 +95,9 @@ export const useGame = (): [
         console.log(state);
     };
 
-    return [state, { join, fetchState }];
+    const submit = (code: string) => {
+        if (socket !== null) socket.emit('submit', { code });
+    };
+
+    return [state, { join, fetchState, submit }];
 };

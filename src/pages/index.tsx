@@ -1,11 +1,8 @@
 import type { NextPage } from 'next';
-import styles from '../styles/Home.module.css';
-import { useEffect, useRef, useState } from 'react';
-import Editor, { Monaco } from '@monaco-editor/react';
+import { Monaco } from '@monaco-editor/react';
 import { getCompletionItems } from '../lib/front/autocomplete';
 import { useGame } from '../lib/front/game';
 import { SessionState } from '../lib/karesz/core/types';
-import { io, Socket } from 'socket.io-client';
 
 export interface Game {
     connected: boolean;
@@ -29,7 +26,7 @@ const Home: NextPage = () => {
         });
     };
 
-    /*const handleEditorWillMount = (monaco: Monaco) => {
+    const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.registerCompletionItemProvider('csharp', {
             provideCompletionItems: () => {
                 return {
@@ -37,13 +34,10 @@ const Home: NextPage = () => {
                 };
             },
         });
-    };*/
+    }; //*/
 
     return (
-        <div className={styles.container}>
-            <div>
-                <button onClick={() => console.log(game)}>log 2</button>
-            </div>
+        <div className='bg-zinc-700 text-red-600'>
             <button onClick={fetchState}>Log state</button>
             <div>
                 <input type='number' id='code' />
