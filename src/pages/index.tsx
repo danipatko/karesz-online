@@ -3,6 +3,8 @@ import { Monaco } from '@monaco-editor/react';
 import { getCompletionItems } from '../lib/front/autocomplete';
 import { useGame } from '../lib/front/game';
 import { SessionState } from '../lib/karesz/core/types';
+import PlayerCard from '../components/PlayerCard';
+import ScoreBoard from '../components/ScoreBoard';
 
 export interface Game {
     connected: boolean;
@@ -37,7 +39,7 @@ const Home: NextPage = () => {
     }; //*/
 
     return (
-        <div className='bg-zinc-700 text-red-600'>
+        <div className=''>
             <button onClick={fetchState}>Log state</button>
             <div>
                 <input type='number' id='code' />
@@ -49,11 +51,16 @@ const Home: NextPage = () => {
 
             {game.connected ? (
                 <div>
-                    <div>Code: {game.code}</div>
-                    <div>Host: {game.host}</div>
-                    <div>Last winner: {game.lastWinner}</div>
-                    <div>Phase: {game.state}</div>
-                    <div>Player data: {JSON.stringify(game.players)}</div>
+                    <div>
+                        <div>Code: {game.code}</div>
+                        <div>Host: {game.host}</div>
+                        <div>Last winner: {game.lastWinner}</div>
+                        <div>Phase: {game.state}</div>
+                        <div>Player data: {JSON.stringify(game.players)}</div>
+                    </div>
+                    <div>
+                        <ScoreBoard players={game.players} />
+                    </div>
                 </div>
             ) : (
                 <div>Not yet joined</div>
