@@ -11,14 +11,17 @@ const BASE_PATH = '/home/karesz-online/testing'; // WSL ROOT
 
 export default class KareszRunner extends KareszCore {
     public lang: 'csharp'; // future support in case new languages are added
+    public onPlayerDeath: (index: number) => void;
 
     constructor(
         lang: 'csharp' = 'csharp',
         players: Map<number, Karesz>,
+        onPlayerDeath: (index: number) => void,
         map?: KareszMap
     ) {
         super(players, map);
         this.lang = lang;
+        this.onPlayerDeath = onPlayerDeath;
     }
 
     /**
@@ -84,9 +87,9 @@ export default class KareszRunner extends KareszCore {
     }
 
     public async run({
-        code,
+        players,
     }: {
-        code: Map<number, string>;
+        players: Map<number, string>;
     }): Promise<{ error?: string; output: string; exitCode: number }> {
         return new Promise<{
             error?: string;
@@ -101,9 +104,9 @@ export default class KareszRunner extends KareszCore {
                     output: 'Not enough players',
                 });
             }
-
+            // run dotnet
             run({
-                code,
+                players: players,
                 basePath: BASE_PATH,
                 dataParser: this.parse,
                 onTick: this.tick,

@@ -16,7 +16,9 @@ interface Player {
     id: string;
     name: string;
     code: string;
-    spectator: boolean;
+    disqualified: boolean;
+    score: number;
+    current_rank: number;
 }
 
 export default class SessionManager {
@@ -27,6 +29,7 @@ export default class SessionManager {
     protected code: number;
     protected lastWinner: string = '';
     public destroy: () => void;
+    private playerRef: { [key: number]: string } = {};
 
     constructor({
         code,
@@ -149,7 +152,9 @@ export default class SessionManager {
             id: socket.id,
             ready: false,
             code: '',
-            spectator: this.state !== SessionState.waiting,
+            score: 0,
+            current_rank: -1,
+            disqualified: false,
         };
 
         // handle user submitting code
@@ -206,6 +211,10 @@ export default class SessionManager {
         this.announce('left', { name: player?.name });
     }
 
+    protected playerDeath(index: number): void {
+        console.log(`${index} dieded`);
+    }
+
     /**
      * Start the game
      */
@@ -248,15 +257,18 @@ export default class SessionManager {
             const game = new KareszRunner(
                 'csharp',
                 this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
+                this.playerDeath,
                 this.map
             );
 
-            const code = new Map<number, string>();
+            this.playerRef = {};
             let i = 0;
-            this.players.forEach((player) => code.set(i++, player.code));
-            game.run({ code }).then(({ exitCode, output, error }) => {
-                res({ exitCode, output, error });
-            });
+            this.players.forEach((player) => (this.playerRef[i] = player.id));
+            game.run({ players: this.playerRef }).then(
+                ({ exitCode, output, error }) => {
+                    res({ exitCode, output, error });
+                }
+            );
         });
     }
 }

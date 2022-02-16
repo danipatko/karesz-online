@@ -7,12 +7,12 @@ import { randstr } from '../../../karesz/util';
 import { SyncTemplate } from './template-sync';
 
 const run = async ({
-    code,
+    players,
     dataParser,
     basePath,
     onTick,
 }: {
-    code: Map<number, string>;
+    players: Map<number, string>;
     dataParser: (
         line: string,
         write: (s: string) => void,
@@ -24,9 +24,9 @@ const run = async ({
     return new Promise<{ error?: string; output: string; exitCode: number }>(
         async (res) => {
             const template =
-                code.size == 1
-                    ? new Template(code.get(0) ?? '', RULES)
-                    : new SyncTemplate(code, RULES);
+                players.size == 1
+                    ? new Template(players.get(0) ?? '', RULES)
+                    : new SyncTemplate(players, RULES);
             if (template.error !== undefined)
                 console.log(`Error: ${template.error}`);
 
