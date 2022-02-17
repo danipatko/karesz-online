@@ -37,12 +37,11 @@ export const FIELD_VALUES: { [key: number]: Field } = {
 
 export type Karesz = {
     startState: State;
-    name: string;
-    id: string;
     position: Point;
     proposedPosition?: Point;
     rotation: Rotation;
     steps: string;
+    score: number;
 };
 
 export interface IKaresz extends Karesz {

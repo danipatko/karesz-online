@@ -18,6 +18,14 @@ export default class KareszCore {
     >();
     private removeList: Array<string> = [];
     public multiPlayer: boolean;
+    public winner?: string;
+    // TODO: do this
+    public events?: {
+        onPlayerDeath: (id: string, killedBy: string) => void; // player dying
+        onPlayerKill: (id: string, kill: string) => void; // player stepping on another
+        onPlayerError: (errors: { id: string; description: string }[]) => void; // called when creating template
+        onGameEnd: (winner: string | string[]) => void;
+    };
 
     constructor(players: Map<string, Karesz>, map?: KareszMap) {
         this.players = players;
@@ -121,17 +129,24 @@ export default class KareszCore {
             if (p === undefined) return;
             this.players.set(players[0], { ...p, position: point });
         });
+
         this.proposedPositions.clear();
     }
 
     /**
      * Remove all players included in `this.removeList` and reset.
+     * @param callback: called when a player dies
      */
-    protected makeRemovals(callback?: (id: string) => void): void {
+    protected makeRemovals(
+        callback?: (id: string, score: number, alive: number) => void
+    ): void {
         this.removeList.forEach((x) => {
-            this.disqualified.set(x, this.players.get(x) as any);
+            const player = this.players.get(x);
             this.players.delete(x);
-            if (callback) callback(x);
+            if (player) {
+                this.disqualified.set(x, player);
+                if (callback) callback(x, player.score, this.players.size);
+            }
         });
         this.removeList = [];
     }

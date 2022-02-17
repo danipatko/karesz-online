@@ -11,17 +11,14 @@ const BASE_PATH = '/home/karesz-online/testing'; // WSL ROOT
 
 export default class KareszRunner extends KareszCore {
     public lang: 'csharp'; // future support in case new languages are added
-    public onPlayerDeath: (id: string) => void;
 
     constructor(
         lang: 'csharp' = 'csharp',
         players: Map<string, Karesz>,
-        onPlayerDeath: (id: string) => void,
         map?: KareszMap
     ) {
         super(players, map);
         this.lang = lang;
-        this.onPlayerDeath = onPlayerDeath;
     }
 
     /**
@@ -83,7 +80,7 @@ export default class KareszRunner extends KareszCore {
 
     protected tick(): void {
         this.makeSteps();
-        this.makeRemovals(this.onPlayerDeath);
+        this.makeRemovals();
     }
 
     public async run({

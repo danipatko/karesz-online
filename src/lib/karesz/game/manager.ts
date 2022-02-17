@@ -117,23 +117,23 @@ export default class SessionManager {
     }): Map<string, Karesz> {
         const map = new Map<string, Karesz>(),
             gap = Math.floor(x / (this.players.size + 1));
-        let i = 0;
         let startState: State;
-        this.players.forEach((player, id) => {
+
+        Object.keys(this.players).forEach((id, index) => {
             // align players evenly
             startState = {
-                position: { x: (i++ + 1) * gap, y: Math.floor(y / 2) },
+                position: { x: (index++ + 1) * gap, y: Math.floor(y / 2) },
                 rotation: Rotation.up,
             };
             // set default props
             map.set(id, {
-                id,
-                name: player.name,
+                score: 0,
                 startState,
                 steps: '',
                 ...startState,
             });
         });
+
         return map;
     }
 
@@ -274,7 +274,6 @@ export default class SessionManager {
             const game = new KareszRunner(
                 'csharp',
                 this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
-                this.playerDeath,
                 this.map
             );
 

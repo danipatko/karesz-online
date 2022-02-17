@@ -19,7 +19,11 @@ const run = async ({
         write: (s: string) => void,
         kill: (signal: NodeJS.Signals) => void
     ) => void;
-    onTick: () => void;
+    // onTick should be able to handle game end (last one standing)
+    onTick: (
+        write: (s: string) => void,
+        kill: (signal: NodeJS.Signals) => void
+    ) => void;
     onError: (errors: { id: string; description: string }[]) => void;
 }): Promise<{ error?: string; output: string; exitCode: number }> => {
     /* 
@@ -65,7 +69,7 @@ const run = async ({
                                 (x) => kill(x)
                             );
                         else if (lines[i].startsWith(template.roundKey))
-                            onTick();
+                            onTick(write, kill);
                         else output += `${lines[i]}\n`;
                     }
                 })
