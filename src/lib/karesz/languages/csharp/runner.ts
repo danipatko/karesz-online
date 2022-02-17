@@ -4,37 +4,39 @@ import { Template } from './template';
 import fs from 'fs';
 import path from 'path/posix';
 import { randstr } from '../../../karesz/util';
-import { SyncTemplate } from './template-sync';
 
 const run = async ({
     players,
-    dataParser,
     basePath,
+    parser,
     onTick,
+    onError,
 }: {
-    players: Map<number, string>;
-    dataParser: (
+    players: { [key: string]: string };
+    basePath: string;
+    parser: (
         line: string,
         write: (s: string) => void,
         kill: (signal: NodeJS.Signals) => void
     ) => void;
     onTick: () => void;
-    basePath: string;
+    onError: (errors: { id: string; description: string }[]) => void;
 }): Promise<{ error?: string; output: string; exitCode: number }> => {
+    /* 
+        TODO: SWITCH TO DOTNET 6 (docker) INSTEAD OF MONO
+    */
     return new Promise<{ error?: string; output: string; exitCode: number }>(
         async (res) => {
-            const template =
-                players.size == 1
-                    ? new Template(players.get(0) ?? '', RULES)
-                    : new SyncTemplate(players, RULES);
-            if (template.error !== undefined)
-                console.log(`Error: ${template.error}`);
+            const template = new Template(players);
 
             // write template to file
             const filename = randstr(10);
             const cwd = path.join(basePath, filename);
             fs.mkdirSync(cwd);
-            fs.writeFileSync(path.join(cwd, `${filename}.cs`), template._code);
+            fs.writeFileSync(path.join(cwd, `${filename}.cs`), template.code);
+
+            // handle user errors (after template.code call)
+            onError(template.errors);
 
             const compileResults = await compile({ filename, cwd });
             if (compileResults.exitCode != 0) {
@@ -57,7 +59,7 @@ const run = async ({
                     for (let i = 0; i < lines.length; i++) {
                         // parse command
                         if (lines[i].startsWith(template.key))
-                            dataParser(
+                            parser(
                                 lines[i],
                                 (x) => write(x),
                                 (x) => kill(x)

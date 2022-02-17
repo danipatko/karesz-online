@@ -10,16 +10,16 @@ import {
 
 export default class KareszCore {
     private map: KareszMap;
-    public players: Map<number, Karesz>;
-    public playersDisqualified: Map<number, Karesz> = new Map<number, Karesz>();
-    private proposedPositions: Map<Point, Array<number>> = new Map<
+    public players: Map<string, Karesz>;
+    public disqualified: Map<string, Karesz> = new Map<string, Karesz>();
+    private proposedPositions: Map<Point, Array<string>> = new Map<
         Point,
-        Array<number>
+        Array<string>
     >();
-    private removeList: Array<number> = [];
+    private removeList: Array<string> = [];
     public multiPlayer: boolean;
 
-    constructor(players: Map<number, Karesz>, map?: KareszMap) {
+    constructor(players: Map<string, Karesz>, map?: KareszMap) {
         this.players = players;
         this.map = map ?? this.fillMap({ sizeX: 10, sizeY: 10 });
         this.multiPlayer = Object.keys(players).length > 1;
@@ -127,10 +127,11 @@ export default class KareszCore {
     /**
      * Remove all players included in `this.removeList` and reset.
      */
-    protected makeRemovals(): void {
-        this.removeList.forEach((x, i) => {
-            this.playersDisqualified.set(x, this.players.get(x) as any);
+    protected makeRemovals(callback?: (id: string) => void): void {
+        this.removeList.forEach((x) => {
+            this.disqualified.set(x, this.players.get(x) as any);
             this.players.delete(x);
+            if (callback) callback(x);
         });
         this.removeList = [];
     }
@@ -141,17 +142,17 @@ export default class KareszCore {
      * Make one step forward
      * C#: `Lépj()`
      */
-    protected proposeStep(player: Karesz, index: number): Karesz {
+    protected proposeStep(player: Karesz, id: string): Karesz {
         const p = this.forward(player);
         // if attempts to step out the map or into a wall, just simply die
         if (!p || !this.canStep(p)) {
-            this.removeList.push(index);
+            this.removeList.push(id);
             return player;
         }
         const prev = this.proposedPositions.get(p);
         this.proposedPositions.set(
             p,
-            prev === undefined ? [index] : prev.concat(index)
+            prev === undefined ? [id] : prev.concat(id)
         );
         return { ...player, proposedPosition: p };
     }

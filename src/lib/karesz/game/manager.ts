@@ -114,17 +114,21 @@ export default class SessionManager {
     }: {
         x: number;
         y: number;
-    }): Map<number, Karesz> {
-        const map = new Map<number, Karesz>(),
+    }): Map<string, Karesz> {
+        const map = new Map<string, Karesz>(),
             gap = Math.floor(x / (this.players.size + 1));
         let i = 0;
-        this.players.forEach((player) => {
-            const startState: State = {
-                position: { x: (i + 1) * gap, y: Math.floor(y / 2) },
+        let startState: State;
+        this.players.forEach((player, id) => {
+            // align players evenly
+            startState = {
+                position: { x: (i++ + 1) * gap, y: Math.floor(y / 2) },
                 rotation: Rotation.up,
             };
-            map.set(i++, {
-                name: player.id,
+            // set default props
+            map.set(id, {
+                id,
+                name: player.name,
                 startState,
                 steps: '',
                 ...startState,
@@ -211,8 +215,21 @@ export default class SessionManager {
         this.announce('left', { name: player?.name });
     }
 
-    protected playerDeath(index: number): void {
-        console.log(`${index} dieded`);
+    protected playerDeath(id: string): void {
+        // do something with rank list
+    }
+
+    protected errorHandler(errors: { id: string; description: string }[]) {
+        let player: Player | undefined;
+        for (let i = 0; i < errors.length; i++) {
+            player = this.players.get(errors[i].id);
+            if (player === undefined) continue;
+
+            this.announce('player_update', {
+                id: player.id,
+                disqualified: true,
+            });
+        }
     }
 
     /**
@@ -264,11 +281,12 @@ export default class SessionManager {
             this.playerRef = {};
             let i = 0;
             this.players.forEach((player) => (this.playerRef[i] = player.id));
-            game.run({ players: this.playerRef }).then(
-                ({ exitCode, output, error }) => {
-                    res({ exitCode, output, error });
-                }
-            );
+            game.run({
+                players: this.playerRef,
+                onError: this.errorHandler,
+            }).then(({ exitCode, output, error }) => {
+                res({ exitCode, output, error });
+            });
         });
     }
 }

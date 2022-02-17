@@ -11,12 +11,12 @@ const BASE_PATH = '/home/karesz-online/testing'; // WSL ROOT
 
 export default class KareszRunner extends KareszCore {
     public lang: 'csharp'; // future support in case new languages are added
-    public onPlayerDeath: (index: number) => void;
+    public onPlayerDeath: (id: string) => void;
 
     constructor(
         lang: 'csharp' = 'csharp',
-        players: Map<number, Karesz>,
-        onPlayerDeath: (index: number) => void,
+        players: Map<string, Karesz>,
+        onPlayerDeath: (id: string) => void,
         map?: KareszMap
     ) {
         super(players, map);
@@ -43,7 +43,7 @@ export default class KareszRunner extends KareszCore {
         if (index === undefined || io === undefined || command === undefined)
             return;
 
-        let player = this.players.get(parseInt(index));
+        let player = this.players.get(index);
         // invalid or removed player, return
         if (player === undefined) return;
 
@@ -52,7 +52,7 @@ export default class KareszRunner extends KareszCore {
 
         switch (command) {
             case Command.forward:
-                player = this.proposeStep(player, parseInt(index));
+                player = this.proposeStep(player, index);
             case Command.turn_right:
                 player = this.turn(player, 1);
             case Command.turn_left:
@@ -78,18 +78,20 @@ export default class KareszRunner extends KareszCore {
             case Command.turn_direction:
                 player = this.turn(player, clamp(parseInt(value), -1, 1));
         }
-        this.players.set(parseInt(index), player);
+        this.players.set(index, player);
     };
 
     protected tick(): void {
         this.makeSteps();
-        this.makeRemovals();
+        this.makeRemovals(this.onPlayerDeath);
     }
 
     public async run({
         players,
+        onError,
     }: {
-        players: Map<number, string>;
+        players: { [key: string]: string };
+        onError: (errors: { id: string; description: string }[]) => void;
     }): Promise<{ error?: string; output: string; exitCode: number }> {
         return new Promise<{
             error?: string;
@@ -97,19 +99,21 @@ export default class KareszRunner extends KareszCore {
             exitCode: number;
         }>((res) => {
             // check players
-            if (this.players.size <= 1) {
+            if (this.players.size == 0) {
                 res({
                     error: 'Not enough players',
                     exitCode: 1,
                     output: 'Not enough players',
                 });
             }
+
             // run dotnet
             run({
                 players: players,
                 basePath: BASE_PATH,
-                dataParser: this.parse,
+                parser: this.parse,
                 onTick: this.tick,
+                onError,
             }).then(({ output, exitCode, error }) => {
                 res({ output, exitCode, error });
             });
