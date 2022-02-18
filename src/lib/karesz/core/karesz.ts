@@ -10,24 +10,54 @@ import {
 
 export default class KareszCore {
     private map: KareszMap;
-    public players: Map<string, Karesz>;
-    public disqualified: Map<string, Karesz> = new Map<string, Karesz>();
-    private proposedPositions: Map<Point, Array<string>> = new Map<
-        Point,
-        Array<string>
-    >();
-    private removeList: Array<string> = [];
-    public multiPlayer: boolean;
-    public winner?: string;
-    // TODO: do this
-    public events?: {
-        onPlayerDeath: (id: string, killedBy: string) => void; // player dying
-        onPlayerKill: (id: string, kill: string) => void; // player stepping on another
-        onPlayerError: (errors: { id: string; description: string }[]) => void; // called when creating template
-        onGameEnd: (winner: string | string[]) => void;
-    };
+    // key is the ID of the dead player and value is the log
+    private removeList: {
+        [key: string]: Karesz;
+    } = {};
 
-    constructor(players: Map<string, Karesz>, map?: KareszMap) {
+    public players: Map<string, Karesz>;
+    public multiPlayer: boolean;
+
+    private proposedPositions = new Map<Point, Karesz[]>();
+    // scoreboard object contains dead players' data
+    public scoreBoard: Map<
+        string,
+        {
+            id: string;
+            startState: {
+                position: { x: number; y: number };
+                rotation: Rotation;
+            };
+            steps: string;
+            score: number;
+            ticksAlive: number;
+            kills: number;
+        }
+    > = new Map<
+        string,
+        {
+            id: string;
+            startState: {
+                position: { x: number; y: number };
+                rotation: Rotation;
+            };
+            steps: string;
+            score: number;
+            ticksAlive: number;
+            kills: number;
+        }
+    >();
+
+    public winner?: string | string[];
+    public tickCount: number = 0;
+
+    constructor({
+        players,
+        map,
+    }: {
+        players: Map<string, Karesz>;
+        map?: KareszMap;
+    }) {
         this.players = players;
         this.map = map ?? this.fillMap({ sizeX: 10, sizeY: 10 });
         this.multiPlayer = Object.keys(players).length > 1;
@@ -61,6 +91,13 @@ export default class KareszCore {
             .map((x) =>
                 x.split('').map((x) => FIELD_VALUES[parseInt(x)] ?? Field.empty)
             );
+    }
+
+    /**
+     * Kill a player
+     */
+    protected kill(player: Karesz): void {
+        this.removeList[player.id] = player;
     }
 
     /**
@@ -111,23 +148,23 @@ export default class KareszCore {
      */
     protected makeSteps(): void {
         this.proposedPositions.forEach((players, point) => {
-            // two (or more) players stepping on the same field
+            // two (or more) players stepping on the same field: no kills
             if (players.length > 1) {
-                players.forEach((x) => this.removeList.push(x));
+                players.forEach((player) => this.kill(player));
                 return;
             }
+
             // player being stepped on by another.
             // NOTE: the player is not getting removed from `this.players` map
             // right away, so if they are facing each other and stepping
             // to each other's positions they will both die eventually
-            this.players.forEach((x, i) => {
-                if (x.position == point && x.proposedPosition === undefined)
-                    this.removeList.push(i);
+            this.players.forEach((p) => {
+                if (p.position == point && p.proposedPosition === undefined) {
+                    this.kill(p); // kill player being stepped on
+                    players[0].kills++; // increment kill count
+                }
             });
-            // actually step
-            const p = this.players.get(players[0]);
-            if (p === undefined) return;
-            this.players.set(players[0], { ...p, position: point });
+            this.players.set(players[0].id, { ...players[0], position: point });
         });
 
         this.proposedPositions.clear();
@@ -137,18 +174,34 @@ export default class KareszCore {
      * Remove all players included in `this.removeList` and reset.
      * @param callback: called when a player dies
      */
-    protected makeRemovals(
-        callback?: (id: string, score: number, alive: number) => void
+    protected makeRemovals(): void {
+        for (const id in this.removeList) {
+            this.scoreBoard.set(id, {
+                ticksAlive: this.tickCount,
+                // TODO: calculate score from alive time and kill count
+                score: this.tickCount * (this.removeList[id].kills + 1),
+                ...this.removeList[id],
+            });
+            this.players.delete(id);
+        }
+        this.removeList = {};
+    }
+
+    /**
+     * Complete a round
+     */
+    public round(
+        write: (s: string) => void,
+        kill: (signal: NodeJS.Signals) => void
     ): void {
-        this.removeList.forEach((x) => {
-            const player = this.players.get(x);
-            this.players.delete(x);
-            if (player) {
-                this.disqualified.set(x, player);
-                if (callback) callback(x, player.score, this.players.size);
-            }
-        });
-        this.removeList = [];
+        this.makeSteps();
+        this.makeRemovals();
+        // one player remaining - kill process
+        if (this.players.size <= 1) {
+            kill('SIGKILL');
+            this.winner = Object.keys(this.players)[0];
+        }
+        this.tickCount++;
     }
 
     /* ---------- KARESZ FUNCTIONS ---------- */
@@ -157,17 +210,17 @@ export default class KareszCore {
      * Make one step forward
      * C#: `Lépj()`
      */
-    protected proposeStep(player: Karesz, id: string): Karesz {
+    protected proposeStep(player: Karesz): Karesz {
         const p = this.forward(player);
         // if attempts to step out the map or into a wall, just simply die
         if (!p || !this.canStep(p)) {
-            this.removeList.push(id);
+            this.kill(player);
             return player;
         }
         const prev = this.proposedPositions.get(p);
         this.proposedPositions.set(
             p,
-            prev === undefined ? [id] : prev.concat(id)
+            prev === undefined ? [player] : prev.concat(player)
         );
         return { ...player, proposedPosition: p };
     }

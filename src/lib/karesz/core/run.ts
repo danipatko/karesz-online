@@ -17,7 +17,10 @@ export default class KareszRunner extends KareszCore {
         players: Map<string, Karesz>,
         map?: KareszMap
     ) {
-        super(players, map);
+        super({
+            players,
+            map,
+        });
         this.lang = lang;
     }
 
@@ -34,8 +37,6 @@ export default class KareszRunner extends KareszCore {
         // io: one character, either '<' for stdout or '>' for stdin
         const [key, index, io, command, value] = input.trim().split(/\s+/gm);
 
-        // console.log(`key: ${key} | index: ${index} | io: ${io} | command: ${command} | value: ${value}`);
-
         // ignore debug logs
         if (index === undefined || io === undefined || command === undefined)
             return;
@@ -49,7 +50,7 @@ export default class KareszRunner extends KareszCore {
 
         switch (command) {
             case Command.forward:
-                player = this.proposeStep(player, index);
+                player = this.proposeStep(player);
             case Command.turn_right:
                 player = this.turn(player, 1);
             case Command.turn_left:
@@ -78,11 +79,9 @@ export default class KareszRunner extends KareszCore {
         this.players.set(index, player);
     };
 
-    protected tick(): void {
-        this.makeSteps();
-        this.makeRemovals();
-    }
-
+    /**
+     * Should start the game, listen for events and make a single return
+     */
     public async run({
         players,
         onError,
@@ -109,8 +108,8 @@ export default class KareszRunner extends KareszCore {
                 players: players,
                 basePath: BASE_PATH,
                 parser: this.parse,
-                onTick: this.tick,
-                onError,
+                onTick: this.round,
+                onTemplateDone: onError,
             }).then(({ output, exitCode, error }) => {
                 res({ output, exitCode, error });
             });

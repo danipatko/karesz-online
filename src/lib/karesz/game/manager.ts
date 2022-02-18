@@ -122,12 +122,13 @@ export default class SessionManager {
         Object.keys(this.players).forEach((id, index) => {
             // align players evenly
             startState = {
-                position: { x: (index++ + 1) * gap, y: Math.floor(y / 2) },
+                position: { x: ++index * gap, y: Math.floor(y / 2) },
                 rotation: Rotation.up,
             };
             // set default props
             map.set(id, {
-                score: 0,
+                id,
+                kills: 0,
                 startState,
                 steps: '',
                 ...startState,

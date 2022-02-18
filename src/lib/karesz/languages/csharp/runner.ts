@@ -1,5 +1,4 @@
 import { spwn } from '../../../util/command';
-import { RULES } from './config';
 import { Template } from './template';
 import fs from 'fs';
 import path from 'path/posix';
@@ -10,7 +9,7 @@ const run = async ({
     basePath,
     parser,
     onTick,
-    onError,
+    onTemplateDone,
 }: {
     players: { [key: string]: string };
     basePath: string;
@@ -24,7 +23,7 @@ const run = async ({
         write: (s: string) => void,
         kill: (signal: NodeJS.Signals) => void
     ) => void;
-    onError: (errors: { id: string; description: string }[]) => void;
+    onTemplateDone: (errors: { id: string; description: string }[]) => void;
 }): Promise<{ error?: string; output: string; exitCode: number }> => {
     /* 
         TODO: SWITCH TO DOTNET 6 (docker) INSTEAD OF MONO
@@ -40,7 +39,7 @@ const run = async ({
             fs.writeFileSync(path.join(cwd, `${filename}.cs`), template.code);
 
             // handle user errors (after template.code call)
-            onError(template.errors);
+            onTemplateDone(template.errors);
 
             const compileResults = await compile({ filename, cwd });
             if (compileResults.exitCode != 0) {
