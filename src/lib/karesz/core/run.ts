@@ -1,6 +1,6 @@
 import KareszCore from './karesz';
 import { randstr, clamp } from '../util';
-import { Command, Karesz, KareszMap } from './types';
+import { Command, Karesz, KareszMap, PlayerScore } from './types';
 import run from '../languages/csharp/runner';
 
 // const BASE_PATH = '/mnt/c/Users/Dani/home/Projects/karesz-online/testing';  // WSL
@@ -88,11 +88,17 @@ export default class KareszRunner extends KareszCore {
     }: {
         players: { [key: string]: string };
         onError: (errors: { id: string; description: string }[]) => void;
-    }): Promise<{ error?: string; output: string; exitCode: number }> {
+    }): Promise<{
+        error?: string;
+        output: string;
+        exitCode: number;
+        results: Map<string, PlayerScore>;
+    }> {
         return new Promise<{
             error?: string;
             output: string;
             exitCode: number;
+            results: Map<string, PlayerScore>;
         }>((res) => {
             // check players
             if (this.players.size == 0) {
@@ -100,6 +106,7 @@ export default class KareszRunner extends KareszCore {
                     error: 'Not enough players',
                     exitCode: 1,
                     output: 'Not enough players',
+                    results: this.scoreBoard,
                 });
             }
 
@@ -110,9 +117,16 @@ export default class KareszRunner extends KareszCore {
                 parser: this.parse,
                 onTick: this.round,
                 onTemplateDone: onError,
-            }).then(({ output, exitCode, error }) => {
-                res({ output, exitCode, error });
-            });
+            }).then(
+                (runData: {
+                    output: string;
+                    exitCode: number;
+                    error?: string;
+                }) => {
+                    // game end
+                    res({ ...runData, results: this.scoreBoard });
+                }
+            );
         });
     }
 }

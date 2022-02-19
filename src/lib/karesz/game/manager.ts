@@ -6,6 +6,7 @@ import {
     Rotation,
     State,
     SessionState,
+    PlayerScore,
 } from '../core/types';
 import KareszRunner from '../core/run';
 import { Socket } from 'socket.io';
@@ -18,7 +19,6 @@ interface Player {
     code: string;
     disqualified: boolean;
     score: number;
-    current_rank: number;
 }
 
 export default class SessionManager {
@@ -53,7 +53,7 @@ export default class SessionManager {
         if (host === undefined) return;
 
         this.host = id;
-        // handle host leaving (find new host or delete session)
+        // handle host leaving - find new host or delete session
         host.socket.on('disconnect', () => {
             this.players.delete(host.socket.id);
             if (this.players.size === 0) this.destroy();
@@ -73,7 +73,8 @@ export default class SessionManager {
             | 'joined'
             | 'player_update'
             | 'state_update'
-            | 'host_change',
+            | 'host_change'
+            | 'game_end',
         params?: object
     ): void {
         this.players.forEach((x) => x.socket.emit(ev, { ...params }));
@@ -158,7 +159,6 @@ export default class SessionManager {
             ready: false,
             code: '',
             score: 0,
-            current_rank: -1,
             disqualified: false,
         };
 
@@ -207,6 +207,20 @@ export default class SessionManager {
         });
     }
 
+    protected gameEnd({
+        exitCode,
+        output,
+        results,
+        error,
+    }: {
+        results: Map<string, PlayerScore>;
+        output: string;
+        error?: string;
+        exitCode: number;
+    }): void {
+        this.announce('game_end', { results, error, exitCode, output });
+    }
+
     /**
      * Remove a player by it's id
      */
@@ -216,16 +230,14 @@ export default class SessionManager {
         this.announce('left', { name: player?.name });
     }
 
-    protected playerDeath(id: string): void {
-        // do something with rank list
-    }
-
     protected errorHandler(errors: { id: string; description: string }[]) {
         let player: Player | undefined;
         for (let i = 0; i < errors.length; i++) {
             player = this.players.get(errors[i].id);
             if (player === undefined) continue;
-
+            // show error to player
+            player.socket.emit('error', { description: errors[i].description });
+            // set DQ status
             this.announce('player_update', {
                 id: player.id,
                 disqualified: true,
@@ -244,49 +256,40 @@ export default class SessionManager {
         map?: string;
         mapType: 'parse' | 'empty' | 'load';
         mapSize?: { x: number; y: number };
-    }): Promise<{ error?: string; output: string; exitCode: number }> {
-        return new Promise<{
-            error?: string;
-            output: string;
-            exitCode: number;
-        }>((res) => {
-            this.state = SessionState.running;
-            this.announce('state_update', { state: SessionState.running });
+    }): Promise<void> {
+        this.state = SessionState.running;
+        this.announce('state_update', { state: SessionState.running });
 
-            switch (mapType) {
-                // create an empty map of size ...
-                case 'empty':
-                    this.fillMap({ ...(mapSize ?? { x: 10, y: 10 }) });
-                // parse map made by user ...
-                case 'parse':
-                    if (map !== undefined) this.parseMapAsString(map);
-                // load an existing map
-                case 'load': // TODO: import maps from karesz
-                    break;
-                default:
-                    res({
-                        error: 'Invalid map type',
-                        exitCode: 1,
-                        output: 'Invalid map type',
-                    });
-            }
+        switch (mapType) {
+            // create an empty map of size ...
+            case 'empty':
+                this.fillMap({ ...(mapSize ?? { x: 10, y: 10 }) });
+            // parse map made by user ...
+            case 'parse':
+                if (map !== undefined) this.parseMapAsString(map);
+            // load an existing map
+            case 'load': // TODO: import maps from karesz
+                break;
+            default:
+                break;
+        }
 
-            // create new runner instance
-            const game = new KareszRunner(
-                'csharp',
-                this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
-                this.map
-            );
+        // create new runner instance
+        const game = new KareszRunner(
+            'csharp',
+            this.getKareszes({ ...(mapSize ?? { x: 10, y: 10 }) }),
+            this.map
+        );
 
-            this.playerRef = {};
-            let i = 0;
-            this.players.forEach((player) => (this.playerRef[i] = player.id));
-            game.run({
+        this.playerRef = {};
+        let i = 0;
+        this.players.forEach((player) => (this.playerRef[i] = player.id));
+
+        this.gameEnd(
+            await game.run({
                 players: this.playerRef,
                 onError: this.errorHandler,
-            }).then(({ exitCode, output, error }) => {
-                res({ exitCode, output, error });
-            });
-        });
+            })
+        );
     }
 }

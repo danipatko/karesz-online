@@ -6,6 +6,7 @@ import {
     Field,
     Rotation,
     FIELD_VALUES,
+    PlayerScore,
 } from './types';
 
 export default class KareszCore {
@@ -19,34 +20,8 @@ export default class KareszCore {
     public multiPlayer: boolean;
 
     private proposedPositions = new Map<Point, Karesz[]>();
-    // scoreboard object contains dead players' data
-    public scoreBoard: Map<
-        string,
-        {
-            id: string;
-            startState: {
-                position: { x: number; y: number };
-                rotation: Rotation;
-            };
-            steps: string;
-            score: number;
-            ticksAlive: number;
-            kills: number;
-        }
-    > = new Map<
-        string,
-        {
-            id: string;
-            startState: {
-                position: { x: number; y: number };
-                rotation: Rotation;
-            };
-            steps: string;
-            score: number;
-            ticksAlive: number;
-            kills: number;
-        }
-    >();
+    // scoreboard - contains dead players' data
+    public scoreBoard = new Map<string, PlayerScore>();
 
     public winner?: string | string[];
     public tickCount: number = 0;
@@ -188,7 +163,7 @@ export default class KareszCore {
     }
 
     /**
-     * Complete a round
+     * Make steps and removals, end game if necessary
      */
     public round(
         write: (s: string) => void,

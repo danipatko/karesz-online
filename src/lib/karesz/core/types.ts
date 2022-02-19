@@ -89,3 +89,15 @@ export const RockColor = {
     4: Rock.green,
     5: Rock.yellow,
 };
+
+export interface PlayerScore {
+    id: string;
+    startState: {
+        position: { x: number; y: number };
+        rotation: Rotation;
+    };
+    steps: string;
+    score: number;
+    ticksAlive: number;
+    kills: number;
+}
