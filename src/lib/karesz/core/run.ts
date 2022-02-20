@@ -107,39 +107,29 @@ export default class KareszRunner extends KareszCore {
         exitCode: number;
         results: Map<string, PlayerScore>;
     }> {
-        return new Promise<{
-            error?: string;
-            output: string;
-            exitCode: number;
-            results: Map<string, PlayerScore>;
-        }>((res) => {
-            // check players
-            if (this.players.size == 0) {
-                res({
-                    error: 'Not enough players',
-                    exitCode: 1,
-                    output: 'Not enough players',
-                    results: this.scoreBoard,
-                });
-            }
+        console.log('RUN CALLED');
+        console.log(players);
 
-            // run dotnet
-            run({
+        if (Object.keys(players).length == 0) {
+            return {
+                error: 'Not enough players',
+                exitCode: 1,
+                output: 'Not enough players',
+                results: this.scoreBoard,
+            };
+        }
+
+        console.log('GOT HERE');
+
+        return {
+            ...(await run({
                 players: players,
                 basePath: BASE_PATH,
                 parser: this.parse,
                 onTick: this.round,
                 onTemplateDone: this.disqualify,
-            }).then(
-                (runData: {
-                    output: string;
-                    exitCode: number;
-                    error?: string;
-                }) => {
-                    // game end
-                    res({ ...runData, results: this.scoreBoard });
-                }
-            );
-        });
+            })),
+            results: this.scoreBoard,
+        };
     }
 }

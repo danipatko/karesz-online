@@ -50,7 +50,6 @@ export default class SessionManager {
     protected code: number;
     protected lastWinner: string = '';
     public destroy: () => void;
-    private playerRef: { [key: number]: string } = {};
 
     constructor({
         code,
@@ -299,14 +298,15 @@ export default class SessionManager {
             this.map
         );
 
-        this.playerRef = {};
-        let i = 0;
-        this.players.forEach((player) => (this.playerRef[i] = player.id));
+        const players: { [key: string]: string } = {};
+        for (const v of this.players.values()) players[v.id] = v.code;
 
-        this.gameEnd(
-            await game.run({
-                players: this.playerRef,
-            })
-        );
+        console.log(players);
+        // this.gameEnd(
+        const res = await game.run({ players });
+        this.gameEnd(res);
+
+        console.log('HEHEHEHA');
+        // );
     }
 }

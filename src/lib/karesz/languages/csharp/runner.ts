@@ -32,6 +32,8 @@ const run = async ({
         async (res) => {
             const template = new Template(players);
 
+            console.log(template);
+
             // write template to file
             const filename = randstr(10);
             const cwd = path.join(basePath, filename);
@@ -41,22 +43,27 @@ const run = async ({
             // handle user errors (after template.code call)
             onTemplateDone(template.errors);
 
+            console.log('compiling');
             const compileResults = await compile({ filename, cwd });
             if (compileResults.exitCode != 0) {
+                console.log(compileResults.error);
+                console.log(compileResults.output);
                 res({ ...compileResults });
                 return;
             }
 
+            console.log('aot');
             const preCompileResults = await preCompile({ filename, cwd });
             if (preCompileResults.exitCode != 0) {
                 res({ ...preCompileResults });
                 return;
             }
 
+            console.log('running');
             let lines: string[] = [],
                 output: string = '',
                 error: string = '';
-            spwn('mono', `${filename}.exe`)
+            spwn('prlimit', '-t=2', 'mono', `${filename}.exe`)
                 .onData((out, write, kill) => {
                     lines = out.trim().split('\n');
                     for (let i = 0; i < lines.length; i++) {

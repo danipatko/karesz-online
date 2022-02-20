@@ -123,6 +123,7 @@ export class Template {
             this.players[key] = this.replaceEntry(this.players[key], key);
             this.players[key] = this.replace(this.players[key], key);
         }
+
         return this.multiPlayer
             ? getMultiPlayerTemplate(
                   this.rand,
@@ -130,7 +131,11 @@ export class Template {
                   this.players,
                   this.roundKey
               )
-            : getSingleTemplate(this.rand, this.key, this.players[0]);
+            : getSingleTemplate(
+                  this.rand,
+                  this.key,
+                  this.players[Object.keys(this.players)[0]]
+              );
     }
 }
 
