@@ -3,18 +3,27 @@ import PlayerCard from './PlayerCard';
 const ScoreBoard = ({
     players,
 }: {
-    players: { [key: string]: { name: string; id: string; ready: boolean } };
+    players: {
+        [id: string]: {
+            name: string;
+            id: string;
+            ready: boolean;
+            wins: number;
+        };
+    };
 }) => {
     return (
         <div className='p-2'>
-            <ul className='list-none bg-zinc-800 odd:bg-zinc-700'>
+            <ul className='list-none'>
                 {Object.keys(players).map((id, index) => (
-                    <PlayerCard
+                    <li
                         key={index}
-                        id={id}
-                        name={players[id].name}
-                        ready={players[id].ready}
-                    />
+                        className='inline-flex flex-1 justify-start gap-4'
+                    >
+                        <div>{players[id].name}</div>
+                        <div>{players[id].wins}</div>
+                        <div>{players[id].ready ? 'Ready' : 'Unready'}</div>
+                    </li>
                 ))}
             </ul>
         </div>

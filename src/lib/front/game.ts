@@ -26,7 +26,8 @@ export interface Game {
 export const useGame = (): [
     Game,
     {
-        join: (data: { name: string; code: number }) => void;
+        join: (name: string, code: number) => void;
+        create: (name: string) => void;
         startGame: () => void;
         submit: (s: string) => void;
     }
@@ -135,8 +136,8 @@ export const useGame = (): [
         setSocket(socket);
     }, [setSocket]);
 
-    const join = (data: { name: string; code: number }) => {
-        if (socket !== null) socket.emit('join', data);
+    const join = (name: string, code: number) => {
+        if (socket !== null) socket.emit('join', { name, code });
     };
 
     const startGame = () => {
@@ -144,9 +145,14 @@ export const useGame = (): [
         socket.emit('start_game');
     };
 
+    const create = (name: string) => {
+        if (socket === null) return;
+        socket.emit('create', { name });
+    };
+
     const submit = (code: string) => {
         if (socket !== null) socket.emit('submit', { code });
     };
 
-    return [state, { join, startGame, submit }];
+    return [state, { join, startGame, create, submit }];
 };

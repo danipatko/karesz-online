@@ -9,7 +9,7 @@ const JoinGame = ({
     onCreateNew,
 }: {
     onJoin: (name: string, code: number) => void;
-    onCreateNew: () => void;
+    onCreateNew: (name: string) => void;
 }) => {
     const codeInput = useRef<HTMLInputElement>(null as any);
 
@@ -25,8 +25,14 @@ const JoinGame = ({
         );
     };
 
+    const create = () => {
+        onCreateNew(
+            (document.getElementById('name') as HTMLInputElement).value
+        );
+    };
+
     return (
-        <main className='flex flex-1 justify-center items-center h-screen bg-back text-white'>
+        <main className='flex flex-1 justify-center items-center asdh-screen bg-back text-white'>
             <div className='p-10 bg-main rounded-lg text-center'>
                 <h1 className='font-semibold text-3xl mb-10'>
                     Join game or create new
@@ -56,6 +62,13 @@ const JoinGame = ({
                     className='px-5 py-2 rounded-lg transition-colors bg-fore hover:bg-fore-highlight text-lg font-semibold'
                 >
                     Join
+                </button>
+                <div className='p-2'></div>
+                <button
+                    onClick={create}
+                    className='px-5 py-2 rounded-lg transition-colors bg-fore hover:bg-fore-highlight text-lg font-semibold'
+                >
+                    Create new
                 </button>
             </div>
         </main>

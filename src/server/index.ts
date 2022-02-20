@@ -29,27 +29,28 @@ io.on('connection', (socket) => {
     console.log(`${socket.id} connected`); // debug
 
     socket.on('join', ({ name, code }: { name: string; code: number }) => {
-        console.log(`name: ${name} | code: ${code}`); // debug
-        if (!(name && code)) return;
+        console.log(`Adding ${name} to existing game (${code}) ...'`); // debug
 
         const game = gameManager.get(code);
-
-        if (game !== undefined) {
-            console.log('adding to existing game...'); // debug
-            game.addPlayer({ name, socket });
-        } else {
-            console.log('creating new game'); // debug
-            let code = randCode();
-            while (gameManager.has(code)) code = randCode();
-            gameManager.set(
-                code,
-                new SessionManager({
-                    code,
-                    name,
-                    socket,
-                    remove: () => gameManager.delete(code),
-                })
-            );
+        if (game === undefined) {
+            console.log('Game not found');
+            return;
         }
+        game.addPlayer({ name, socket });
+    });
+
+    socket.on('create', ({ name }: { name: string }) => {
+        console.log(`Creating ${name}'s game`); // debug
+        let code = randCode();
+        while (gameManager.has(code)) code = randCode();
+        gameManager.set(
+            code,
+            new SessionManager({
+                code,
+                name,
+                socket,
+                remove: () => gameManager.delete(code),
+            })
+        );
     });
 });

@@ -3,19 +3,16 @@ import { Monaco } from '@monaco-editor/react';
 import { getCompletionItems } from '../lib/front/autocomplete';
 import { useGame } from '../lib/front/game';
 import JoinGame from '../components/JoinGame';
-import Navbar from '../components/Navbar';
+import ScoreBoard from '../components/ScoreBoard';
+
+const code = `
+void FELADAT() {
+    Console.WriteLine("hello world");
+}
+`;
 
 const Home: NextPage = () => {
-    const [game, { join, fetchState }] = useGame();
-
-    // join a game or create new if code is not present
-    const joinGame = (name: string, code: number) => {
-        join({ code, name });
-    };
-
-    const createNewGame = () => {
-        console.log('sad');
-    };
+    const [game, { join, startGame, submit, create }] = useGame();
 
     const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.registerCompletionItemProvider('csharp', {
@@ -27,10 +24,37 @@ const Home: NextPage = () => {
         });
     }; //*/
 
+    const sub = () => submit(code);
+
     return (
         <div className=''>
-            <Navbar />
-            <JoinGame onCreateNew={createNewGame} onJoin={joinGame} />
+            <JoinGame onCreateNew={create} onJoin={join} />
+
+            {game.connected ? (
+                <div>
+                    <div>
+                        <div>Code: {game.code}</div>
+                        <div>Host: {game.host}</div>
+                        <div>Phase: {game.state}</div>
+                        <div>Player data: {JSON.stringify(game.players)}</div>
+                        <div>
+                            Scoreboard contents:{' '}
+                            {JSON.stringify(game.scoreBoard)}
+                        </div>
+                        <div>
+                            <button onClick={sub}>Submit code</button>
+                        </div>
+                        <div>
+                            <button onClick={startGame}>Start game</button>
+                        </div>
+                    </div>
+                    <div>
+                        <ScoreBoard players={game.players} />
+                    </div>
+                </div>
+            ) : (
+                <div>Not yet joined</div>
+            )}
         </div>
     );
 };

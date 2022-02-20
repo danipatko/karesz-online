@@ -87,20 +87,8 @@ export default class SessionManager {
         });
 
         // start game event
-        host.socket.on('start_game', async () => {
-            return new Promise<void>((res) => {
-                // TODO: check ready players
-                this.players.forEach((player) => {
-                    if (!player.ready) {
-                        host.socket.emit('start_fail', {
-                            description: 'Not all players are ready',
-                        });
-                        res();
-                    }
-                });
-
-                this.startGame({ mapType: 'empty', mapSize: { x: 10, y: 10 } });
-            });
+        host.socket.on('start_game', () => {
+            this.startGame({ mapType: 'empty', mapSize: { x: 10, y: 10 } });
         });
 
         this.announce('host_change', { host: id });
@@ -227,9 +215,15 @@ export default class SessionManager {
 
         // create a list of joined people
         const players: {
-            [id: string]: { name: string; wins: number; ready: boolean };
+            [id: string]: {
+                name: string;
+                wins: number;
+                ready: boolean;
+                id: string;
+            };
         } = {};
-        for (const [k, p] of this.players.entries()) players[k] = { ...p };
+        for (const [k, p] of this.players.entries())
+            players[k] = { name: p.name, wins: p.wins, ready: p.ready, id: k };
 
         socket.emit('fetch', {
             players,
