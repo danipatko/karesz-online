@@ -15,7 +15,7 @@ export class Template {
     private readonly betweenParanthesis: RegExp = /(?<=\()(.*?)(?=\))/gm;
     protected players: { [key: string]: string };
     public multiPlayer: boolean;
-    public errors: { id: string; description: string }[] = [];
+    public errors: string[] = [];
 
     constructor(players: { [id: string]: string }) {
         this.players = players;
@@ -34,10 +34,7 @@ export class Template {
 
             if (RULESET[key].action == 'disqualify') {
                 delete this.players[id];
-                this.errors.push({
-                    description: RULESET[key].reason ?? 'bruh',
-                    id,
-                });
+                this.errors.push(id);
                 return '';
             } else
                 return input.replace(
@@ -109,11 +106,7 @@ export class Template {
 
         // no replacements occured
         if (newCode == input) {
-            this.errors.push({
-                id,
-                description:
-                    'Unable to find FELADAT entry. Make sure your submitted code contains a void type FELADAT function.',
-            });
+            this.errors.push(id);
             delete this.players[id];
             return '';
         }

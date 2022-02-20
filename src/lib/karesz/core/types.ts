@@ -92,12 +92,13 @@ export const RockColor = {
 
 export interface PlayerScore {
     id: string;
-    startState: {
+    score: number;
+    ticksAlive: number;
+    disqualified: boolean;
+    startState?: {
         position: { x: number; y: number };
         rotation: Rotation;
     };
-    steps: string;
-    score: number;
-    ticksAlive: number;
-    kills: number;
+    steps?: string;
+    kills?: number;
 }

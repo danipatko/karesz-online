@@ -23,7 +23,7 @@ const run = async ({
         write: (s: string) => void,
         kill: (signal: NodeJS.Signals) => void
     ) => void;
-    onTemplateDone: (errors: { id: string; description: string }[]) => void;
+    onTemplateDone: (errors: string[]) => void;
 }): Promise<{ error?: string; output: string; exitCode: number }> => {
     /* 
         TODO: SWITCH TO DOTNET 6 (docker) INSTEAD OF MONO

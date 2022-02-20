@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
 
         if (game !== undefined) {
             console.log('adding to existing game...'); // debug
-            game.addPlayer({ name, socket, host: false });
+            game.addPlayer({ name, socket });
         } else {
             console.log('creating new game'); // debug
             let code = randCode();

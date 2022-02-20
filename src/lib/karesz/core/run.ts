@@ -80,14 +80,27 @@ export default class KareszRunner extends KareszCore {
     };
 
     /**
+     * Disqualify an array of players before starting the game
+     */
+    protected disqualify(players: string[]): void {
+        players.forEach((id) => {
+            this.scoreBoard.set(id, {
+                id,
+                disqualified: true,
+                score: 0,
+                ticksAlive: 0,
+            });
+            this.players.delete(id);
+        });
+    }
+
+    /**
      * Should start the game, listen for events and make a single return
      */
     public async run({
         players,
-        onError,
     }: {
         players: { [key: string]: string };
-        onError: (errors: { id: string; description: string }[]) => void;
     }): Promise<{
         error?: string;
         output: string;
@@ -116,7 +129,7 @@ export default class KareszRunner extends KareszCore {
                 basePath: BASE_PATH,
                 parser: this.parse,
                 onTick: this.round,
-                onTemplateDone: onError,
+                onTemplateDone: this.disqualify,
             }).then(
                 (runData: {
                     output: string;

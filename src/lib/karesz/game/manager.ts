@@ -13,13 +13,34 @@ import { Socket } from 'socket.io';
 
 interface Player {
     socket: Socket;
-    ready: boolean;
     id: string;
-    name: string;
     code: string;
-    disqualified: boolean;
-    score: number;
+    ready: boolean; // *
+    name: string; // *
+    wins: number; // *
+    // * visible for all
 }
+
+/* 
+SOCKET EVENTS
+
+public:
+    joined              s -> c 
+    left                s -> c
+    fetch               s -> c
+    host_change         s -> c
+    player_update       s -> c
+    state_update        s -> c
+    scoreboard_update   s -> c
+    submit              c -> s
+    unsubmit            c -> s
+
+
+host: 
+    start_game c -> s
+    start_fail s -> c
+
+*/
 
 export default class SessionManager {
     private map: KareszMap | undefined;
@@ -45,23 +66,44 @@ export default class SessionManager {
         this.code = code;
         this.host = socket.id;
         this.destroy = remove;
-        this.addPlayer({ name, socket, host: true });
+        this.addPlayer({ name, socket });
     }
 
+    /**
+     * Set host of game
+     */
     protected setHost(id: string) {
         const host = this.players.get(id);
         if (host === undefined) return;
 
         this.host = id;
-        // handle host leaving - find new host or delete session
         host.socket.on('disconnect', () => {
-            this.players.delete(host.socket.id);
+            this.players.delete(host.id);
+            // delete session
             if (this.players.size === 0) this.destroy();
-
-            this.announce('left', { id: host.socket.id });
-            this.host = this.players.keys().next().value;
-            this.announce('host_change', { host: this.host });
+            this.announce('left', { id: host.id });
+            // find new host
+            this.setHost(Object.keys(this.players)[0]);
         });
+
+        // start game event
+        host.socket.on('start_game', async () => {
+            return new Promise<void>((res) => {
+                // TODO: check ready players
+                this.players.forEach((player) => {
+                    if (!player.ready) {
+                        host.socket.emit('start_fail', {
+                            description: 'Not all players are ready',
+                        });
+                        res();
+                    }
+                });
+
+                this.startGame({ mapType: 'empty', mapSize: { x: 10, y: 10 } });
+            });
+        });
+
+        this.announce('host_change', { host: id });
     }
 
     /**
@@ -69,15 +111,16 @@ export default class SessionManager {
      */
     private announce(
         ev:
-            | 'left'
-            | 'joined'
-            | 'player_update'
-            | 'state_update'
-            | 'host_change'
-            | 'game_end',
+            | 'left' // player left
+            | 'joined' // player joined
+            | 'player_update' // player ready
+            | 'state_update' // game start / end
+            | 'host_change' // new host
+            | 'scoreboard_update', // on game end
         params?: object
     ): void {
-        this.players.forEach((x) => x.socket.emit(ev, { ...params }));
+        for (const player of this.players.values())
+            player.socket.emit(ev, { ...params });
     }
 
     /**
@@ -143,29 +186,20 @@ export default class SessionManager {
      * Append a new player.
      * @returns the index of the current player
      */
-    public addPlayer({
-        name,
-        socket,
-        host,
-    }: {
-        name: string;
-        socket: Socket;
-        host: boolean;
-    }): void {
+    public addPlayer({ name, socket }: { name: string; socket: Socket }): void {
         const player: Player = {
             name,
             socket,
             id: socket.id,
             ready: false,
             code: '',
-            score: 0,
-            disqualified: false,
+            wins: 0,
         };
 
         // handle user submitting code
         socket.on('submit', ({ code }: { code: string }) => {
             if (this.state == SessionState.running) return;
-            const p = this.players.get(socket.id);
+            const p = this.players.get(player.id);
             if (p === undefined) return;
             this.players.set(p.id, { ...p, code, ready: true });
             this.announce('player_update', { id: p.id, ready: true });
@@ -180,33 +214,33 @@ export default class SessionManager {
             this.announce('player_update', { id: p.id, ready: false });
         });
 
+        // join event for others
         this.announce('joined', {
             id: player.id,
             name: player.name,
             ready: false,
+            wins: 0,
         });
 
         this.players.set(player.id, player);
-        if (host) this.setHost(player.id);
+        if (this.players.size == 1) this.setHost(player.id);
 
-        // emit data about every players when joining first time
+        // create a list of joined people
         const players: {
-            [key: string]: { name: string; id: string; ready: boolean };
+            [id: string]: { name: string; wins: number; ready: boolean };
         } = {};
-
-        this.players.forEach(
-            (x, i) => (players[i] = { name: x.name, id: x.id, ready: x.ready })
-        );
+        for (const [k, p] of this.players.entries()) players[k] = { ...p };
 
         socket.emit('fetch', {
             players,
             host: this.host,
             code: this.code,
-            lastWinner: this.lastWinner,
-            state: this.state,
         });
     }
 
+    /**
+     * Announce round results
+     */
     protected gameEnd({
         exitCode,
         output,
@@ -218,7 +252,12 @@ export default class SessionManager {
         error?: string;
         exitCode: number;
     }): void {
-        this.announce('game_end', { results, error, exitCode, output });
+        this.announce('scoreboard_update', {
+            results,
+            error,
+            exitCode,
+            output,
+        });
     }
 
     /**
@@ -228,21 +267,6 @@ export default class SessionManager {
         const player = this.players.get(id);
         this.players.delete(id);
         this.announce('left', { name: player?.name });
-    }
-
-    protected errorHandler(errors: { id: string; description: string }[]) {
-        let player: Player | undefined;
-        for (let i = 0; i < errors.length; i++) {
-            player = this.players.get(errors[i].id);
-            if (player === undefined) continue;
-            // show error to player
-            player.socket.emit('error', { description: errors[i].description });
-            // set DQ status
-            this.announce('player_update', {
-                id: player.id,
-                disqualified: true,
-            });
-        }
     }
 
     /**
@@ -288,7 +312,6 @@ export default class SessionManager {
         this.gameEnd(
             await game.run({
                 players: this.playerRef,
-                onError: this.errorHandler,
             })
         );
     }

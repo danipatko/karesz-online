@@ -147,7 +147,6 @@ export default class KareszCore {
 
     /**
      * Remove all players included in `this.removeList` and reset.
-     * @param callback: called when a player dies
      */
     protected makeRemovals(): void {
         for (const id in this.removeList) {
@@ -155,6 +154,7 @@ export default class KareszCore {
                 ticksAlive: this.tickCount,
                 // TODO: calculate score from alive time and kill count
                 score: this.tickCount * (this.removeList[id].kills + 1),
+                disqualified: false,
                 ...this.removeList[id],
             });
             this.players.delete(id);
