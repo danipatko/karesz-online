@@ -29,32 +29,11 @@ const Home: NextPage = () => {
     return (
         <div className=''>
             <JoinGame onCreateNew={create} onJoin={join} />
-
-            {game.connected ? (
-                <div>
-                    <div>
-                        <div>Code: {game.code}</div>
-                        <div>Host: {game.host}</div>
-                        <div>Phase: {game.state}</div>
-                        <div>Player data: {JSON.stringify(game.players)}</div>
-                        <div>
-                            Scoreboard contents:{' '}
-                            {JSON.stringify(game.scoreBoard)}
-                        </div>
-                        <div>
-                            <button onClick={sub}>Submit code</button>
-                        </div>
-                        <div>
-                            <button onClick={startGame}>Start game</button>
-                        </div>
-                    </div>
-                    <div>
-                        <ScoreBoard players={game.players} />
-                    </div>
-                </div>
-            ) : (
-                <div>Not yet joined</div>
-            )}
+            <ScoreBoard
+                players={game.players}
+                code={game.code}
+                host={game.host}
+            />
         </div>
     );
 };
