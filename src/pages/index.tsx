@@ -3,6 +3,7 @@ import { Monaco } from '@monaco-editor/react';
 import { getCompletionItems } from '../lib/front/autocomplete';
 import ScoreBoard from '../components/ScoreBoard';
 import Router from 'next/router';
+import Edit from '../components/Edit';
 
 const code = `
 void FELADAT() {
@@ -11,17 +12,14 @@ void FELADAT() {
 `;
 
 const Home: NextPage = () => {
-    const handleEditorWillMount = (monaco: Monaco) => {
-        monaco.languages.registerCompletionItemProvider('csharp', {
-            provideCompletionItems: () => {
-                return {
-                    suggestions: getCompletionItems(monaco),
-                };
-            },
-        });
-    }; //*/
-
-    return <div className=''>very epic heheheha</div>;
+    return (
+        <div className='bg-back h-screen w-full'>
+            <div className='text-white'>{1111}</div>
+            <div className='p-5'>
+                <Edit />
+            </div>
+        </div>
+    );
 };
 
 export default Home;

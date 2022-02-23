@@ -1,5 +1,5 @@
-import { PlayerScore, SessionState } from '../karesz/core/types';
-import React, { useEffect, useState } from 'react';
+import { PlayerScore } from '../karesz/core/types';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 interface Player {

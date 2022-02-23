@@ -13,26 +13,35 @@ const ScoreBoard = ({
     };
 }) => {
     return (
-        <div className='pt-5 rounded-xl bg-main fixed'>
+        <div className='p-3 rounded-md bg-main w-fit'>
+            <div className='flex justify-between gap-10'>
+                <div className='text-white font-semibold text-3xl mb-3'>
+                    Lobby
+                </div>
+                <div className='text-gray-400 text-base float-right'>
+                    Name/Wins/Ready
+                </div>
+            </div>
             {Object.keys(players).map((id, index) => (
                 <div
                     key={index}
-                    className={`${
-                        index ? '' : 'bg-main-highlight'
-                    } w-full flex`}
+                    className='p-1 text-white flex flex-1 justify-end gap-4'
                 >
-                    <div className='font-semibold text-lg flex-initial'>
-                        {id == host ? (
-                            <span className='fa fa-crown'></span>
-                        ) : null}{' '}
+                    <div className='grow overflow-hidden text-lg'>
                         {players[id].name}
+                        {id == host ? (
+                            <i className='text-xs pl-2 fa fa-crown text-yellow-500'></i>
+                        ) : null}
                     </div>
-                    <div className=''>
-                        <span
-                            className={`fa ${
-                                players[id].ready ? 'fa-tick' : 'fa-x'
-                            }`}
-                        ></span>
+                    <div>{players[id].wins}</div>
+                    <div>
+                        <i
+                            className={
+                                players[id].ready
+                                    ? 'fa fa-tick text-green-500'
+                                    : 'fa fa-x text-red-600'
+                            }
+                        ></i>
                     </div>
                 </div>
             ))}
