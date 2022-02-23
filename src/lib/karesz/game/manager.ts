@@ -51,6 +51,10 @@ export default class SessionManager {
     protected lastWinner: string = '';
     public destroy: () => void;
 
+    public get playerCount(): number {
+        return this.players.size;
+    }
+
     constructor({
         code,
         name,

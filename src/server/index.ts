@@ -28,21 +28,33 @@ const io = new Server(httpserver);
 io.on('connection', (socket) => {
     console.log(`${socket.id} connected`); // debug
 
+    // fetch minimal game data / check if exists
+    socket.on('prejoin', ({ code }: { code: number }) => {
+        console.log(`prejoining to ${code}`);
+
+        const game = gameManager.get(code);
+        socket.emit('prejoin', {
+            playerCount:
+                code != 0 && game === undefined ? -1 : game?.playerCount ?? 0,
+        });
+    });
+
     socket.on('join', ({ name, code }: { name: string; code: number }) => {
         console.log(`Adding ${name} to existing game (${code}) ...'`); // debug
 
         const game = gameManager.get(code);
-        if (game === undefined) {
-            console.log('Game not found');
-            return;
-        }
+        // game not found
+        if (game === undefined) return;
         game.addPlayer({ name, socket });
     });
 
     socket.on('create', ({ name }: { name: string }) => {
         console.log(`Creating ${name}'s game`); // debug
+
+        // random four digit gamecode
         let code = randCode();
         while (gameManager.has(code)) code = randCode();
+
         gameManager.set(
             code,
             new SessionManager({

@@ -9,34 +9,43 @@ interface Player {
     wins: number;
 }
 
+export enum GameState {
+    notfound = 0,
+    prejoin = 1,
+    joined = 2,
+    running = 3,
+}
+
 export interface Game {
     connected: boolean;
     players: { [id: string]: Player };
     code: number;
     host: string;
-    state: SessionState;
+    state: GameState;
     round: {
         exitCode: number;
         errors: string;
         output: string;
     };
     scoreBoard: { [id: string]: PlayerScore };
+    playerCount: number;
 }
 
-export const useGame = (): [
+export const useGame = (
+    code: number
+): [
     Game,
     {
-        join: (name: string, code: number) => void;
-        create: (name: string) => void;
         startGame: () => void;
         submit: (s: string) => void;
+        join: (name: string) => void;
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
     const [state, setState] = useState<Game>({
         connected: false,
-        state: SessionState.waiting,
-        code: -1,
+        state: GameState.notfound,
+        code,
         host: '',
         players: {},
         scoreBoard: {},
@@ -45,8 +54,10 @@ export const useGame = (): [
             exitCode: -1,
             output: '',
         },
+        playerCount: 0,
     });
 
+    // init function
     useEffect(() => {
         const socket = io();
         // called after joining
@@ -56,14 +67,15 @@ export const useGame = (): [
                 host: string;
                 players: { [id: string]: Player };
                 code: number;
-                state: SessionState;
             }) => {
-                setState(() => {
+                setState((s) => {
                     return {
                         ...data,
+                        state: GameState.joined,
                         connected: true,
                         scoreBoard: {},
                         round: { errors: '', exitCode: -1, output: '' },
+                        playerCount: s.playerCount,
                     };
                 });
                 // */
@@ -117,7 +129,6 @@ export const useGame = (): [
                         ...s,
                         scoreBoard: scoreBoard.results,
                         round: { ...scoreBoard },
-                        state: SessionState.waiting,
                     };
                 });
             }
@@ -132,27 +143,43 @@ export const useGame = (): [
                 });
             }
         });
+        // choose a username
+        socket.on('prejoin', ({ playerCount }: { playerCount: number }) => {
+            console.log(`Prejoin count: ${playerCount} code: ${code} ------`);
+            setState((s) => {
+                return {
+                    ...s,
+                    playerCount,
+                    state:
+                        playerCount < 0
+                            ? GameState.notfound
+                            : GameState.prejoin,
+                };
+            });
+        });
+
+        socket.emit('prejoin', { code });
 
         setSocket(socket);
     }, [setSocket]);
-
-    const join = (name: string, code: number) => {
-        if (socket !== null) socket.emit('join', { name, code });
-    };
 
     const startGame = () => {
         if (socket === null || socket.id !== state.host) return;
         socket.emit('start_game');
     };
 
-    const create = (name: string) => {
+    const join = (name: string) => {
         if (socket === null) return;
-        socket.emit('create', { name });
+
+        socket.emit(code == 0 ? 'create' : 'join', {
+            name,
+            code,
+        });
     };
 
     const submit = (code: string) => {
         if (socket !== null) socket.emit('submit', { code });
     };
 
-    return [state, { join, startGame, create, submit }];
+    return [state, { startGame, submit, join }];
 };

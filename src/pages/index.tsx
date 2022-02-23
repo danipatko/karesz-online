@@ -1,9 +1,8 @@
 import type { NextPage } from 'next';
 import { Monaco } from '@monaco-editor/react';
 import { getCompletionItems } from '../lib/front/autocomplete';
-import { useGame } from '../lib/front/game';
-import JoinGame from '../components/JoinGame';
 import ScoreBoard from '../components/ScoreBoard';
+import Router from 'next/router';
 
 const code = `
 void FELADAT() {
@@ -12,8 +11,6 @@ void FELADAT() {
 `;
 
 const Home: NextPage = () => {
-    const [game, { join, startGame, submit, create }] = useGame();
-
     const handleEditorWillMount = (monaco: Monaco) => {
         monaco.languages.registerCompletionItemProvider('csharp', {
             provideCompletionItems: () => {
@@ -24,18 +21,7 @@ const Home: NextPage = () => {
         });
     }; //*/
 
-    const sub = () => submit(code);
-
-    return (
-        <div className=''>
-            <JoinGame onCreateNew={create} onJoin={join} />
-            <ScoreBoard
-                players={game.players}
-                code={game.code}
-                host={game.host}
-            />
-        </div>
-    );
+    return <div className=''>very epic heheheha</div>;
 };
 
 export default Home;

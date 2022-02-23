@@ -1,9 +1,7 @@
 const ScoreBoard = ({
     players,
-    code,
     host,
 }: {
-    code: number;
     host: string;
     players: {
         [id: string]: {
@@ -15,10 +13,10 @@ const ScoreBoard = ({
     };
 }) => {
     return (
-        <div className='pt-2 rounded-md bg-main fixed'>
-            <div className='p-2 font-semibold text-2xl'>#{code}</div>
+        <div className='pt-5 rounded-xl bg-main fixed'>
             {Object.keys(players).map((id, index) => (
                 <div
+                    key={index}
                     className={`${
                         index ? '' : 'bg-main-highlight'
                     } w-full flex`}
