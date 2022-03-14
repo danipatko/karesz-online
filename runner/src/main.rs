@@ -163,40 +163,52 @@ impl Moves for Game {
 }
 */
 
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, Stdio};
-use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
+// use std::thread;
 
-fn start_listener<T: 'static + Send + Fn(&str)>(cb: T) {
-    let child = Command::new("ping")
+fn do_some_shit<T: 'static + Send + Fn(&str)>(cb: T) {
+    let mut child = Command::new("ping")
         .arg("google.com")
         .stdout(Stdio::piped())
+        .stdin(Stdio::piped())
         .spawn()
         .expect("Failed to start ping process");
 
     println!("Started process: {}", child.id());
+    
+    // thread::spawn(move || {
+        let mut stdout = BufReader::new(child.stdout.unwrap());
+        let stdin = child.stdin.as_mut().unwrap();
 
-    thread::spawn(move || {
-        let mut f = BufReader::new(child.stdout.unwrap());
         loop {
             let mut buf = String::new();
-            match f.read_line(&mut buf) {
+            match stdout.read_line(&mut buf) {
+                // successfully read child stdin
                 Ok(_) => {
+                    // write some shit
+                    match stdin.write_all(b"hehehea") {
+                        Ok(_) => {
+                            println!("successfully written to process stdin");
+                        }
+                        Err(e) => println!("uh oh: {}", e),
+                    }
+                    // callback
                     cb(buf.as_str());
                 }
+                // catch error
                 Err(e) => println!("an error!: {:?}", e),
             }
         }
-    });
+   // });
 }
 
 fn main() {
-    start_listener(|s| {
+    
+    do_some_shit(|s| {
         println!("Got this back: {}", s);
     });
 
-    sleep(Duration::from_secs(5));
-    println!("Done!");
+    // sleep(Duration::from_secs(5));
+    // println!("Done!");
 }
