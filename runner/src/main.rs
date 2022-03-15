@@ -1,12 +1,12 @@
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, Stdio};
 use std::collections::HashMap;
+mod prepare;
 
-// use std::thread;
 #[derive(Debug)]
 struct Karesz {
     steps: Vec<char>,
-    alive: bool,
+    is_moving: bool,
     kills: u8,
     position: (u32, u32),
     rotation: u8,
@@ -15,17 +15,22 @@ struct Karesz {
 
 #[derive(Debug)]
 struct Game {
-    objects: HashMap<(u32, u32), u8>,
     players: HashMap<u8, Karesz>,
     proposed_steps: HashMap<(u32, u32), Vec<u8>>, // hashmap containing player id's for that position
+    objects: HashMap<(u32, u32), u8>,
+    death_row: Vec<u8>,   
     rounds: u32,
     size_x: u32,
     size_y: u32,
 }
 
 trait GameActions {
-    // should make steps
+    // increment round, make steps and kill people
     fn round(&mut self);
+    // make steps
+    fn make_steps(&mut self /*, players: &mut HashMap<u8, Karesz>, proposed_steps: &mut HashMap<(u32, u32), std::vec::Vec<u8>>, death_row: &mut Vec<u8>*/);
+    // remove players on death row
+    fn kill_row(&mut self /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/);
 }
 
 trait Moves {
@@ -42,7 +47,7 @@ trait Moves {
     
     // Player moves
     // propose a step (risky borrow??)
-    fn step(&self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>);
+    fn step(&mut self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>);
     // turn left or right (1 or -1)
     fn turn(&mut self, direction: i8);
     // check if able to step
@@ -83,7 +88,7 @@ impl Moves for Karesz {
     }
     // check if field is out of bounds
     fn out_of_bounds(&self, size_x: u32, size_y: u32, position: (u32, u32)) -> bool {
-        position.0 <= size_x && position.1 <= size_y
+        position.0 >= size_x || position.1 >= size_y
     }
     // check if position is valid
     fn can_step(&self, size_x: u32, size_y: u32, objects: &HashMap<(u32, u32), u8>, position: (u32, u32)) -> bool {
@@ -92,8 +97,9 @@ impl Moves for Karesz {
 
     // player moves
     // propose step
-    fn step(&self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>) {
+    fn step(&mut self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>) {
         let fwd = self.forward(self.position, self.rotation);
+        self.is_moving = true;
         // if someone's already at a position, push id
         if proposed_steps.contains_key(&fwd) {
             proposed_steps.get_mut(&fwd).unwrap().push(self.id);
@@ -141,6 +147,50 @@ impl Moves for Karesz {
     }
 }
 
+impl GameActions for Game {
+   
+    fn make_steps(&mut self) {
+        for (position, players_here) in &self.proposed_steps {
+            // two (or more) players stepping on the same field
+            if players_here.len() > 1 {
+                for elem in players_here {
+                    self.death_row.push(*elem);
+                }
+                return;
+            }
+
+            // one player stepping on another
+            let mut did_kill:bool = false; 
+            for (id, player) in &self.players {
+                if player.position == *position && !player.is_moving {
+                    self.death_row.push(*id);
+                    did_kill = true;
+                }
+            }
+            if did_kill {
+                self.players.get_mut(&0).unwrap().kills += 1;
+            }
+            
+            // step
+            self.players.get_mut(&0).unwrap().position = *position;
+        }
+        self.proposed_steps.clear();
+    }
+
+    fn kill_row(&mut self) {
+        for id in &self.death_row {
+            self.players.remove(&id);
+        }
+        self.death_row.clear();
+    }
+
+    fn round(&mut self) {
+        self.make_steps();
+        self.kill_row();
+        self.rounds += 1;
+    }
+}
+
 // runner function 
 fn do_some_shit<T: 'static + Send + Fn(&str)>(callback: T) {
     let mut child = Command::new("./dummy.exe")
@@ -180,32 +230,30 @@ fn do_some_shit<T: 'static + Send + Fn(&str)>(callback: T) {
 
 fn main() {
 
-    let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new() };
-    
-    game.players.insert(0, Karesz { id:0, position: (5,5), rotation:0, steps:Vec::new(), alive:true, kills:0 });
-
-    dbg!(&game);
-
-    let player = game.players.get_mut(&0).unwrap();
-
+    /*let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new(), death_row: Vec::new() };
+    game.players.insert(0, Karesz { id:0, position: (5, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
+   
     let mut i:u8 = 0;
+    let mut player: &mut Karesz;
     while i < 10 {
+        
+        player = game.players.get_mut(&0).unwrap();
         if player.can_i_step(game.size_x, game.size_y, &game.objects) {
             println!("I can step");
             player.step(&mut game.proposed_steps);
         } else {
             println!("I can't step");
         }
+        game.round();
         i += 1;
-    }
+    }*/
 
-
-    // do_some_shit(|s| {
-    //     println!("Got this back: {}", s);
-    // });
-
-    // sleep(Duration::from_secs(5));
-    // println!("Done!");
+    let mut v = vec![
+        prepare::MPCode { code: "a".to_string(), caller: "b".to_string() }
+    ];
+    
+    println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf"), 1));
+    
 }
 
 // a < 0 ? b + (a % b) : a % b;
