@@ -249,11 +249,30 @@ fn main() {
     }*/
 
     let mut v = vec![
-        prepare::MPCode { code: "a".to_string(), caller: "b".to_string() }
+        prepare::MPCode { code: "void FELADAT()
+        {
+            Fordulj(jobbra);
+            while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }
+            while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }
+        }".to_string(), caller: "epic_thread".to_string() },
+        prepare::MPCode { code: "void FELADAT()
+        {
+            Fordulj(jobbra);
+            while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }
+            while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }
+        }".to_string(), caller: "second_thread".to_string() }
     ];
     
     println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf"), 1));
-    
+
 }
 
 // a < 0 ? b + (a % b) : a % b;

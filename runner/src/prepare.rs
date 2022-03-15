@@ -49,10 +49,12 @@ const RULES: [Rule; 21] = [
     Rule { std: Std::In, replace: r"Kilépek_e_a_pályáról\s*\(\s*\)", with: "e" },
 ];
 
-pub fn replace_all(mut input: String, id: u8, random: &String) -> String {
-    let mut re:regex::Regex;
+pub fn replace_all(mut input: String, id: u8, random: &String, main_fn: String) -> String {
+    let mut re:regex::Regex = Regex::new(r"void\s+FELADAT\s*\((.*|\s*)\)").unwrap();
+    // replace main function
+    input = String::from(re.replace_all(&input, main_fn));
     for elem in RULES {
-        println!("Replacing: {:?}", elem.replace);
+        // println!("Replacing: {:?}", elem.replace);
         re = regex::Regex::new(elem.replace).unwrap();    
         match elem.std {
             Std::In => {
@@ -71,7 +73,7 @@ pub fn replace_all(mut input: String, id: u8, random: &String) -> String {
 
 // create template
 pub fn create_single_player_template(mut code:String, rand:String, id:u8) -> String {
-    code = replace_all(code, id, &rand);
+    code = replace_all(code, id, &rand, String::from("static void Main(string[] args)"));
     format!(
         "namespace Karesz
         {{
@@ -94,7 +96,7 @@ pub struct MPCode {
 // create template
 pub fn create_multi_player_template(codes: &mut Vec<MPCode>, rand:String, id:u8) -> String {
     for elem in codes.into_iter() {
-        elem.code = replace_all(elem.code.to_string(), id, &rand);
+        elem.code = replace_all(elem.code.to_string(), id, &rand, String::from(format!("static void {}()", elem.caller)));
     }
     
     format!(
@@ -165,7 +167,7 @@ class Program
     {codes}
 }}", rand=rand, 
     length=codes.len(), 
-    thread_names=codes.iter().map(|p| p.caller.clone()).collect::<Vec<String>>().join("\n"), 
+    thread_names=codes.iter().map(|p| p.caller.clone()).collect::<Vec<String>>().join(", "), 
     round_key="", 
     key="", 
     codes=codes.iter().map(|p| p.code.clone()).collect::<Vec<String>>().join("\n")
