@@ -196,16 +196,29 @@ impl GameActions for Game {
 
 // runner function 
 fn run<T: 'static + Send + Fn(&str)>(callback: T) {
+    /* 
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Console.dll"
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Runtime.dll"
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Private.CoreLib.dll"
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.dll"
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.Tasks.Parallel.dll"
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/netstandard.dll"
+-r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/mscorlib.dll"
+    */
 
     let mut child = Command::new("dotnet")
         .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/netstandard.dll\"")
+        // .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/hostpolicy.dll\"")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Console.dll\"")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Runtime.dll\"")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Core.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Data.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Collections.dll\"")
-        .arg("C:/Users/Dani/home/Projects/karesz-online/runner/dummy.cs")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Private.CoreLib.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.Tasks.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.Tasks.Parallel.dll\"")
+        .arg("C:/Users/Dani/home/Projects/karesz-online/runner/csharp/dummy.cs")
+        .arg("-out:\"C:/Users/Dani/home/Projects/karesz-online/runner/csharp/hehe.dll\"")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped()) 
         .current_dir(Path::new("C:/Users/Dani"))
@@ -321,11 +334,11 @@ fn main() {
         }".to_string(), caller: "second_thread".to_string() }
     ]; //*/
     
-    println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf"), 1));
+    // println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf")));
 
-    /*run(move |s| {
+    run(move |s| {
         println!("{}", s);
-    })*/
+    })// */
 
 }
 

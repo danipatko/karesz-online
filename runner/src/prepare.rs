@@ -22,7 +22,7 @@ FIELD VALUES
 5: yellow
 */
 
-const RULES: [Rule; 21] = [ 
+const _RULES: [Rule; 21] = [ 
     // replace with field values    
     Rule { std: Std::None, replace: r"fekete", with: "2", },
     Rule { std: Std::None, replace: r"piros", with: "3", },
@@ -38,15 +38,15 @@ const RULES: [Rule; 21] = [
     Rule { std: Std::Out, replace: r"Fordulj\s*\((?P<first>.*)\)", with: "3 ${first}" },
     Rule { std: Std::Out, replace: r"Vegyél_fel_egy_kavicsot\s*\(\s*\)", with: "4" },
     Rule { std: Std::Out, replace: r"Tegyél_le_egy_kavicsot\s*\((?P<first>.*)\)", with: "5 ${first}" },
-    Rule { std: Std::Out, replace: r"Északra_néz\s*\(\s*\)", with: "6" },
-    Rule { std: Std::In, replace: r"Délre_néz\s*\(\s*\)", with: "7" },
-    Rule { std: Std::In, replace: r"Keletre_néz\s*\(\s*\)", with: "8" },
-    Rule { std: Std::In, replace: r"Nyugatra_néz\s*\(\s*\)", with: "9" },
+    Rule { std: Std::Out, replace: r"Északra_néz\s*\(\s*\)", with: "6\",\"0" },
+    Rule { std: Std::In, replace: r"Délre_néz\s*\(\s*\)", with: "7\",\"2" },
+    Rule { std: Std::In, replace: r"Keletre_néz\s*\(\s*\)", with: "8\",\"1" },
+    Rule { std: Std::In, replace: r"Nyugatra_néz\s*\(\s*\)", with: "9\",\"3" },
     Rule { std: Std::In, replace: r"Merre_néz\s*\(\s*\)", with: "a" },
-    Rule { std: Std::In, replace: r"Van_e_itt_kavics\s*\(\s*\)", with: "b" },
+    Rule { std: Std::In, replace: r"Van_e_itt_kavics\s*\(\s*\)", with: "b\",\"1" },
     Rule { std: Std::In, replace: r"Mi_van_alattam\s*\(\s*\)", with: "c" },
-    Rule { std: Std::In, replace: r"Van_e_előttem_fal\s*\(\s*\)", with: "d" },
-    Rule { std: Std::In, replace: r"Kilépek_e_a_pályáról\s*\(\s*\)", with: "e" },
+    Rule { std: Std::In, replace: r"Van_e_előttem_fal\s*\(\s*\)", with: "d\",\"1" },
+    Rule { std: Std::In, replace: r"Kilépek_e_a_pályáról\s*\(\s*\)", with: "e\",\"1" },
 ];
 
 fn format_fn(multiplayer:bool, io:&str, random: &String, id: u8, with: &str) -> String {
@@ -61,7 +61,7 @@ pub fn replace_all(mut input: String, id: u8, random: &String, main_fn: String, 
     let mut re:regex::Regex = Regex::new(r"void\s+FELADAT\s*\((.*|\s*)\)").unwrap();
     // replace main function
     input = String::from(re.replace_all(&input, main_fn));
-    for elem in RULES {
+    for elem in _RULES {
         // println!("Replacing: {:?}", elem.replace);
         re = regex::Regex::new(elem.replace).unwrap();    
         match elem.std {
@@ -80,8 +80,8 @@ pub fn replace_all(mut input: String, id: u8, random: &String, main_fn: String, 
 }
 
 // create template
-pub fn create_single_player_template(mut code:String, rand:String, id:u8) -> String {
-    code = replace_all(code, id, &rand, String::from("static void Main(string[] args)"), false);
+pub fn create_single_player_template(mut code:String, rand:String, key: &str) -> String {
+    code = replace_all(code, 0, &rand, String::from("static void Main(string[] args)"), false);
     format!(
 "namespace Karesz
 {{
@@ -93,7 +93,7 @@ pub fn create_single_player_template(mut code:String, rand:String, id:u8) -> Str
         
         {code}
     }}
-}}", rand=rand, key=id, code=code)
+}}", rand=rand, key=key, code=code)
 }
 
 pub struct MPCode {
@@ -102,9 +102,11 @@ pub struct MPCode {
 }
 
 // create template
-pub fn create_multi_player_template(codes: &mut Vec<MPCode>, rand:String, id:u8) -> String {
+pub fn create_multi_player_template(codes: &mut Vec<MPCode>, rand:String) -> String {
+    let mut i:u8 = 0;
     for elem in codes.into_iter() {
-        elem.code = replace_all(elem.code.to_string(), id, &rand, String::from(format!("static void {}()", elem.caller)), true);
+        elem.code = replace_all(elem.code.to_string(), i, &rand, String::from(format!("static void {}()", elem.caller)), true);
+        i += 1;
     }
     
     format!(
@@ -176,8 +178,7 @@ class Program
 }}", rand=rand, 
     length=codes.len(), 
     thread_names=codes.iter().map(|p| p.caller.clone()).collect::<Vec<String>>().join(", "), 
-    round_key="", 
-    key="", 
-    codes=codes.iter().map(|p| p.code.clone()).collect::<Vec<String>>().join("\n")
-    )
+    round_key="very_epic_round_key", 
+    key="",
+    codes=codes.iter().map(|p| p.code.clone()).collect::<Vec<String>>().join("\n\n\n"))
 }
