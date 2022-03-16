@@ -75,17 +75,17 @@ pub fn replace_all(mut input: String, id: u8, random: &String, main_fn: String) 
 pub fn create_single_player_template(mut code:String, rand:String, id:u8) -> String {
     code = replace_all(code, id, &rand, String::from("static void Main(string[] args)"));
     format!(
-        "namespace Karesz
-        {{
-            class Program
-            {{
-                static bool stdin_{rand}(string c,string m){{Console.WriteLine($\"> {key} {{c}}\");string l=Console.ReadLine();return l==m;}}
-                static int stdin_{rand}(string c){{Console.WriteLine($\"> {key} {{c}}\");string l=Console.ReadLine();return int.Parse(l);}}
-                static void stdout_{rand}(string c){{Console.WriteLine($\"< {key} {{c}}\");}}
-                
-                {code}
-            }}
-        }}", rand=rand, key=id, code=code)
+"namespace Karesz
+{{
+    class Program
+    {{
+        static bool stdin_{rand}(string c,string m){{Console.WriteLine($\"> {key} {{c}}\");string l=Console.ReadLine();return l==m;}}
+        static int stdin_{rand}(string c){{Console.WriteLine($\"> {key} {{c}}\");string l=Console.ReadLine();return int.Parse(l);}}
+        static void stdout_{rand}(string c){{Console.WriteLine($\"< {key} {{c}}\");}}
+        
+        {code}
+    }}
+}}", rand=rand, key=id, code=code)
 }
 
 pub struct MPCode {
