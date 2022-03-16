@@ -194,34 +194,41 @@ impl GameActions for Game {
     }
 }
 
+fn compile() {
+    let output = Command::new("dotnet")
+        .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Private.CoreLib.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Runtime.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.Thread.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.Tasks.Parallel.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Runtime.Extensions.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Collections.Concurrent.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Diagnostics.Tracing.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Collections.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Console.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Text.Encoding.Extensions.dll\"")
+        .arg("C:/Users/Dani/home/Projects/karesz-online/test/Program.cs")
+        .arg("-out:\"C:/Users/Dani/home/Projects/karesz-online/runner/test.dll\"")
+        // .stdout(Stdio::piped())
+        // .stdin(Stdio::piped()) 
+        .current_dir(Path::new("C:/Users/Dani"))
+        .output()
+        .expect("Failed to start compile process");
+    
+    println!("Finished {}", output.status.code().unwrap())
+}
+
 // runner function 
 fn run<T: 'static + Send + Fn(&str)>(callback: T) {
-    /* 
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Console.dll"
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Runtime.dll"
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Private.CoreLib.dll"
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.dll"
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.Tasks.Parallel.dll"
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/netstandard.dll"
--r:"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/mscorlib.dll"
-    */
-
     let mut child = Command::new("dotnet")
-        .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/netstandard.dll\"")
-        // .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/hostpolicy.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Console.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Runtime.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Core.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Private.CoreLib.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.Tasks.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/5.0.11/System.Threading.Tasks.Parallel.dll\"")
-        .arg("C:/Users/Dani/home/Projects/karesz-online/runner/csharp/dummy.cs")
-        .arg("-out:\"C:/Users/Dani/home/Projects/karesz-online/runner/csharp/hehe.dll\"")
+        .arg("exec")
+        .arg("--runtimeconfig")
+        .arg("./test.runtimeconfig.json")
+        .arg("./test.dll")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped()) 
-        .current_dir(Path::new("C:/Users/Dani"))
+        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
         .spawn()
         .expect("Failed to start ping process");
     
@@ -230,6 +237,7 @@ fn run<T: 'static + Send + Fn(&str)>(callback: T) {
     let mut stdout = BufReader::new(child.stdout.take().unwrap());
     let mut stdin = child.stdin.take().unwrap();
     let mut current_line = String::new();
+    let mut i:usize = 0;
 
     loop {
         match child.try_wait() {
@@ -241,9 +249,17 @@ fn run<T: 'static + Send + Fn(&str)>(callback: T) {
             Ok(_) => {
                 match stdout.read_line(&mut current_line) {
                     Ok(_) => {
-                        // callback(buf.as_str());
-                        println!("Received buffer: {buf}", buf=current_line);
-                        // stdin.write_all(b"asdf\n");
+                        callback(current_line.as_str());
+                        i += 1;
+
+                        match stdin.write_all(b"heheheha\n") {
+                            Ok(_) => { println!("write ok"); },
+                            Err(e) => {
+                                println!("uh oh: {}", e); 
+                                break
+                            },
+                        }
+
                         current_line.clear();
                     }
                     Err(e) => {
@@ -258,37 +274,8 @@ fn run<T: 'static + Send + Fn(&str)>(callback: T) {
             }
         }
     }
-     
-        
-    
-    // let mut stdout = BufReader::new(child.stdout.unwrap());
-    // let stdin = child.stdin.as_mut().unwrap();
-    // let mut buffer = String::new();
-    
-    /* loop {
-        match stdout.read_line(&mut buffer) {
-            // successfully read child stdin
-            Ok(_) => {
-                // println!("Process stdout: << {}", buffer.as_str());
-                // write some shit
-                match stdin.write_all(b"heheheha\n") {
-                    Ok(_) => {
-                        println!(">> heheheha");
-                    }
-                    Err(e) => {
-                        println!("uh oh: {}", e); 
-                        break
-                    },
-                }// 
-                // callback
-                callback(buffer.as_str());
-            }
-            // catch error
-            Err(_) => break
-        }
-    }*/
 
-    println!("END");    
+    println!("END - {i}", i=i);    
 }
 
 fn main() {
@@ -311,6 +298,7 @@ fn main() {
         i += 1;
     }*/
 
+    /*
     let mut v = vec![
         prepare::MPCode { code: "void FELADAT()
         {
@@ -332,12 +320,14 @@ fn main() {
                 Lépj();
             }
         }".to_string(), caller: "second_thread".to_string() }
-    ]; //*/
-    
-    // println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf")));
+    ]; 
+    println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf")));
+    // */
+
+    compile();
 
     run(move |s| {
-        println!("{}", s);
+        println!("Got back: {}", s);
     })// */
 
 }
