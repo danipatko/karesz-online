@@ -213,7 +213,6 @@ fn run<T: 'static + Send + Fn(&str)>(callback: T) {
         .expect("Failed to start ping process");
     
     println!("Started process: {}", child.id());
-
     
     let mut stdout = BufReader::new(child.stdout.take().unwrap());
     let mut stdin = child.stdin.take().unwrap();
@@ -299,7 +298,7 @@ fn main() {
         i += 1;
     }*/
 
-    /*let mut v = vec![
+    let mut v = vec![
         prepare::MPCode { code: "void FELADAT()
         {
             Fordulj(jobbra);
@@ -320,23 +319,13 @@ fn main() {
                 Lépj();
             }
         }".to_string(), caller: "second_thread".to_string() }
-    ];*/
+    ]; //*/
     
-   /* println!("{}", prepare::create_single_player_template(String::from("
-void FELADAT()
-{
-    Fordulj(jobbra);
-    while(!Kilépek_e_a_pályáról()) {
-        Lépj();
-    }
-    while(!Kilépek_e_a_pályáról()) {
-        Lépj();
-    }
-}"), String::from("asdf"), 1));*/
+    println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf"), 1));
 
-    run(move |s| {
+    /*run(move |s| {
         println!("{}", s);
-    })
+    })*/
 
 }
 
