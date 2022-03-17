@@ -1,10 +1,6 @@
-use std::io::{BufRead, BufReader, Write};
-use std::process::{Command, Stdio};
 use std::collections::HashMap;
-use std::path::Path;
-use std::thread;
-
 mod prepare;
+mod run;
 
 #[derive(Debug)]
 struct Karesz {
@@ -56,15 +52,17 @@ trait Moves {
     // check if able to step
     fn can_i_step(&self, size_x: u32, size_y: u32, objects: &HashMap<(u32, u32), u8>) -> bool;
     // check if player objects contain a rock at player position
-    fn is_rock_under(&self, objects: &HashMap<(u32, u32), u8>) -> bool;
+    fn is_rock_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8;
     // put down a rock to player position
     fn place_rock(&self, objects: &mut HashMap<(u32, u32), u8>, color: u8);
     // set field value to 0
     fn pick_up_rock(&self, objects: &mut HashMap<(u32, u32), u8>);
     // check the field's value under player's position
-    fn what_is_under(&self, objects: &mut HashMap<(u32, u32), u8>) -> u8;
+    fn what_is_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8;
+    // check if there is a wall in front
+    fn is_wall_in_front(&self, objects: &HashMap<(u32, u32), u8>) -> u8;
     // check if forward is out of bounds
-    fn is_on_edge(&self, size_x: u32, size_y: u32) -> bool;
+    fn is_on_edge(&self, size_x: u32, size_y: u32) -> u8;
     // TODO: implement radar
     // fn radar(&self, player: &mut Karesz) -> u8;
     // return own direction
@@ -123,8 +121,8 @@ impl Moves for Karesz {
         !self.out_of_bounds(size_x, size_y, fwd) && !self.is_wall(objects, fwd)
     }
     // check if player objects contain a rock at player position
-    fn is_rock_under(&self, objects: &HashMap<(u32, u32), u8>) -> bool {
-        objects.get(&self.position).unwrap() == &0
+    fn is_rock_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8 {
+        if objects.get(&self.position).unwrap() == &0 { 1 } else { 0 }
     }
     // put down a rock to player position
     fn place_rock(&self, objects: &mut HashMap<(u32, u32), u8>, color: u8) {
@@ -135,12 +133,16 @@ impl Moves for Karesz {
         objects.insert(self.position, 0);
     }
     // check the field's value under player's position
-    fn what_is_under(&self, objects: &mut HashMap<(u32, u32), u8>) -> u8 {
-        *objects.get_mut(&self.position).unwrap_or(&mut 0)
+    fn what_is_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8 {
+        *objects.get(&self.position).unwrap_or(&0)
     }
     // check if forward is out of bounds
-    fn is_on_edge(&self, size_x: u32, size_y: u32) -> bool {
-        self.out_of_bounds(size_x, size_y, self.forward(self.position, self.rotation))
+    fn is_on_edge(&self, size_x: u32, size_y: u32) -> u8 {
+        if self.out_of_bounds(size_x, size_y, self.forward(self.position, self.rotation)) { 1 } else { 0 }
+    }
+    // check if there is a wall in front
+    fn is_wall_in_front(&self, objects: &HashMap<(u32, u32), u8>) -> u8 {
+        if self.is_wall(objects, self.forward(self.position, self.rotation)) { 1 } else { 0 }
     }
     // TODO: implement radar
     // fn radar(&self, player: &mut Karesz) -> u8;
@@ -151,7 +153,6 @@ impl Moves for Karesz {
 }
 
 impl GameActions for Game {
-   
     fn make_steps(&mut self) {
         for (position, players_here) in &self.proposed_steps {
             // two (or more) players stepping on the same field
@@ -194,109 +195,16 @@ impl GameActions for Game {
     }
 }
 
-fn compile() {
-    let output = Command::new("dotnet")
-        .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Private.CoreLib.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Runtime.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.Thread.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.Tasks.Parallel.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Runtime.Extensions.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Collections.Concurrent.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Diagnostics.Tracing.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Collections.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Console.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Text.Encoding.Extensions.dll\"")
-        .arg("C:/Users/Dani/home/Projects/karesz-online/test/Program.cs")
-        .arg("-out:\"C:/Users/Dani/home/Projects/karesz-online/runner/test.dll\"")
-        // .stdout(Stdio::piped())
-        // .stdin(Stdio::piped()) 
-        .current_dir(Path::new("C:/Users/Dani"))
-        .output()
-        .expect("Failed to start compile process");
-    
-    println!("Finished {}", output.status.code().unwrap())
-}
 
-// runner function 
-fn run<T: 'static + Send + Fn(&str)>(callback: T) {
-    let mut child = Command::new("dotnet")
-        .arg("exec")
-        .arg("--runtimeconfig")
-        .arg("./test.runtimeconfig.json")
-        .arg("./test.dll")
-        .stdout(Stdio::piped())
-        .stdin(Stdio::piped()) 
-        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
-        .spawn()
-        .expect("Failed to start ping process");
-    
-    println!("Started process: {}", child.id());
-    
-    let mut stdout = BufReader::new(child.stdout.take().unwrap());
-    let mut stdin = child.stdin.take().unwrap();
-    let mut current_line = String::new();
-    let mut i:usize = 0;
-
-    loop {
-        match child.try_wait() {
-            // process end
-            Ok(Some(status)) => {
-                println!("Process exited with code {}", status.code().unwrap());
-                break
-            },
-            Ok(_) => {
-                match stdout.read_line(&mut current_line) {
-                    Ok(_) => {
-                        callback(current_line.as_str());
-                        i += 1;
-
-                        match stdin.write_all(b"heheheha\n") {
-                            Ok(_) => { println!("write ok"); },
-                            Err(e) => {
-                                println!("uh oh: {}", e); 
-                                break
-                            },
-                        }
-
-                        current_line.clear();
-                    }
-                    Err(e) => {
-                        println!("Error reading stdout: {}", e);
-                        break
-                    }
-                }
-            },
-            Err(e) => {
-                println!("An error occued when attempting to wait: {}",e);
-                break
-            }
-        }
-    }
-
-    println!("END - {i}", i=i);    
-}
 
 fn main() {
 
-    /*let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new(), death_row: Vec::new() };
-    game.players.insert(0, Karesz { id:0, position: (5, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
+    let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new(), death_row: Vec::new() };
+    game.players.insert(0, Karesz { id:0, position: (2, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
+    game.players.insert(1, Karesz { id:0, position: (7, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
    
-    let mut i:u8 = 0;
-    let mut player: &mut Karesz;
-    while i < 10 {
-        
-        player = game.players.get_mut(&0).unwrap();
-        if player.can_i_step(game.size_x, game.size_y, &game.objects) {
-            println!("I can step");
-            player.step(&mut game.proposed_steps);
-        } else {
-            println!("I can't step");
-        }
-        game.round();
-        i += 1;
-    }*/
+    let round_key = "round_key";
+    let key = "random_key";
 
     /*
     let mut v = vec![
@@ -321,14 +229,69 @@ fn main() {
             }
         }".to_string(), caller: "second_thread".to_string() }
     ]; 
-    println!("{}", prepare::create_multi_player_template(&mut v, String::from("asdf")));
+    println!("{}", prepare::create_multi_player_template(&mut v, "", key, round_key));
     // */
 
-    compile();
+    run::compile();
+    run::run(move |s| {
+        let s = s.trim();
+        // 0: key, 1: player index, 2: command, 3: value
+        if s == round_key {
+            println!("-----------------------");
+            game.round();
+        } else {
+            let s: Vec<&str> = s.split(" ").collect();
+            
+            // ignore debug logs
+            if s.len() < 3 || s[0] != key {
+                println!("round key did not match.");
+                return None
+            }
+            
+            let id:u8 = s[1].parse::<u8>().unwrap();
+            // player not in game (or dead)
+            if !game.players.contains_key(&id) {
+                println!("player does not exist.");
+                return None
+            }
+            
+            let player = game.players.get_mut(&id).unwrap();
+            
+            match s[2] {
+                "0" => player.step(&mut game.proposed_steps),
+                "1" => player.turn(-1),
+                "2" => player.turn(1),
+                "3" => {
+                    if s.len() < 4 { return None; }
+                    
+                    if s[3] == "-1" {
+                        player.turn(-1);
+                    } else if s[3] == "1" {
+                        player.turn(1);
+                    }
+                },
+                "4" => player.pick_up_rock(&mut game.objects),
+                "5" => {
+                    if s.len() < 4 { 
+                        player.place_rock(&mut game.objects, 2);
+                        return None;
+                    }
+                    let mut value = s[3].parse::<u8>().unwrap();
+                    // clamp value
+                    value = if value < 2 { 2 } else if value > 5 { 5 } else { value };
+                    player.place_rock(&mut game.objects, value);
+                },
+                "6" => return Some(player.looking_at()),
+                "7" => return Some(player.is_rock_under(&game.objects)),
+                "8" => return Some(player.what_is_under(&game.objects)),
+                "9" => return Some(player.is_wall_in_front(&game.objects)),
+                "a" => return Some(player.is_on_edge(game.size_x, game.size_y)),
+                _ => {/* Ignore */}
+            }
+        }
 
-    run(move |s| {
-        println!("Got back: {}", s);
-    })// */
+        None
+    }); // */
 
 }
 
