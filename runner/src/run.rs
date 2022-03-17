@@ -73,6 +73,16 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
                             None => {}
                         }
                         i += 1;
+                        if i > 100 {
+                            match child.kill() {
+                                Ok(_) => {
+                                    println!("killed");
+                                }
+                                Err(_) => {
+                                    println!("kill failed");
+                                }
+                            }
+                        }
                         current_line.clear();
                     }
                     Err(e) => {

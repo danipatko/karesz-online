@@ -196,7 +196,7 @@ impl GameActions for Game {
 }
 
 
-
+#[allow(arithmetic_overflow)]
 fn main() {
 
     let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new(), death_row: Vec::new() };
@@ -237,8 +237,9 @@ fn main() {
         let s = s.trim();
         // 0: key, 1: player index, 2: command, 3: value
         if s == round_key {
-            println!("-----------------------");
+            println!("--------");
             game.round();
+            return None
         } else {
             let s: Vec<&str> = s.split(" ").collect();
             
@@ -256,7 +257,10 @@ fn main() {
             }
             
             let player = game.players.get_mut(&id).unwrap();
-            
+            player.steps.push(s[2].chars().next().unwrap());
+            // println!("Steps: {:?}", player.steps);
+            println!("Command: {} | Player: {}", s[2], id);
+
             match s[2] {
                 "0" => player.step(&mut game.proposed_steps),
                 "1" => player.turn(-1),
@@ -286,13 +290,11 @@ fn main() {
                 "8" => return Some(player.what_is_under(&game.objects)),
                 "9" => return Some(player.is_wall_in_front(&game.objects)),
                 "a" => return Some(player.is_on_edge(game.size_x, game.size_y)),
-                _ => {/* Ignore */}
+                _ => return None
             }
         }
-
         None
     }); // */
-
 }
 
 // a < 0 ? b + (a % b) : a % b;
