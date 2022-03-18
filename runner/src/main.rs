@@ -46,7 +46,7 @@ trait Moves {
     
     // Player moves
     // propose a step (risky borrow??)
-    fn step(&mut self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>);
+    fn step(&mut self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>, death_row: &mut Vec<u8>, size_x: u32, size_y: u32, objects: &HashMap<(u32, u32), u8>);
     // turn left or right (1 or -1)
     fn turn(&mut self, direction: i8);
     // check if able to step
@@ -70,15 +70,15 @@ trait Moves {
 }
 
 impl Moves for Karesz {
-    // get the point one step forward
+    // get the point one step forward | NOTE: if unable to step (negative value), the value will remain the same
     fn forward(&self, mut position: (u32, u32), rotation: u8) -> (u32, u32) {
         if rotation == 0 {
             position.1 += 1
         } else if rotation == 1 {
             position.0 += 1
-        } else if rotation == 2 {
+        } else if rotation == 2 && position.1 > 0  {
             position.1 -= 1
-        } else {
+        } else if position.0 > 0 {
             position.0 -= 1
         }
         position
@@ -98,11 +98,15 @@ impl Moves for Karesz {
 
     // player moves
     // propose step
-    fn step(&mut self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>) {
+    fn step(&mut self, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>, death_row: &mut Vec<u8>, size_x: u32, size_y: u32, objects: &HashMap<(u32, u32), u8>) {
         let fwd = self.forward(self.position, self.rotation);
         self.is_moving = true;
+        // attempt to step out of map
+        if fwd == self.position || !self.can_step(size_x, size_y, objects, fwd){
+            println!("Player {} attempted to step out of bounds", self.id);
+            death_row.push(self.id);
         // if someone's already at a position, push id
-        if proposed_steps.contains_key(&fwd) {
+        } else if proposed_steps.contains_key(&fwd) {
             proposed_steps.get_mut(&fwd).unwrap().push(self.id);
         // create new vector for position
         } else {
@@ -158,6 +162,7 @@ impl GameActions for Game {
             // two (or more) players stepping on the same field
             if players_here.len() > 1 {
                 for elem in players_here {
+                    println!("Player {} stepped on the same field as others", elem);
                     self.death_row.push(*elem);
                 }
                 return;
@@ -167,6 +172,7 @@ impl GameActions for Game {
             let mut did_kill:bool = false; 
             for (id, player) in &self.players {
                 if player.position == *position && !player.is_moving {
+                    println!("Player {} was stepped on by Player {}", id, players_here[0]);
                     self.death_row.push(*id);
                     did_kill = true;
                 }
@@ -183,6 +189,7 @@ impl GameActions for Game {
 
     fn kill_row(&mut self) {
         for id in &self.death_row {
+            println!("---> KILLING {}", id);
             self.players.remove(&id);
         }
         self.death_row.clear();
@@ -201,7 +208,7 @@ fn main() {
 
     let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new(), death_row: Vec::new() };
     game.players.insert(0, Karesz { id:0, position: (2, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
-    game.players.insert(1, Karesz { id:0, position: (7, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
+    game.players.insert(1, Karesz { id:1, position: (7, 5), rotation:0, steps:Vec::new(), is_moving:false, kills:0 });
    
     let round_key = "round_key";
     let key = "random_key";
@@ -232,7 +239,8 @@ fn main() {
     println!("{}", prepare::create_multi_player_template(&mut v, "", key, round_key));
     // */
 
-    run::compile();
+    // run::compile();
+    let mut i:usize = 0;
     run::run(move |s| {
         let s = s.trim();
         // 0: key, 1: player index, 2: command, 3: value
@@ -245,24 +253,22 @@ fn main() {
             
             // ignore debug logs
             if s.len() < 3 || s[0] != key {
-                println!("round key did not match.");
                 return None
             }
             
             let id:u8 = s[1].parse::<u8>().unwrap();
             // player not in game (or dead)
             if !game.players.contains_key(&id) {
-                println!("player does not exist.");
+                println!("player {} does not exist.", id);
                 return None
             }
             
             let player = game.players.get_mut(&id).unwrap();
             player.steps.push(s[2].chars().next().unwrap());
-            // println!("Steps: {:?}", player.steps);
-            println!("Command: {} | Player: {}", s[2], id);
+            println!("R{} >> '{}' | id:{} | pos: {:?} | rot: {} | steps: {:?}", i, s[2], player.id, player.position, player.rotation, player.steps);
 
             match s[2] {
-                "0" => player.step(&mut game.proposed_steps),
+                "0" => player.step(&mut game.proposed_steps, &mut game.death_row, game.size_x, game.size_y, &game.objects),
                 "1" => player.turn(-1),
                 "2" => player.turn(1),
                 "3" => {
@@ -292,7 +298,9 @@ fn main() {
                 "a" => return Some(player.is_on_edge(game.size_x, game.size_y)),
                 _ => return None
             }
+            player.is_moving = false;
         }
+        i += 1;
         None
     }); // */
 }

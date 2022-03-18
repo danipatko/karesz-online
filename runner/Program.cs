@@ -55,33 +55,32 @@ class Program
     }
     static void Main()
     {
-        new Thread(Kill_).Start();
+        // new Thread(Kill_).Start();
         Parallel.Invoke(epic_thread, second_thread);
-        Bar_.Dispose();
+        // Bar_.Dispose();
     }
 
     /* USER CODE */
 
     static void epic_thread()
-        {
-            stdout_(0, "3 1");
-            while(!stdin_(0, "a","1")) {
-                stdout_(0, "0");
-            }
-            while(!stdin_(0, "a","1")) {
-                stdout_(0, "0");
-            }
+    {
+        stdout_(0, "3 1");
+        while(!stdin_(0, "a","1")) {
+            stdout_(0, "0");
         }
-
-
-static void second_thread()
-        {
-            stdout_(1, "3 1");
-            while(!stdin_(1, "a","1")) {
-                stdout_(1, "0");
-            }
-            while(!stdin_(1, "a","1")) {
-                stdout_(1, "0");
-            }
+        while(!stdin_(0, "a","1")) {
+            stdout_(0, "0");
         }
+    }
+
+    static void second_thread()
+    {
+        stdout_(1, "3 1");
+        while(!stdin_(1, "a","1")) {
+            stdout_(1, "0");
+        }
+        while(!stdin_(1, "a","1")) {
+            stdout_(1, "0");
+        }
+    }
 }

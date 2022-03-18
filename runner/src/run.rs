@@ -24,7 +24,7 @@ pub fn compile() {
         .output()
         .expect("Failed to start compile process");
     
-    println!("Finished {}", output.status.code().unwrap())
+    println!("Finished with exit code {}\n--- output ---\n{:?}\n--- errors ---\n{:?}", output.status.code().unwrap(), std::str::from_utf8(&output.stdout), std::str::from_utf8(&output.stderr))
 }
 
 // runner function 
