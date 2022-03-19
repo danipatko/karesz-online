@@ -30,6 +30,7 @@ trait GameActions {
     fn make_steps(&mut self /*, players: &mut HashMap<u8, Karesz>, proposed_steps: &mut HashMap<(u32, u32), std::vec::Vec<u8>>, death_row: &mut Vec<u8>*/);
     // remove players on death row
     fn kill_row(&mut self /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/);
+    fn parse(&mut self, id:u8, s: & Vec<&str>) -> Option<u8>;
 }
 
 trait Moves {
@@ -170,19 +171,20 @@ impl GameActions for Game {
 
             // one player stepping on another
             let mut did_kill:bool = false; 
-            for (id, player) in &self.players {
+            for (id, player) in &mut self.players {
                 if player.position == *position && !player.is_moving {
                     println!("Player {} was stepped on by Player {}", id, players_here[0]);
                     self.death_row.push(*id);
                     did_kill = true;
                 }
+                player.is_moving = false;
             }
             if did_kill {
-                self.players.get_mut(&0).unwrap().kills += 1;
+                self.players.get_mut(&players_here[0]).unwrap().kills += 1;
             }
             
             // step
-            self.players.get_mut(&0).unwrap().position = *position;
+            self.players.get_mut(&players_here[0]).unwrap().position = *position;
         }
         self.proposed_steps.clear();
     }
@@ -200,10 +202,66 @@ impl GameActions for Game {
         self.kill_row();
         self.rounds += 1;
     }
+
+    fn parse(&mut self, id:u8, s: & Vec<&str>) -> Option<u8> {
+        let player = self.players.get_mut(&id).unwrap();
+        print!("    [{}] pos: {:?}, rot: {} => ", player.id, player.position, player.rotation);
+        // push command character
+        player.steps.push(s[2].chars().next().unwrap());
+
+        let res:Option<u8> = {
+            match s[2] {
+                "0" => {
+                    player.step(&mut self.proposed_steps, &mut self.death_row, self.size_x, self.size_y, &self.objects);
+                    None
+                },    
+                "1" => {
+                    player.turn(-1); 
+                    None
+                },
+                "2" => {
+                    player.turn(1); 
+                    None
+                },
+                "3" => {
+                    // no value
+                    if s.len() < 4 { return None; }
+                    
+                    if s[3] == "-1" {
+                        player.turn(-1);
+                    } else if s[3] == "1" {
+                        player.turn(1);
+                    }
+                    None
+                },
+                "4" => {
+                    player.pick_up_rock(&mut self.objects);
+                    None
+                },
+                "5" => {
+                    if s.len() < 4 { 
+                        player.place_rock(&mut self.objects, 2);
+                        return None;
+                    }
+                    let mut value = s[3].parse::<u8>().unwrap();
+                    // clamp value
+                    value = if value < 2 { 2 } else if value > 5 { 5 } else { value };
+                    player.place_rock(&mut self.objects, value);
+                    None
+                },
+                "6" => Some(player.looking_at()),
+                "7" => Some(player.is_rock_under(&self.objects)),
+                "8" => Some(player.what_is_under(&self.objects)),
+                "9" => Some(player.is_wall_in_front(&self.objects)),
+                "a" => Some(player.is_on_edge(self.size_x, self.size_y)),
+                _ => None
+            }
+        };
+        println!("res: {:?} pos: {:?}, rot: {}, steps: {:?} \n", res, player.position, player.rotation, player.steps);
+        res
+    }
 }
 
-
-#[allow(arithmetic_overflow)]
 fn main() {
 
     let mut game = Game { size_x:10, size_y:10, rounds:0, objects:HashMap::new(), players:HashMap::new(), proposed_steps:HashMap::new(), death_row: Vec::new() };
@@ -244,6 +302,7 @@ fn main() {
     run::run(move |s| {
         let s = s.trim();
         // 0: key, 1: player index, 2: command, 3: value
+        println!(">> '{}'", s);
         if s == round_key {
             println!("--------");
             game.round();
@@ -263,42 +322,7 @@ fn main() {
                 return None
             }
             
-            let player = game.players.get_mut(&id).unwrap();
-            player.steps.push(s[2].chars().next().unwrap());
-            println!(">> '{}' | id:{} | pos: {:?} | rot: {} | steps: {:?}", s[2], player.id, player.position, player.rotation, player.steps);
-
-            match s[2] {
-                "0" => player.step(&mut game.proposed_steps, &mut game.death_row, game.size_x, game.size_y, &game.objects),
-                "1" => player.turn(-1),
-                "2" => player.turn(1),
-                "3" => {
-                    if s.len() < 4 { return None; }
-                    
-                    if s[3] == "-1" {
-                        player.turn(-1);
-                    } else if s[3] == "1" {
-                        player.turn(1);
-                    }
-                },
-                "4" => player.pick_up_rock(&mut game.objects),
-                "5" => {
-                    if s.len() < 4 { 
-                        player.place_rock(&mut game.objects, 2);
-                        return None;
-                    }
-                    let mut value = s[3].parse::<u8>().unwrap();
-                    // clamp value
-                    value = if value < 2 { 2 } else if value > 5 { 5 } else { value };
-                    player.place_rock(&mut game.objects, value);
-                },
-                "6" => return Some(player.looking_at()),
-                "7" => return Some(player.is_rock_under(&game.objects)),
-                "8" => return Some(player.what_is_under(&game.objects)),
-                "9" => return Some(player.is_wall_in_front(&game.objects)),
-                "a" => return Some(player.is_on_edge(game.size_x, game.size_y)),
-                _ => return None
-            }
-            player.is_moving = false;
+            return game.parse(id, &s);
         }
         i += 1;
         None
