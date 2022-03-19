@@ -239,7 +239,7 @@ fn main() {
     println!("{}", prepare::create_multi_player_template(&mut v, "", key, round_key));
     // */
 
-    // run::compile();
+    run::compile();
     let mut i:usize = 0;
     run::run(move |s| {
         let s = s.trim();
@@ -265,7 +265,7 @@ fn main() {
             
             let player = game.players.get_mut(&id).unwrap();
             player.steps.push(s[2].chars().next().unwrap());
-            println!("R{} >> '{}' | id:{} | pos: {:?} | rot: {} | steps: {:?}", i, s[2], player.id, player.position, player.rotation, player.steps);
+            println!(">> '{}' | id:{} | pos: {:?} | rot: {} | steps: {:?}", s[2], player.id, player.position, player.rotation, player.steps);
 
             match s[2] {
                 "0" => player.step(&mut game.proposed_steps, &mut game.death_row, game.size_x, game.size_y, &game.objects),

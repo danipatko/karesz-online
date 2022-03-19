@@ -113,29 +113,20 @@ pub fn create_multi_player_template(codes: &mut Vec<MPCode>, rand:&str, key:&str
 "using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 class Program
 {{
-    struct Command_{rand}
-    {{
-        public string C_{rand} {{ get; }}
-        public bool IO_{rand} {{ get; }}
-        public Command_{rand}(string c, bool io)
-        {{
-            C_{rand} = c;
-            IO_{rand} = io;
-        }}
-    }}
-    static Dictionary<int, Command_{rand}> Commands_{rand} = new Dictionary<int, Command_{rand}>();
-    static Dictionary<int, string> Results_{rand} = new Dictionary<int, string>();
+    static ConcurrentDictionary<int, (bool, string)> Commands_{rand} = new ConcurrentDictionary<int, (bool, string)>();
+    static ConcurrentDictionary<int, string> Results_{rand} = new ConcurrentDictionary<int, string>();
+
     static Barrier Bar_{rand} = new Barrier({length}, (b) =>
     {{
         Results_{rand}.Clear();
-        foreach(int key in Commands_{rand}.Keys)
+        foreach (var item in Commands_{rand})
         {{
-            Console.WriteLine($\"{key} {{key}} {{Commands_{rand}[key].C_{rand}}}\");
-            if (Commands_{rand}[key].IO_{rand}) Results_{rand}[key] = Console.ReadLine();
+            Console.WriteLine($\"{key} {{item.Key}} {{item.Value.Item2}}\");
+            if (item.Value.Item1) Results_.TryAdd(item.Key, Console.ReadLine());
         }}
         Console.WriteLine(\"{round_key}\");
         Commands_{rand}.Clear();
@@ -143,21 +134,22 @@ class Program
 
     static bool stdin_{rand}(int i, string c, string m)
     {{
-        Commands_{rand}.Add(i, new Command_{rand}(c, true));
+        Commands_{rand}.TryAdd(i, (true, c));
         Bar_{rand}.SignalAndWait();
-        return Results_{rand}[i] == m;
+        if (Results_{rand}.TryGetValue(i, out string res)) return res == m;
+        else return false;
     }}
 
     static int stdin_{rand}(int i, string c)
     {{
-        Commands_{rand}.Add(i, new Command_{rand}(c, true));
+        Commands_{rand}.TryAdd(i, (true, c));
         Bar_{rand}.SignalAndWait();
         return int.Parse(Results_{rand}[i]);
     }}
 
     static void stdout_{rand}(int i, string c)
     {{
-        Commands_{rand}.Add(i, new Command_{rand}(c, false));
+        Commands_{rand}.TryAdd(i, (false, c));
         Bar_{rand}.SignalAndWait();
     }}
     static void Kill_{rand}() 
@@ -169,7 +161,7 @@ class Program
     {{
         new Thread(Kill_{rand}).Start();
         Parallel.Invoke({thread_names});
-        Bar_{rand}.Dispose();
+        // Bar_{rand}.Dispose();
     }}
 
     /* USER CODE */

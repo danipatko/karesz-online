@@ -3,24 +3,44 @@ use std::process::{Command, Stdio};
 use std::path::Path;
 
 pub fn compile() {
+    /*
     let output = Command::new("dotnet")
-        .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Private.CoreLib.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Runtime.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.Thread.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.Tasks.Parallel.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Runtime.Extensions.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Threading.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Collections.Concurrent.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Diagnostics.Tracing.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Collections.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Console.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/3.1.20/System.Text.Encoding.Extensions.dll\"")
-        .arg("C:/Users/Dani/home/Projects/karesz-online/runner/Program.cs")
-        .arg("-out:\"C:/Users/Dani/home/Projects/karesz-online/runner/test.dll\"")
+        .arg("/usr/share/dotnet/sdk/6.0.201/Roslyn/bincore/csc.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Private.CoreLib.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.Thread.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.Tasks.Parallel.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.Extensions.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.Concurrent.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Diagnostics.Tracing.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Console.dll")
+        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Text.Encoding.Extensions.dll")
+        .arg("/usr/src/app/Program.cs")
+        .arg("-out:/usr/src/app/test.dll\"")
         // .stdout(Stdio::piped())
         // .stdin(Stdio::piped()) 
-        .current_dir(Path::new("C:/Users/Dani"))
+        // .current_dir(Path::new("C:/Users/Dani"))
+        .output()
+        .expect("Failed to start compile process");
+    // */
+    let output = Command::new("dotnet")
+        .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Private.CoreLib.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.Thread.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.Tasks.Parallel.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.Extensions.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.Concurrent.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Diagnostics.Tracing.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Console.dll\"")
+        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Text.Encoding.Extensions.dll\"")
+        .arg("./Program.cs")
+        .arg("-out:./test.dll")
+        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
         .output()
         .expect("Failed to start compile process");
     
@@ -29,6 +49,18 @@ pub fn compile() {
 
 // runner function 
 pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
+    /*
+    let mut child = Command::new("dotnet")
+        .arg("exec")
+        .arg("--runtimeconfig")
+        .arg("/usr/src/app/test.runtimeconfig.json")
+        .arg("/usr/src/app/test.dll")
+        .stdout(Stdio::piped())
+        .stdin(Stdio::piped()) 
+        .spawn()
+        .expect("Failed to start ping process");
+    // */
+    
     let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
@@ -39,7 +71,7 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
         .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
         .spawn()
         .expect("Failed to start ping process");
-    
+    // */
     println!("Started process: {}", child.id());
     
     let mut stdout = BufReader::new(child.stdout.take().unwrap());
@@ -61,9 +93,7 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
                         match callback(current_line.as_str()) {
                             Some(value) => {
                                 match stdin.write_all(format!("{}\n", value).as_bytes()) {
-                                    Ok(_) => {
-                                        println!("wrote '{}' to child stdin", value);
-                                    },
+                                    Ok(_) => {},
                                     Err(e) => {
                                         println!("uh oh: {}", e); 
                                         break

@@ -1,22 +1,21 @@
-FROM rust:1.59.0-buster
-ARG DOTNET_SDK_VERSION=6.0.201
+FROM mcr.microsoft.com/dotnet/sdk:6.0.201-bullseye-slim-amd64
 
-RUN apt-get update && apt install \
-        curl \
-        git 
+# Update and install curl
+RUN apt update && \
+    apt install -y build-essential curl
 
-# Install .NET SDK
-RUN wget -O dotnet.tar.gz https://dotnetcli.azureedge.net/dotnet/Sdk/$DOTNET_SDK_VERSION/dotnet-sdk-$DOTNET_SDK_VERSION-linux-musl-x64.tar.gz \
-    && mkdir -p /usr/share/dotnet \
-    && tar -oxzf dotnet.tar.gz -C /usr/share/dotnet ./packs ./sdk ./sdk-manifests ./templates ./LICENSE.txt ./ThirdPartyNotices.txt \
-    && rm dotnet.tar.gz \
-    # Trigger first run experience by running arbitrary cmd
-    && dotnet help
+# Test
+RUN ls -la /usr/share/dotnet/shared/Microsoft.NETCore.App/
 
-WORKDIR /app
+# Install rustup
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Start rust app
+WORKDIR /usr/src/app
 
 COPY . .
 
-RUN cargo install --path .
+RUN cargo build --release
 
-CMD ["app"]
+CMD ["/usr/src/app/target/release/runner"]
