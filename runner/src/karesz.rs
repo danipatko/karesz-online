@@ -29,7 +29,7 @@ pub trait GameActions {
     // remove players on death row
     fn kill_row(&mut self /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/);
     // use for multiplayer
-    fn parse(&mut self, id:u8, s: & Vec<&str>) -> Option<u8>;
+    fn parse(&mut self, id:u8, s: & Vec<&str>) -> Option<i8>;
 }
 
 pub trait Moves {
@@ -70,7 +70,7 @@ pub trait Moves {
     // return own direction
     fn looking_at(&self) -> u8;
     //
-    fn parse(&mut self, s: &Vec<&str>, multi: bool, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>, death_row: &mut Vec<u8>, size_x:u32, size_y:u32, objects:&mut HashMap<(u32, u32), u8>) -> Option<u8>;
+    fn parse(&mut self, s: &Vec<&str>, multi: bool, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>, death_row: &mut Vec<u8>, size_x:u32, size_y:u32, objects:&mut HashMap<(u32, u32), u8>) -> Option<i8>;
 }
 
 impl Moves for Karesz {
@@ -119,16 +119,16 @@ impl Moves for Karesz {
             proposed_steps.insert(fwd, vec);
         }
     }
-    // actually step: returns false if player is dead
+    // actually step: returns true if player is dead
     fn step_single(&mut self, size_x: u32, size_y: u32, objects: &HashMap<(u32, u32), u8>) -> bool {
         let fwd = self.forward(self.position, self.rotation);
         // attempt to step out of map
         if fwd == self.position || !self.can_step(size_x, size_y, objects, fwd) {
             println!("Player {} attempted to step out of bounds", self.id);
-            return false;
+            return true;
         }
         self.position = fwd;
-        return true;
+        return false;
     }
     // turn left or right (1 or -1)
     fn turn(&mut self, direction: i8) {
@@ -171,7 +171,7 @@ impl Moves for Karesz {
     }
 
     // parses a command
-    fn parse(&mut self, s: &Vec<&str>, multi: bool, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>, death_row: &mut Vec<u8>, size_x:u32, size_y:u32, objects:&mut HashMap<(u32, u32), u8>) -> Option<u8> {
+    fn parse(&mut self, s: &Vec<&str>, multi: bool, proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>, death_row: &mut Vec<u8>, size_x:u32, size_y:u32, objects:&mut HashMap<(u32, u32), u8>) -> Option<i8> {
         print!("    [{}] pos: {:?}, rot: {} => ", self.id, self.position, self.rotation);
         
         // push command char
@@ -179,16 +179,17 @@ impl Moves for Karesz {
             self.steps.push(s[2].chars().next().unwrap());
         }
 
-        let res:Option<u8> = {
+        let res:Option<i8> = {
             match s[2] {
                 "0" => {
                     if multi {
                         self.step(proposed_steps, death_row, size_x, size_y, objects);
+                        None
+                    } else if self.step_single(size_x, size_y, objects) {
+                        Some(-1)
                     } else {
-                        // TODO: handle player dying
-                        self.step_single(size_x, size_y, objects);
+                        None
                     }
-                    None
                 },    
                 "1" => {
                     self.turn(-1); 
@@ -226,11 +227,11 @@ impl Moves for Karesz {
                     self.place_rock(objects, value);
                     None
                 },
-                "6" => Some(self.looking_at()),
-                "7" => Some(self.is_rock_under(objects)),
-                "8" => Some(self.what_is_under(objects)),
-                "9" => Some(self.is_wall_in_front(objects)),
-                "a" => Some(self.is_on_edge(size_x, size_y)),
+                "6" => Some(self.looking_at() as i8),
+                "7" => Some(self.is_rock_under(objects) as i8),
+                "8" => Some(self.what_is_under(objects) as i8),
+                "9" => Some(self.is_wall_in_front(objects) as i8),
+                "a" => Some(self.is_on_edge(size_x, size_y) as i8),
                 _ => None
             }
         };
@@ -285,7 +286,7 @@ impl GameActions for Game {
         self.rounds += 1;
     }
 
-    fn parse(&mut self, id:u8, s: & Vec<&str>) -> Option<u8> {
+    fn parse(&mut self, id:u8, s: & Vec<&str>) -> Option<i8> {
         let player = self.players.get_mut(&id).unwrap();
         return player.parse(s, true, &mut self.proposed_steps, &mut self.death_row, self.size_x, self.size_y, &mut self.objects);
     }

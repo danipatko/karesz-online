@@ -50,10 +50,11 @@ pub fn compile() -> Result<usize, String> {
         return Err(format!("Error: {}", std::str::from_utf8(&output.stdout).unwrap()));
     }
 }
+type Callback = fn();
 
 // runner function 
 // TODO: make result return
-pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
+pub fn run<T: 'static + Send + FnMut(&str, Callback) -> Option<u8>>(mut callback: T) {
     /*
     let mut child = Command::new("dotnet")
         .arg("exec")
@@ -91,6 +92,7 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
                 break
             },
             Ok(_) => {
+                // TODO: callback kill process
                 match stdout.read_line(&mut current_line) {
                     Ok(_) => {
                         // get response from callback

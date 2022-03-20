@@ -115,8 +115,14 @@ fn run_single() {
         if s.len() < 3 || s[0] != key {
             return None
         }
+
+        let r = player.parse(&s, false, &mut game.proposed_steps, &mut game.death_row, game.size_x, game.size_y, &mut game.objects);
         
-        return player.parse(&s, false, &mut game.proposed_steps, &mut game.death_row, game.size_x, game.size_y, &mut game.objects);
+        if r >= 0 {
+            return Some(r as u8);
+        } else {
+            return None
+        }
         // */
     }); 
 
