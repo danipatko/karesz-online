@@ -80,16 +80,18 @@ pub fn replace_all(mut input: String, id: u8, random: &str, main_fn: String, mul
 }
 
 // create template
-pub fn create_single_player_template(mut code:String, rand:String, key: &str) -> String {
+pub fn create_single_player_template(mut code:String, rand:&str, key: &str) -> String {
     code = replace_all(code, 0, &rand, String::from("static void Main(string[] args)"), false);
     format!(
-"namespace Karesz
+"using System;
+
+namespace Karesz
 {{
     class Program
     {{
-        static bool stdin_{rand}(string c,string m){{Console.WriteLine($\"> {key} {{c}}\");string l=Console.ReadLine();return l==m;}}
-        static int stdin_{rand}(string c){{Console.WriteLine($\"> {key} {{c}}\");string l=Console.ReadLine();return int.Parse(l);}}
-        static void stdout_{rand}(string c){{Console.WriteLine($\"< {key} {{c}}\");}}
+        static bool stdin_{rand}(string c,string m){{Console.WriteLine($\"{key} 0 {{c}}\");string l=Console.ReadLine();return l==m;}}
+        static int stdin_{rand}(string c){{Console.WriteLine($\"{key} 0 {{c}}\");string l=Console.ReadLine();return int.Parse(l);}}
+        static void stdout_{rand}(string c){{Console.WriteLine($\"{key} 0 {{c}}\");}}
         
         {code}
     }}

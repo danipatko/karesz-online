@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, Stdio};
 use std::path::Path;
 
-pub fn compile() {
+pub fn compile() -> Result<usize, String> {
     /*
     let output = Command::new("dotnet")
         .arg("/usr/share/dotnet/sdk/6.0.201/Roslyn/bincore/csc.dll")
@@ -43,11 +43,16 @@ pub fn compile() {
         .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
         .output()
         .expect("Failed to start compile process");
-    
-    println!("Finished with exit code {}\n--- output ---\n{:?}\n--- errors ---\n{:?}", output.status.code().unwrap(), std::str::from_utf8(&output.stdout), std::str::from_utf8(&output.stderr))
+
+    if output.status.code().unwrap() == 0 {
+        return Ok(0);
+    } else {
+        return Err(format!("Error: {}", std::str::from_utf8(&output.stdout).unwrap()));
+    }
 }
 
 // runner function 
+// TODO: make result return
 pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
     /*
     let mut child = Command::new("dotnet")
@@ -60,7 +65,6 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
         .spawn()
         .expect("Failed to start ping process");
     // */
-    
     let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
@@ -93,7 +97,9 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
                         match callback(current_line.as_str()) {
                             Some(value) => {
                                 match stdin.write_all(format!("{}\n", value).as_bytes()) {
-                                    Ok(_) => {},
+                                    Ok(_) => {
+                                        println!("      wrote: '{}'", value);
+                                    },
                                     Err(e) => {
                                         println!("uh oh: {}", e); 
                                         break
