@@ -1,189 +1,92 @@
-use std::collections::HashMap;
-mod karesz;
-mod prepare;
-mod run;
-use karesz::{Game, GameActions, Karesz, Moves};
-use std::fs;
+#[macro_use]
+extern crate rocket;
+// use rocket::response::status;
+use rocket::serde::json::Json;
+use rocket::serde::Deserialize;
 
-fn main() {
-    run_single();
+#[get("/")]
+fn index() -> &'static str {
+    "Hello, world!"
 }
 
-fn run_multiplayer() {
-    let mut game = Game {
-        size_x: 10,
-        size_y: 10,
-        rounds: 0,
-        objects: HashMap::new(),
-        players: HashMap::new(),
-        proposed_steps: HashMap::new(),
-        death_row: Vec::new(),
-    };
-    game.players.insert(
-        0,
-        Karesz {
-            id: 0,
-            position: (2, 5),
-            rotation: 0,
-            steps: Vec::new(),
-            is_moving: false,
-            kills: 0,
-        },
-    );
-    game.players.insert(
-        1,
-        Karesz {
-            id: 1,
-            position: (7, 5),
-            rotation: 0,
-            steps: Vec::new(),
-            is_moving: false,
-            kills: 0,
-        },
-    );
-
-    let round_key = "round_key";
-    let key = "random_key";
-
-    let mut v = vec![
-        prepare::MPCode {
-            code: "void FELADAT()
-        {
-            Fordulj(jobbra);
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
-        }"
-            .to_string(),
-            caller: "epic_thread".to_string(),
-        },
-        prepare::MPCode {
-            code: "void FELADAT()
-        {
-            Fordulj(jobbra);
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
-        }"
-            .to_string(),
-            caller: "second_thread".to_string(),
-        },
-    ];
-
-    match fs::write(
-        "../Program.cs",
-        prepare::create_multi_player_template(&mut v, "", key, round_key),
-    ) {
-        Ok(_) => println!("Write OK"),
-        Err(e) => println!("uh oh: {}", e),
-    }
-
-    run::compile();
-    run::run(move |s| {
-        let s = s.trim();
-        // 0: key, 1: player index, 2: command, 3: value
-        println!(">> '{}'", s);
-        if s == round_key {
-            println!("--------");
-            game.round();
-            return None;
-        } else {
-            let s: Vec<&str> = s.split(" ").collect();
-
-            // ignore debug logs
-            if s.len() < 3 || s[0] != key {
-                return None;
-            }
-
-            let id: u8 = s[1].parse::<u8>().unwrap();
-            // player not in game (or dead)
-            if !game.players.contains_key(&id) {
-                println!("player {} does not exist.", id);
-                return None;
-            }
-
-            return game.parse(id, &s);
-        }
-    }); // */
+// single player params
+#[derive(Deserialize, Debug)]
+struct SinglePlayerRequest<'r> {
+    start_x: u32,
+    start_y: u32,
+    rotation: u8,
+    code: &'r str,
 }
 
-fn run_single() {
-    // values
-    let mut game = Game {
-        size_x: 10,
-        size_y: 10,
-        rounds: 0,
-        objects: HashMap::new(),
-        players: HashMap::new(),
-        proposed_steps: HashMap::new(),
-        death_row: Vec::new(),
-    };
-    let mut player = Karesz {
-        id: 0,
-        position: (2, 5),
-        rotation: 0,
-        steps: Vec::new(),
-        is_moving: false,
-        kills: 0,
-    };
-    // game.players.insert(0, player);
+#[derive(Deserialize, Debug)]
+struct SinglePlayerRequestCustom<'r> {
+    map: &'r str,
+    start_x: u32,
+    start_y: u32,
+    rotation: u8,
+    code: &'r str,
+}
 
-    let key = "random_key";
+// singleplayer, load an existing map
+#[post("/sp/map/<mapname>", data = "<req>")]
+fn singleplayer_map(mapname: &str, req: Json<SinglePlayerRequest<'_>>) -> &'static str {
+    println!(
+        "start from ({}, {} | {}) in map {}",
+        req.start_x, req.start_y, req.rotation, mapname
+    );
+    "xd"
+}
 
-    let code = "void FELADAT()
-        {
-            /* Fordulj(jobbra);
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }*/ 
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
-            Lépj();
-        }"
-    .to_string();
+// singleplayer, parse a map from string
+#[post("/sp/custom", data = "<req>")]
+fn singleplayer_custom(req: Json<SinglePlayerRequestCustom<'_>>) -> &'static str {
+    println!(
+        "start from ({}, {} | {}) in map {}",
+        req.start_x, req.start_y, req.rotation, req.map
+    );
+    "xd"
+}
 
-    // Write to file
-    match fs::write(
-        "./Program.cs",
-        prepare::create_single_player_template(code, key, key),
-    ) {
-        Ok(_) => println!("Write OK"),
-        Err(e) => println!("uh oh: {}", e),
-    }
+#[derive(Deserialize, Debug)]
+struct Player<'r> {
+    name: &'r str,
+    code: &'r str,
+}
 
-    // compile
-    match run::compile() {
-        Ok(exit_code) => println!("Compile exited with code {}", exit_code),
-        Err(e) => println!("{}", e),
-    }
+#[derive(Deserialize, Debug)]
+struct MultiplayerRequest<'r> {
+    #[serde(borrow)]
+    players: Vec<Player<'r>>,
+}
 
-    // run
-    run::run(move |s| {
-        let s = s.trim();
-        let s: Vec<&str> = s.split(" ").collect();
-        println!(">> {:?}", s);
+#[derive(Deserialize, Debug)]
+struct MultiplayerRequestCustom<'r> {
+    map: &'r str,
+    players: Vec<Player<'r>>,
+}
 
-        // ignore debug logs
-        if s.len() < 3 || s[0] != key {
-            return None;
-        }
+// multiplayer, custom map
+#[post("/mp/custom", data = "<req>")]
+fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> &'static str {
+    "xd"
+}
 
-        player.parse(
-            &s,
-            false,
-            &mut game.proposed_steps,
-            &mut game.death_row,
-            game.size_x,
-            game.size_y,
-            &mut game.objects,
-        )
-        // */
-    });
+// multiplayer, selected map
+#[post("/mp/map/<mapname>", data = "<req>")]
+fn multiplayer_map(mapname: &str, req: Json<MultiplayerRequest<'_>>) -> &'static str {
+    "xd"
+}
+
+#[launch]
+fn rocket() -> _ {
+    rocket::build().mount(
+        "/",
+        routes![
+            index,
+            singleplayer_map,
+            singleplayer_custom,
+            multiplayer_custom,
+            multiplayer_map
+        ],
+    )
 }
