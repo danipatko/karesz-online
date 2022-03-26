@@ -10,13 +10,15 @@ namespace Karesz
         
         static void Main(string[] args)
         {
-            stdout_random_key("3 1");
+            /* stdout_random_key("3 1");
+            xd
+            while(!stdin_random_key("a","1")) {
+                stdout_random_key("0");
+            }*/ 
             while(!stdin_random_key("a","1")) {
                 stdout_random_key("0");
             }
-            while(!stdin_random_key("a","1")) {
-                stdout_random_key("0");
-            }
+            stdout_random_key("0");
         }
     }
 }

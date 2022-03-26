@@ -1,7 +1,9 @@
 use std::io::{BufRead, BufReader, Write};
+use std::path::Path;
 use std::process::{Command, Stdio};
 
 pub fn compile() -> Result<usize, String> {
+    /*
     let output = Command::new("dotnet")
         .arg("/usr/share/dotnet/sdk/6.0.201/Roslyn/bincore/csc.dll")
         .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Private.CoreLib.dll")
@@ -18,12 +20,12 @@ pub fn compile() -> Result<usize, String> {
         .arg("/usr/src/app/Program.cs")
         .arg("-out:/home/dapa/Projects/karesz-online/runner/test.dll\"")
         // .stdout(Stdio::piped())
-        // .stdin(Stdio::piped()) 
+        // .stdin(Stdio::piped())
         // .current_dir(Path::new("C:/Users/Dani"))
         .output()
         .expect("Failed to start compile process");
     // */
-    /*
+
     let output = Command::new("dotnet")
         .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Private.CoreLib.dll\"")
@@ -39,7 +41,7 @@ pub fn compile() -> Result<usize, String> {
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Text.Encoding.Extensions.dll\"")
         .arg("./Program.cs")
         .arg("-out:./test.dll")
-        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
+        // .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
         .output()
         .expect("Failed to start compile process");
     // */
@@ -56,7 +58,7 @@ pub fn compile() -> Result<usize, String> {
 // runner function
 // TODO: make result return
 pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
-    let mut child = Command::new("dotnet")
+    /* let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
         .arg("/home/dapa/Projects/karesz-online/runner/test.runtimeconfig.json")
@@ -66,7 +68,7 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
         .spawn()
         .expect("Failed to start ping process");
     // */
-    /*
+
     let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
@@ -74,7 +76,9 @@ pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
         .arg("./test.dll")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
-        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
+        .current_dir(Path::new(
+            "C:/Users/Dani/home/Projects/karesz-online/runner",
+        ))
         .spawn()
         .expect("Failed to start ping process");
     // */

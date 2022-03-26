@@ -138,13 +138,14 @@ fn run_single() {
 
     let code = "void FELADAT()
         {
-            Fordulj(jobbra);
+            /* Fordulj(jobbra);
+            while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }*/ 
             while(!Kilépek_e_a_pályáról()) {
                 Lépj();
             }
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
+            Lépj();
         }"
     .to_string();
 
