@@ -1,15 +1,56 @@
 use std::collections::HashMap;
+use std::fs;
 mod karesz;
 mod prepare;
 mod run;
 use karesz::{Game, GameActions, Karesz, Moves};
-use std::fs;
 
-fn main() {
-    run_single();
+pub fn rand_str(len: u32) -> String {
+    (0..len)
+        .map(|_| rand::random::<u8>() as char)
+        .collect::<String>()
 }
 
-fn run_multiplayer(size_x: usize) {
+// obtain objects from map string
+pub fn parse_map(map: &str) -> HashMap<(u32, u32), u8> {
+    let mut res = HashMap::new();
+    let mut x = 0u32;
+    let mut y = 0u32;
+    let mut current: u8 = 0;
+    map.split("\n").for_each(|s| {
+        // todo: quit loop and return error
+        if s.len() as u32 != x && x != 0 {
+            println!("Uh oh, malformed map");
+        }
+        s.chars().for_each(|s2| {
+            current = s2.to_digit(10).unwrap() as u8;
+            res.insert((x, y), current);
+            x += 1;
+        });
+        x = 0;
+        y += 1;
+    });
+
+    /*
+    map.split("\n").map(|s| {
+        if s.len() != x && x != 0 {
+            println!("Uh oh, malformed map");
+            return res;
+        }
+        s.chars().map(|s2| {
+            match s2 {
+                '0' => res.insert((x, y), 0),
+                _ => {}
+            }
+            x += 1;
+        });
+        x = 0;
+        y += 1;
+    });*/
+    res
+}
+
+pub fn run_multiplayer(size_x: usize) {
     let mut game = Game {
         size_x: 10,
         size_y: 10,
@@ -113,7 +154,7 @@ fn run_multiplayer(size_x: usize) {
     }); // */
 }
 
-fn run_single() {
+pub fn run_single() {
     // values
     let mut game = Game {
         size_x: 10,

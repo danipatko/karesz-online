@@ -4,4 +4,4 @@ app/package
 app/.env
 app/.env.*
 app/.next
-pakety/*
+runner/target
