@@ -155,7 +155,7 @@ fn format_fn(multiplayer: bool, io: &str, random: &str, id: u8, with: &str) -> S
 pub fn replace_all(
     mut input: String,
     id: u8,
-    random: &str,
+    random: &String,
     main_fn: String,
     multiplayer: bool,
 ) -> String {
@@ -185,11 +185,11 @@ pub fn replace_all(
 }
 
 // create template
-pub fn create_single_player_template(mut code: String, rand: &str, key: &str) -> String {
+pub fn create_single_player_template(mut code: String, rand: &String, key: &String) -> String {
     code = replace_all(
         code,
         0,
-        &rand,
+        rand,
         String::from("static void Main(string[] args)"),
         false,
     );
@@ -217,9 +217,9 @@ pub struct MPCode {
 // create template
 pub fn create_multi_player_template(
     codes: &mut Vec<MPCode>,
-    rand: &str,
-    key: &str,
-    round_key: &str,
+    rand: &String,
+    key: &String,
+    round_key: &String,
 ) -> String {
     let mut i: u8 = 0;
     for elem in codes.into_iter() {

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Karesz {
-    pub steps: Vec<char>,
+    pub steps: Vec<u8>,
     pub is_moving: bool,
     pub kills: u8,
     pub position: (u32, u32),
@@ -16,14 +16,64 @@ pub struct Game {
     pub proposed_steps: HashMap<(u32, u32), Vec<u8>>, // hashmap containing player id's for that position
     pub objects: HashMap<(u32, u32), u8>,
     pub death_row: Vec<u8>,
-    pub rounds: u32,
+    pub scoreboard: HashMap<&'static str, (Vec<u8>, u8)>, // player id, (steps, kills)
+    pub round: u32,
+    pub winner: u8,
     pub size_x: u32,
     pub size_y: u32,
 }
 
+// obtain objects from map string + size x, y
+// returns none if map is invalid
+pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<(u32, u32), u8>> {
+    // custom map is empty
+    if map.len() == 0 {
+        return Some(HashMap::<(u32, u32), u8>::new());
+    }
+    let lines = map.split("\n").collect::<Vec<&str>>();
+    // check if map is valid
+    if lines.len() != size_y as usize || lines[0].len() != size_x as usize {
+        return None;
+    }
+    // parse map from string
+    let mut res = HashMap::new();
+    for line in lines {
+        size_x = 0;
+        for c in line.chars() {
+            let c = c.to_digit(10).unwrap();
+            res.insert((size_x, size_y), c as u8);
+            size_x += 1;
+        }
+        size_y -= 1;
+    }
+    Some(res)
+}
+
+// generate the karesz objects and starting positions
+pub fn get_players(players_length: usize, size_x: u32, size_y: u32) -> HashMap<u8, Karesz> {
+    let mut res = HashMap::new();
+    // align players evenly on the x axis
+    let unit = size_x / players_length as u32;
+    let y = size_y / 2;
+    for i in 1..players_length + 1 {
+        res.insert(
+            i as u8,
+            Karesz {
+                position: (i as u32 * unit, y),
+                rotation: 0,
+                id: i as u8 - 1,
+                is_moving: false,
+                kills: 0,
+                steps: vec![],
+            },
+        );
+    }
+    res
+}
+
 pub trait GameActions {
     // increment round, make steps and kill people
-    fn round(&mut self);
+    fn round(&mut self) -> Option<u8>;
     // make steps
     fn make_steps(
         &mut self, /*, players: &mut HashMap<u8, Karesz>, proposed_steps: &mut HashMap<(u32, u32), std::vec::Vec<u8>>, death_row: &mut Vec<u8>*/
@@ -32,6 +82,9 @@ pub trait GameActions {
     fn kill_row(&mut self /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/);
     // use for multiplayer
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8>;
+
+    fn new_custom(players_length: usize, size_x: u32, size_y: u32, map: &str) -> Option<Game>;
+    fn new_load(players_length: usize, map: &str) -> Option<Game>;
 }
 
 pub trait Moves {
@@ -235,14 +288,10 @@ impl Moves for Karesz {
             self.id, self.position, self.rotation
         );
 
-        // push command char
-        if s[2] != "3" {
-            self.steps.push(s[2].chars().next().unwrap());
-        }
-
         let res: Option<u8> = {
             match s[2] {
                 "0" => {
+                    self.steps.push(0x0);
                     if multi {
                         self.step(proposed_steps, death_row, size_x, size_y, objects);
                         None
@@ -253,10 +302,12 @@ impl Moves for Karesz {
                     }
                 }
                 "1" => {
+                    self.steps.push(0x1);
                     self.turn(-1);
                     None
                 }
                 "2" => {
+                    self.steps.push(0x2);
                     self.turn(1);
                     None
                 }
@@ -268,24 +319,26 @@ impl Moves for Karesz {
 
                     if s[3] == "-1" {
                         self.turn(-1);
-                        self.steps.push('1');
+                        self.steps.push(0x1);
                     } else if s[3] == "1" {
                         self.turn(1);
-                        self.steps.push('2');
+                        self.steps.push(0x2);
                     }
                     None
                 }
                 "4" => {
+                    self.steps.push(0x4);
                     self.pick_up_rock(objects);
                     None
                 }
                 "5" => {
+                    self.steps.push(0x5);
                     if s.len() < 4 {
                         self.place_rock(objects, 2);
                         return None;
                     }
                     let mut value = s[3].parse::<u8>().unwrap();
-                    // clamp value
+                    // clamp value and place
                     value = if value < 2 {
                         2
                     } else if value > 5 {
@@ -296,11 +349,26 @@ impl Moves for Karesz {
                     self.place_rock(objects, value);
                     None
                 }
-                "6" => Some(self.looking_at()),
-                "7" => Some(self.is_rock_under(objects)),
-                "8" => Some(self.what_is_under(objects)),
-                "9" => Some(self.is_wall_in_front(objects)),
-                "a" => Some(self.is_on_edge(size_x, size_y)),
+                "6" => {
+                    self.steps.push(0x6);
+                    Some(self.looking_at())
+                }
+                "7" => {
+                    self.steps.push(0x7);
+                    Some(self.is_rock_under(objects))
+                }
+                "8" => {
+                    self.steps.push(0x8);
+                    Some(self.what_is_under(objects))
+                }
+                "9" => {
+                    self.steps.push(0x9);
+                    Some(self.is_wall_in_front(objects))
+                }
+                "a" => {
+                    self.steps.push(0xa);
+                    Some(self.is_on_edge(size_x, size_y))
+                }
                 _ => None,
             }
         };
@@ -313,6 +381,39 @@ impl Moves for Karesz {
 }
 
 impl GameActions for Game {
+    // create a new custom game. Returns none if failed to parse map
+    fn new_custom(players_length: usize, size_x: u32, size_y: u32, map: &str) -> Option<Self> {
+        match parse_map(map, size_x, size_y) {
+            Some(objects) => Some(Game {
+                players: get_players(players_length, size_x, size_y),
+                objects,
+                proposed_steps: HashMap::new(),
+                death_row: Vec::new(),
+                scoreboard: HashMap::new(),
+                round: 0,
+                winner: 0,
+                size_x,
+                size_y,
+            }),
+            None => None,
+        }
+    }
+
+    fn new_load(players_length: usize, map: &str) -> Option<Self> {
+        // TODO: Load map by name
+        Some(Game {
+            players: get_players(players_length, 20, 20),
+            objects: HashMap::new(),
+            proposed_steps: HashMap::new(),
+            death_row: Vec::new(),
+            scoreboard: HashMap::new(),
+            round: 0,
+            winner: 0,
+            size_x: 20,
+            size_y: 20,
+        })
+    }
+
     fn make_steps(&mut self) {
         for (position, players_here) in &self.proposed_steps {
             // two (or more) players stepping on the same field
@@ -352,10 +453,14 @@ impl GameActions for Game {
         self.death_row.clear();
     }
 
-    fn round(&mut self) {
+    fn round(&mut self) -> Option<u8> {
         self.make_steps();
         self.kill_row();
-        self.rounds += 1;
+        self.round += 1;
+        if self.players.keys().len() < 2 {
+            return Some(8u8);
+        }
+        None
     }
 
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8> {

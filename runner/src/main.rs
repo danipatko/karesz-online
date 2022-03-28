@@ -49,26 +49,23 @@ fn singleplayer_custom(req: Json<SinglePlayerRequestCustom<'_>>) -> &'static str
 }
 
 #[derive(Deserialize, Debug)]
-struct Player<'r> {
-    name: &'r str,
-    code: &'r str,
-}
-
-#[derive(Deserialize, Debug)]
 struct MultiplayerRequest<'r> {
     #[serde(borrow)]
-    players: Vec<Player<'r>>,
+    players: Vec<create::Player<'r>>,
 }
 
 #[derive(Deserialize, Debug)]
 struct MultiplayerRequestCustom<'r> {
+    size_x: u32,
+    size_y: u32,
     map: &'r str,
-    players: Vec<Player<'r>>,
+    players: Vec<create::Player<'r>>,
 }
 
 // multiplayer, custom map
 #[post("/mp/custom", data = "<req>")]
 fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> &'static str {
+    create::run_multiplayer(&req.players, req.size_x, req.size_y, req.map);
     "xd"
 }
 
