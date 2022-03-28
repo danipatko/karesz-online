@@ -1,4 +1,5 @@
 use regex::Regex;
+use rocket::futures::stream::ReuniteError;
 
 enum Std {
     Out,
@@ -158,12 +159,16 @@ pub fn replace_all(
     random: &String,
     main_fn: String,
     multiplayer: bool,
-) -> String {
+) -> Option<String> {
     let mut re: regex::Regex = Regex::new(r"void\s+FELADAT\s*\((.*|\s*)\)").unwrap();
+    // unable to find entry
+    if !re.is_match(&input) {
+        return None;
+    }
     // replace main function
     input = String::from(re.replace_all(&input, main_fn));
+    // replace rules
     for elem in _RULES {
-        // println!("Replacing: {:?}", elem.replace);
         re = regex::Regex::new(elem.replace).unwrap();
         match elem.std {
             Std::In => {
@@ -181,32 +186,41 @@ pub fn replace_all(
             }
         }
     }
-    input
+    Some(input)
 }
 
 // create template
-pub fn create_single_player_template(mut code: String, rand: &String, key: &String) -> String {
-    code = replace_all(
+pub fn create_single_player_template<'r>(
+    code: String,
+    rand: &String,
+    key: &String,
+) -> Result<String, &'r str> {
+    // replace & check for errors
+    match replace_all(
         code,
         0,
         rand,
         String::from("static void Main(string[] args)"),
         false,
-    );
-    format!(
-"using System;
-
-namespace Karesz
-{{
-    class Program
-    {{
-        static bool stdin_{rand}(string c,string m){{Console.WriteLine($\"{key} 0 {{c}}\");string l=Console.ReadLine();return l==m;}}
-        static int stdin_{rand}(string c){{Console.WriteLine($\"{key} 0 {{c}}\");string l=Console.ReadLine();return int.Parse(l);}}
-        static void stdout_{rand}(string c){{Console.WriteLine($\"{key} 0 {{c}}\");}}
-        
-        {code}
-    }}
-}}", rand=rand, key=key, code=code)
+    ) {
+        Some(code) => {
+            return Ok(format!(
+                "using System;
+                
+                namespace Karesz
+                {{
+                    class Program
+                    {{
+                        static bool stdin_{rand}(string c,string m){{Console.WriteLine($\"{key} 0 {{c}}\");string l=Console.ReadLine();return l==m;}}
+                        static int stdin_{rand}(string c){{Console.WriteLine($\"{key} 0 {{c}}\");string l=Console.ReadLine();return int.Parse(l);}}
+                        static void stdout_{rand}(string c){{Console.WriteLine($\"{key} 0 {{c}}\");}}
+                        
+                        {code}
+                    }}
+                }}", rand=rand, key=key, code=code));
+        }
+        None => return Err("Unable to find entry"),
+    }
 }
 
 pub struct MPCode {
@@ -220,20 +234,23 @@ pub fn create_multi_player_template(
     rand: &String,
     key: &String,
     round_key: &String,
-) -> String {
+) -> Result<String, String> {
     let mut i: u8 = 0;
     for elem in codes.into_iter() {
-        elem.code = replace_all(
+        match replace_all(
             elem.code.to_string(),
             i,
             rand,
             String::from(format!("static void {}()", elem.caller)),
             true,
-        );
+        ) {
+            Some(code) => elem.code = code,
+            None => return Err(format!("Unable to find entry in player {}'s code", i)),
+        }
         i += 1;
     }
 
-    format!(
+    Ok(format!(
 "using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -291,5 +308,5 @@ class Program
     /* USER CODE */
 
     {codes}
-}}", rand=rand, length=codes.len(), thread_names=codes.iter().map(|p| p.caller.clone()).collect::<Vec<String>>().join(", "), round_key=round_key, key=key, codes=codes.iter().map(|p| p.code.clone()).collect::<Vec<String>>().join("\n\n\n"))
+}}", rand=rand, length=codes.len(), thread_names=codes.iter().map(|p| p.caller.clone()).collect::<Vec<String>>().join(", "), round_key=round_key, key=key, codes=codes.iter().map(|p| p.code.clone()).collect::<Vec<String>>().join("\n\n\n")))
 }

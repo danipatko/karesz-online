@@ -1,3 +1,4 @@
+use rocket::serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -8,6 +9,20 @@ pub struct Karesz {
     pub position: (u32, u32),
     pub rotation: u8,
     pub id: u8,
+    pub name: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Player<'r> {
+    pub name: &'r str,
+    pub code: &'r str,
+}
+#[derive(Debug)]
+pub struct PlayerScore {
+    pub name: String,
+    pub kills: u8,
+    pub steps: Vec<u8>,
+    pub place: u8,
 }
 
 #[derive(Debug)]
@@ -16,7 +31,7 @@ pub struct Game {
     pub proposed_steps: HashMap<(u32, u32), Vec<u8>>, // hashmap containing player id's for that position
     pub objects: HashMap<(u32, u32), u8>,
     pub death_row: Vec<u8>,
-    pub scoreboard: HashMap<&'static str, (Vec<u8>, u8)>, // player id, (steps, kills)
+    pub scoreboard: HashMap<u8, PlayerScore>, // id, (placement, steps, kills)
     pub round: u32,
     pub winner: u8,
     pub size_x: u32,
@@ -50,12 +65,12 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
 }
 
 // generate the karesz objects and starting positions
-pub fn get_players(players_length: usize, size_x: u32, size_y: u32) -> HashMap<u8, Karesz> {
+pub fn get_players(players: &Vec<Player>, size_x: u32, size_y: u32) -> HashMap<u8, Karesz> {
     let mut res = HashMap::new();
     // align players evenly on the x axis
-    let unit = size_x / players_length as u32;
+    let unit = size_x / players.len() as u32;
     let y = size_y / 2;
-    for i in 1..players_length + 1 {
+    for i in 1..players.len() + 1 {
         res.insert(
             i as u8,
             Karesz {
@@ -65,6 +80,7 @@ pub fn get_players(players_length: usize, size_x: u32, size_y: u32) -> HashMap<u
                 is_moving: false,
                 kills: 0,
                 steps: vec![],
+                name: players[i as usize - 1].name.to_string(),
             },
         );
     }
@@ -83,8 +99,9 @@ pub trait GameActions {
     // use for multiplayer
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8>;
 
-    fn new_custom(players_length: usize, size_x: u32, size_y: u32, map: &str) -> Option<Game>;
-    fn new_load(players_length: usize, map: &str) -> Option<Game>;
+    // constructors
+    fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &str) -> Option<Game>;
+    fn new_load(players: &Vec<Player>, map: &str) -> Option<Game>;
 }
 
 pub trait Moves {
@@ -382,10 +399,10 @@ impl Moves for Karesz {
 
 impl GameActions for Game {
     // create a new custom game. Returns none if failed to parse map
-    fn new_custom(players_length: usize, size_x: u32, size_y: u32, map: &str) -> Option<Self> {
+    fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &str) -> Option<Self> {
         match parse_map(map, size_x, size_y) {
             Some(objects) => Some(Game {
-                players: get_players(players_length, size_x, size_y),
+                players: get_players(players, size_x, size_y),
                 objects,
                 proposed_steps: HashMap::new(),
                 death_row: Vec::new(),
@@ -399,10 +416,11 @@ impl GameActions for Game {
         }
     }
 
-    fn new_load(players_length: usize, map: &str) -> Option<Self> {
+    // create a new game with a predefined map
+    fn new_load(players: &Vec<Player>, map: &str) -> Option<Self> {
         // TODO: Load map by name
         Some(Game {
-            players: get_players(players_length, 20, 20),
+            players: get_players(players, 20, 20),
             objects: HashMap::new(),
             proposed_steps: HashMap::new(),
             death_row: Vec::new(),
@@ -448,6 +466,16 @@ impl GameActions for Game {
     fn kill_row(&mut self) {
         for id in &self.death_row {
             println!("---> KILLING {}", id);
+            let k = self.players.get(&id).unwrap();
+            self.scoreboard.insert(
+                *id,
+                PlayerScore {
+                    name: k.name.clone(),
+                    kills: k.kills,
+                    steps: k.steps.clone(),
+                    place: self.players.len() as u8,
+                },
+            );
             self.players.remove(&id);
         }
         self.death_row.clear();
@@ -457,7 +485,19 @@ impl GameActions for Game {
         self.make_steps();
         self.kill_row();
         self.round += 1;
+        // end of game
         if self.players.keys().len() < 2 {
+            let k = self.players.values().next().unwrap();
+            self.scoreboard.insert(
+                k.id,
+                PlayerScore {
+                    name: k.name.clone(),
+                    kills: k.kills,
+                    steps: k.steps.clone(),
+                    place: self.players.len() as u8,
+                },
+            );
+            self.winner = k.id;
             return Some(8u8);
         }
         None

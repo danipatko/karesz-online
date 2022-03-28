@@ -57,7 +57,7 @@ pub fn compile() -> Result<usize, String> {
 
 // runner function
 // TODO: make result return
-pub fn run<T: 'static + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
+pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
     /* let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")

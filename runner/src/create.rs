@@ -1,40 +1,34 @@
-use std::collections::HashMap;
-use std::fs;
-mod karesz;
+use std::{collections::HashMap, fs};
+pub mod karesz;
 mod prepare;
 mod run;
-use karesz::{Game, GameActions, Karesz, Moves};
-use rocket::serde::Deserialize;
+use karesz::{Game, GameActions};
+use rand::Rng;
 
-#[derive(Deserialize, Debug)]
-pub struct Player<'r> {
-    name: &'r str,
-    code: &'r str,
-}
-
-pub fn rand_str<'a>(len: u32) -> String {
-    (0..len)
-        .map(|_| rand::random::<u8>() as char)
-        .collect::<String>()
+pub fn rand_str(len: u32) -> String {
+    rand::thread_rng()
+        .sample_iter(&rand::distributions::Alphanumeric)
+        .take(len as usize)
+        .map(char::from)
+        .collect()
 }
 
 // run a multiplayer session with a custom map
-pub fn run_multiplayer<'r>(
-    players: &Vec<Player<'r>>,
+pub fn run_multiplayer(
+    players: &Vec<karesz::Player>,
     size_x: u32,
     size_y: u32,
     map: &str,
-) -> Result<u8, String> {
+) -> Result<HashMap<u8, karesz::PlayerScore>, String> {
     let mut game: Game;
     // generate game
-    match Game::new_custom(players.len(), size_x, size_y, map) {
+    match Game::new_custom(players, size_x, size_y, map) {
         Some(x) => game = x,
         None => {
             return Err(String::from("Failed to start game: invalid map"));
         }
     }
     // generate random strings
-    let rand = rand_str(10);
     let round_key = rand_str(10);
     let key = rand_str(10);
 
@@ -52,18 +46,24 @@ pub fn run_multiplayer<'r>(
         .collect();
 
     // TODO: randomized dirs and files
-    match fs::write(
-        "../Program.cs",
-        prepare::create_multi_player_template(&mut v, &rand, &key, &round_key),
-    ) {
-        Ok(_) => println!("Write OK"),
-        Err(_) => {
-            return Err(String::from(
-                "Failed to start game: failed to write to file",
-            ));
+
+    // generate template
+    match prepare::create_multi_player_template(&mut v, &rand_str(10), &key, &round_key) {
+        // if ok, write to file
+        Ok(code) => match fs::write("../Program.cs", code) {
+            Ok(_) => println!("Write OK"),
+            Err(_) => {
+                return Err(String::from(
+                    "Failed to start game: failed to write to file",
+                ));
+            }
+        },
+        Err(e) => {
+            return Err(e);
         }
     }
 
+    // compile
     match run::compile() {
         Ok(_) => println!("Compile OK"),
         Err(e) => {
@@ -74,7 +74,8 @@ pub fn run_multiplayer<'r>(
         }
     }
 
-    run::run(move |s| {
+    // run
+    run::run(|s| {
         // 0: key, 1: player index, 2: command, 3: value
         let s = s.trim();
         println!(">> '{}'", s);
@@ -90,7 +91,7 @@ pub fn run_multiplayer<'r>(
             // parse current line
             let s: Vec<&str> = s.split(" ").collect();
             // ignore debug logs
-            if s.len() < 3 || s[0] != key {
+            if s.len() < 3 {
                 return None;
             }
 
@@ -104,7 +105,7 @@ pub fn run_multiplayer<'r>(
             return game.parse(id, &s);
         }
     }); // */
-    Ok(2)
+    Ok(game.scoreboard)
 }
 
 pub fn run_single() {
