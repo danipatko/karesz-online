@@ -3,6 +3,35 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+// these import will be loaded
+const ALLOWED_IMPORTS: [&str; 11] = [
+    "System.Private.CoreLib.dll",
+    "System.Runtime.dll",
+    "System.Threading.Thread.dll",
+    "System.Threading.Tasks.Parallel.dll",
+    "System.Runtime.Extensions.dll",
+    "System.Threading.dll",
+    "System.Collections.Concurrent.dll",
+    "System.Diagnostics.Tracing.dll",
+    "System.Collections.dll",
+    "System.Console.dll",
+    "System.Text.Encoding.Extensions.dll",
+];
+
+// <...>/dotnet/shared/Microsoft.NETCore.App/VERSION
+const ASSEMBLY_LOCATION: &str = if cfg!(windows) {
+    "C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/"
+} else {
+    "/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/"
+};
+
+// the location of the csc compiler
+const COMPILER_LOCATION: &str = if cfg!(windows) {
+    "C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll"
+} else {
+    "/usr/share/dotnet/sdk/6.0.201/Roslyn/bincore/csc.dll"
+};
+
 pub fn compile(code: &String, outdir: &str, filename: &String) -> Result<String, String> {
     // write to file
     match fs::write(format!("{}/{}.cs", outdir, filename), code) {
@@ -12,56 +41,34 @@ pub fn compile(code: &String, outdir: &str, filename: &String) -> Result<String,
         }
     }
 
-    /*
-    let output = Command::new("dotnet")
-        .arg("/usr/share/dotnet/sdk/6.0.201/Roslyn/bincore/csc.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Private.CoreLib.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Runtime.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Threading.Thread.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Threading.Tasks.Parallel.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Runtime.Extensions.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Threading.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Collections.Concurrent.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Diagnostics.Tracing.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Collections.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Console.dll")
-        .arg("-r:/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/System.Text.Encoding.Extensions.dll")
-        .arg("/usr/src/app/Program.cs")
-        .arg("-out:/home/dapa/Projects/karesz-online/runner/test.dll\"")
-        // .stdout(Stdio::piped())
-        // .stdin(Stdio::piped())
-        .output()
-        .expect("Failed to start compile process");
-    // */
-
     match Command::new("dotnet")
-        .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Private.CoreLib.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.Thread.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.Tasks.Parallel.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.Extensions.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Threading.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.Concurrent.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Diagnostics.Tracing.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Console.dll\"")
-        .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Text.Encoding.Extensions.dll\"")
+        .arg(COMPILER_LOCATION)
+        .args(ALLOWED_IMPORTS.map(|s| format!("-r:{}/{}", ASSEMBLY_LOCATION, s)))
         .arg(format!("./{}.cs", filename))
         .arg(format!("-out:./{}.dll", filename))
         .current_dir(Path::new(outdir))
-        .output() {
+        .output()
+    {
         Ok(output) => {
             // exit code is 0
             let code = output.status.code().unwrap_or(-1);
             if code == 0 {
-                return Ok(format!("Compiler output:\n{}", String::from_utf8_lossy(&output.stdout)));
+                return Ok(format!(
+                    "Compiler output:\n{}",
+                    String::from_utf8_lossy(&output.stdout)
+                ));
             // compilation returned an error
             } else {
-                return Err(format!("Compiler exited with error code {}:\n{}", code, String::from_utf8_lossy(&output.stdout)));
+                return Err(format!(
+                    "Compiler exited with error code {}:\n{}",
+                    code,
+                    String::from_utf8_lossy(&output.stdout)
+                ));
             }
-        },
-        Err(e) => { return  Err(e.to_string()); }
+        }
+        Err(e) => {
+            return Err(e.to_string());
+        }
     }
     // */
 }

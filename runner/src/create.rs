@@ -6,7 +6,11 @@ use karesz::{Game, GameActions};
 use rand::Rng;
 
 // the directory where testing files and dlls are stored
-const TESTING_DIRECTORY: &str = "C:/Users/Dani/home/Projects/karesz-online/testing";
+const TESTING_DIRECTORY: &str = if cfg!(windows) {
+    "C:/Users/Dani/home/Projects/karesz-online/testing"
+} else {
+    "/home/dapa/Projects/karesz-online/testing"
+};
 
 pub fn rand_str(len: u32) -> String {
     rand::thread_rng()
@@ -95,8 +99,8 @@ pub fn run_multiplayer(
             return game.parse(id, &s);
         }
     }); // */
-    // remove leftover files
-    // FIXME: windows won't let you remove dll files
+        // remove leftover files
+        // FIXME: windows won't let you remove dll files
     match fs::remove_file(format!("{}/{}.dll", TESTING_DIRECTORY, &key)) {
         Ok(_) => println!("Removed file"),
         Err(e) => println!("Failed to remove dll file: '{}'", e),
