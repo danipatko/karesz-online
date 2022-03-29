@@ -41,7 +41,7 @@ pub fn compile() -> Result<usize, String> {
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Text.Encoding.Extensions.dll\"")
         .arg("./Program.cs")
         .arg("-out:./test.dll")
-        // .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
+        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
         .output()
         .expect("Failed to start compile process");
     // */

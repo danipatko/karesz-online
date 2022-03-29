@@ -160,7 +160,7 @@ pub fn replace_all(
     main_fn: String,
     multiplayer: bool,
 ) -> Option<String> {
-    let mut re: regex::Regex = Regex::new(r"void\s+FELADAT\s*\((.*|\s*)\)").unwrap();
+    let mut re: regex::Regex = Regex::new(r"void\s+FELADAT\s*\((\s*)\)").unwrap();
     // unable to find entry
     if !re.is_match(&input) {
         return None;
@@ -238,7 +238,7 @@ pub fn create_multi_player_template(
     let mut i: u8 = 0;
     for elem in codes.into_iter() {
         match replace_all(
-            elem.code.to_string(),
+            elem.code.clone(),
             i,
             rand,
             String::from(format!("static void {}()", elem.caller)),
@@ -267,7 +267,7 @@ class Program
         foreach (var item in Commands_{rand})
         {{
             Console.WriteLine($\"{key} {{item.Key}} {{item.Value.Item2}}\");
-            if (item.Value.Item1) Results_.TryAdd(item.Key, Console.ReadLine());
+            if (item.Value.Item1) Results_{rand}.TryAdd(item.Key, Console.ReadLine());
         }}
         Console.WriteLine(\"{round_key}\");
         Commands_{rand}.Clear();

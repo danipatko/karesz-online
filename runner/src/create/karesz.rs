@@ -68,11 +68,11 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
 pub fn get_players(players: &Vec<Player>, size_x: u32, size_y: u32) -> HashMap<u8, Karesz> {
     let mut res = HashMap::new();
     // align players evenly on the x axis
-    let unit = size_x / players.len() as u32;
+    let unit = size_x / (players.len() + 1) as u32;
     let y = size_y / 2;
     for i in 1..players.len() + 1 {
         res.insert(
-            i as u8,
+            i as u8 - 1,
             Karesz {
                 position: (i as u32 * unit, y),
                 rotation: 0,
@@ -100,7 +100,7 @@ pub trait GameActions {
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8>;
 
     // constructors
-    fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &str) -> Option<Game>;
+    fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &String) -> Option<Game>;
     fn new_load(players: &Vec<Player>, map: &str) -> Option<Game>;
 }
 
@@ -399,7 +399,7 @@ impl Moves for Karesz {
 
 impl GameActions for Game {
     // create a new custom game. Returns none if failed to parse map
-    fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &str) -> Option<Self> {
+    fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &String) -> Option<Self> {
         match parse_map(map, size_x, size_y) {
             Some(objects) => Some(Game {
                 players: get_players(players, size_x, size_y),

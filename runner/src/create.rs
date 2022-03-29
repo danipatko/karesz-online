@@ -18,7 +18,7 @@ pub fn run_multiplayer(
     players: &Vec<karesz::Player>,
     size_x: u32,
     size_y: u32,
-    map: &str,
+    map: &String,
 ) -> Result<HashMap<u8, karesz::PlayerScore>, String> {
     let mut game: Game;
     // generate game
@@ -28,6 +28,8 @@ pub fn run_multiplayer(
             return Err(String::from("Failed to start game: invalid map"));
         }
     }
+    println!("{:?}", game);
+
     // generate random strings
     let round_key = rand_str(10);
     let key = rand_str(10);
@@ -50,7 +52,7 @@ pub fn run_multiplayer(
     // generate template
     match prepare::create_multi_player_template(&mut v, &rand_str(10), &key, &round_key) {
         // if ok, write to file
-        Ok(code) => match fs::write("../Program.cs", code) {
+        Ok(code) => match fs::write("./Program.cs", code) {
             Ok(_) => println!("Write OK"),
             Err(_) => {
                 return Err(String::from(

@@ -48,24 +48,25 @@ fn index() -> &'static str {
 //     "xd"
 // }
 
-#[derive(Deserialize, Debug)]
-struct MultiplayerRequest<'r> {
-    #[serde(borrow)]
-    players: Vec<create::karesz::Player<'r>>,
-}
+// #[derive(Deserialize, Debug)]
+// struct MultiplayerRequest<'r> {
+//     #[serde(borrow)]
+//     players: Vec<create::karesz::Player<'r>>,
+// }
 
 #[derive(Deserialize, Debug)]
-struct MultiplayerRequestCustom<'r> {
+struct MultiplayerRequestCustom<'a> {
     size_x: u32,
     size_y: u32,
-    map: &'r str,
-    players: Vec<create::karesz::Player<'r>>,
+    map: String,
+    #[serde(borrow)]
+    players: Vec<create::karesz::Player<'a>>,
 }
 
 // multiplayer, custom map
 #[post("/mp/custom", data = "<req>")]
 fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> &'static str {
-    match create::run_multiplayer(&req.players, req.size_x, req.size_y, req.map) {
+    match create::run_multiplayer(&req.players, req.size_x, req.size_y, &req.map) {
         Ok(x) => {
             println!("{:?}", x);
             return "OK";
