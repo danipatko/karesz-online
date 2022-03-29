@@ -5,3 +5,4 @@ app/.env
 app/.env.*
 app/.next
 runner/target
+testing/*

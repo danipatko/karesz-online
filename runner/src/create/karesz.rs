@@ -95,7 +95,9 @@ pub trait GameActions {
         &mut self, /*, players: &mut HashMap<u8, Karesz>, proposed_steps: &mut HashMap<(u32, u32), std::vec::Vec<u8>>, death_row: &mut Vec<u8>*/
     );
     // remove players on death row
-    fn kill_row(&mut self /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/);
+    fn kill_row(
+        &mut self, /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/
+    ) -> bool;
     // use for multiplayer
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8>;
 
@@ -463,43 +465,69 @@ impl GameActions for Game {
         self.proposed_steps.clear();
     }
 
-    fn kill_row(&mut self) {
+    // returns true if the game is over
+    fn kill_row(&mut self) -> bool {
+        // everyone dies in the same round
+        if self.death_row.len() == self.players.len() {
+            for id in &self.death_row {
+                let player = self.players.get(id).unwrap();
+                self.scoreboard.insert(
+                    player.id,
+                    PlayerScore {
+                        name: player.name.clone(),
+                        kills: player.kills,
+                        steps: player.steps.clone(),
+                        place: 1u8,
+                    },
+                );
+                self.players.remove(id);
+            }
+            self.winner = 0;
+            return true;
+        }
+
+        // remove everybody in death row
         for id in &self.death_row {
-            println!("---> KILLING {}", id);
-            let k = self.players.get(&id).unwrap();
+            let player = self.players.get(id).unwrap();
             self.scoreboard.insert(
-                *id,
+                player.id,
                 PlayerScore {
-                    name: k.name.clone(),
-                    kills: k.kills,
-                    steps: k.steps.clone(),
+                    name: player.name.clone(),
+                    kills: player.kills,
+                    steps: player.steps.clone(),
                     place: self.players.len() as u8,
                 },
             );
-            self.players.remove(&id);
+            self.players.remove(id);
         }
+
+        // if one player is left, game is over
+        if self.players.len() == 1 {
+            let id = *self.players.keys().last().unwrap();
+            let player = self.players.get(&id).unwrap();
+            self.scoreboard.insert(
+                id,
+                PlayerScore {
+                    name: player.name.clone(),
+                    kills: player.kills,
+                    steps: player.steps.clone(),
+                    place: 1u8,
+                },
+            );
+            self.winner = id;
+            return true;
+        }
+
         self.death_row.clear();
+        false
     }
 
     fn round(&mut self) -> Option<u8> {
         self.make_steps();
-        self.kill_row();
-        self.round += 1;
-        // end of game
-        if self.players.keys().len() < 2 {
-            let k = self.players.values().next().unwrap();
-            self.scoreboard.insert(
-                k.id,
-                PlayerScore {
-                    name: k.name.clone(),
-                    kills: k.kills,
-                    steps: k.steps.clone(),
-                    place: self.players.len() as u8,
-                },
-            );
-            self.winner = k.id;
+        if self.kill_row() {
             return Some(8u8);
         }
+        self.round += 1;
         None
     }
 

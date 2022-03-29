@@ -1,8 +1,17 @@
+use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-pub fn compile() -> Result<usize, String> {
+pub fn compile(code: &String, outdir: &str, filename: &String) -> Result<String, String> {
+    // write to file
+    match fs::write(format!("{}/{}.cs", outdir, filename), code) {
+        Ok(_) => println!("Write OK"),
+        Err(_) => {
+            return Err(String::from("Failed to write to file"));
+        }
+    }
+
     /*
     let output = Command::new("dotnet")
         .arg("/usr/share/dotnet/sdk/6.0.201/Roslyn/bincore/csc.dll")
@@ -21,12 +30,11 @@ pub fn compile() -> Result<usize, String> {
         .arg("-out:/home/dapa/Projects/karesz-online/runner/test.dll\"")
         // .stdout(Stdio::piped())
         // .stdin(Stdio::piped())
-        // .current_dir(Path::new("C:/Users/Dani"))
         .output()
         .expect("Failed to start compile process");
     // */
 
-    let output = Command::new("dotnet")
+    match Command::new("dotnet")
         .arg("C:/Program Files/dotnet/sdk/5.0.402/Roslyn/bincore/csc.dll")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Private.CoreLib.dll\"")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Runtime.dll\"")
@@ -39,50 +47,42 @@ pub fn compile() -> Result<usize, String> {
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Collections.dll\"")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Console.dll\"")
         .arg("-r:\"C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/System.Text.Encoding.Extensions.dll\"")
-        .arg("./Program.cs")
-        .arg("-out:./test.dll")
-        .current_dir(Path::new("C:/Users/Dani/home/Projects/karesz-online/runner"))
-        .output()
-        .expect("Failed to start compile process");
-    // */
-    if output.status.code().unwrap() == 0 {
-        return Ok(0);
-    } else {
-        return Err(format!(
-            "Error: {}",
-            std::str::from_utf8(&output.stdout).unwrap()
-        ));
+        .arg(format!("./{}.cs", filename))
+        .arg(format!("-out:./{}.dll", filename))
+        .current_dir(Path::new(outdir))
+        .output() {
+        Ok(output) => {
+            // exit code is 0
+            let code = output.status.code().unwrap_or(-1);
+            if code == 0 {
+                return Ok(format!("Compiler output:\n{}", String::from_utf8_lossy(&output.stdout)));
+            // compilation returned an error
+            } else {
+                return Err(format!("Compiler exited with error code {}:\n{}", code, String::from_utf8_lossy(&output.stdout)));
+            }
+        },
+        Err(e) => { return  Err(e.to_string()); }
     }
+    // */
 }
 
 // runner function
 // TODO: make result return
-pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(mut callback: T) {
-    /* let mut child = Command::new("dotnet")
-        .arg("exec")
-        .arg("--runtimeconfig")
-        .arg("/home/dapa/Projects/karesz-online/runner/test.runtimeconfig.json")
-        .arg("/home/dapa/Projects/karesz-online/runner/test.dll")
-        .stdout(Stdio::piped())
-        .stdin(Stdio::piped())
-        .spawn()
-        .expect("Failed to start ping process");
-    // */
-
+pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
+    outdir: &str,
+    filename: &String,
+    mut callback: T,
+) {
     let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
-        .arg("./test.runtimeconfig.json")
-        .arg("./test.dll")
+        .arg("./test.runtimeconfig.json") // use same config
+        .arg(format!("./{}.dll", filename))
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
-        .current_dir(Path::new(
-            "C:/Users/Dani/home/Projects/karesz-online/runner",
-        ))
+        .current_dir(Path::new(outdir))
         .spawn()
-        .expect("Failed to start ping process");
-    // */
-    println!("Started process: {}", child.id());
+        .expect("Failed to start runner process");
 
     let mut stdout = BufReader::new(child.stdout.take().unwrap());
     let mut stdin = child.stdin.take().unwrap();

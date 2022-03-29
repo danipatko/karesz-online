@@ -5,6 +5,9 @@ mod run;
 use karesz::{Game, GameActions};
 use rand::Rng;
 
+// the directory where testing files and dlls are stored
+const TESTING_DIRECTORY: &str = "C:/Users/Dani/home/Projects/karesz-online/testing";
+
 pub fn rand_str(len: u32) -> String {
     rand::thread_rng()
         .sample_iter(&rand::distributions::Alphanumeric)
@@ -47,17 +50,13 @@ pub fn run_multiplayer(
         })
         .collect();
 
-    // TODO: randomized dirs and files
-
     // generate template
     match prepare::create_multi_player_template(&mut v, &rand_str(10), &key, &round_key) {
-        // if ok, write to file
-        Ok(code) => match fs::write("./Program.cs", code) {
-            Ok(_) => println!("Write OK"),
-            Err(_) => {
-                return Err(String::from(
-                    "Failed to start game: failed to write to file",
-                ));
+        // if ok, write to file and compile
+        Ok(x) => match run::compile(&x, TESTING_DIRECTORY, &key) {
+            Ok(_) => println!("Compile OK"),
+            Err(e) => {
+                return Err(format!("Failed to start game: \n{}", e));
             }
         },
         Err(e) => {
@@ -65,19 +64,8 @@ pub fn run_multiplayer(
         }
     }
 
-    // compile
-    match run::compile() {
-        Ok(_) => println!("Compile OK"),
-        Err(e) => {
-            return Err(String::from(format!(
-                "Failed to start game: failed to compile\nLogs:\n{}",
-                e
-            )));
-        }
-    }
-
     // run
-    run::run(|s| {
+    run::run(TESTING_DIRECTORY, &key, |s| {
         // 0: key, 1: player index, 2: command, 3: value
         let s = s.trim();
         println!(">> '{}'", s);
@@ -86,7 +74,7 @@ pub fn run_multiplayer(
             println!("--------"); // debug
             return game.round();
         } else {
-            // TODO: append string to debug logs
+            // ignore debug logs
             if !s.starts_with(&key) {
                 return None;
             }
@@ -107,79 +95,93 @@ pub fn run_multiplayer(
             return game.parse(id, &s);
         }
     }); // */
+    // remove leftover files
+    // FIXME: windows won't let you remove dll files
+    match fs::remove_file(format!("{}/{}.dll", TESTING_DIRECTORY, &key)) {
+        Ok(_) => println!("Removed file"),
+        Err(e) => println!("Failed to remove dll file: '{}'", e),
+    }
+    match fs::remove_file(format!("{}/{}.cs", TESTING_DIRECTORY, &key)) {
+        Ok(_) => println!("Removed file"),
+        Err(e) => println!("Failed to remove cs file: '{}'", e),
+    }
+
     Ok(game.scoreboard)
 }
 
-pub fn run_single() {
-    // // values
-    // let mut game = Game {
-    //     size_x: 10,
-    //     size_y: 10,
-    //     round: 0,
-    //     objects: HashMap::new(),
-    //     players: HashMap::new(),
-    //     proposed_steps: HashMap::new(),
-    //     death_row: Vec::new(),
-    // };
-    // let mut player = Karesz {
-    //     id: 0,
-    //     position: (2, 5),
-    //     rotation: 0,
-    //     steps: Vec::new(),
-    //     is_moving: false,
-    //     kills: 0,
-    // };
-    // // game.players.insert(0, player);
+pub fn run_single(code: &str, map: &str, start_x: u32, start_y: u32, size_x: u32, size_y: u32) {
 
-    // let key = rand_str(10);
-    // let code = "void FELADAT()
-    //     {
-    //         /* Fordulj(jobbra);
-    //         while(!Kilépek_e_a_pályáról()) {
-    //             Lépj();
-    //         }*/
-    //         while(!Kilépek_e_a_pályáról()) {
-    //             Lépj();
-    //         }
-    //         Lépj();
-    //     }"
-    // .to_string();
+    /*
+    // values
+    let mut game = Game {
+        size_x: 10,
+        size_y: 10,
+        round: 0,
+        objects: HashMap::new(),
+        players: HashMap::from(),
+        proposed_steps: HashMap::new(),
+        death_row: Vec::new(),
+        winner: 0,
+        scoreboard: HashMap::new(),
+    };
+    let mut player = Karesz {
+        id: 0,
+        position: (5, 5),
+        rotation: 0,
+        steps: Vec::new(),
+        is_moving: false,
+        kills: 0,
+    };
+    // game.players.insert(0, player
+    let key = rand_str(10);
+    let code = "void FELADAT()
+        {
+            /* Fordulj(jobbra);
+            while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }*/
+    while(!Kilépek_e_a_pályáról()) {
+                Lépj();
+            }
+            Lépj();
+        }"
+    .to_string();
 
-    // // Write to file
-    // match fs::write(
-    //     "./Program.cs",
-    //     prepare::create_single_player_template(code, &key, &key),
-    // ) {
-    //     Ok(_) => println!("Write OK"),
-    //     Err(e) => println!("uh oh: {}", e),
-    // }
+    // Write to file
+    match fs::write(
+        "./Program.cs",
+        prepare::create_single_player_template(code, &key, &key),
+    ) {
+        Ok(_) => println!("Write OK"),
+        Err(e) => println!("uh oh: {}", e),
+    }
 
-    // // compile
-    // match run::compile() {
-    //     Ok(exit_code) => println!("Compile exited with code {}", exit_code),
-    //     Err(e) => println!("{}", e),
-    // }
+    // compile
+    match run::compile() {
+        Ok(exit_code) => println!("Compile exited with code {}", exit_code),
+        Err(e) => println!("{}", e),
+    }
 
-    // // run
-    // run::run(move |s| {
-    //     let s = s.trim();
-    //     let s: Vec<&str> = s.split(" ").collect();
-    //     println!(">> {:?}", s);
+    // run
+    run::run(move |s| {
+        let s = s.trim();
+        let s: Vec<&str> = s.split(" ").collect();
+        println!(">> {:?}", s);
 
-    //     // ignore debug logs
-    //     if s.len() < 3 || s[0] != key {
-    //         return None;
-    //     }
+        // ignore debug logs
+        if s.len() < 3 || s[0] != key {
+            return None;
+        }
 
-    //     player.parse(
-    //         &s,
-    //         false,
-    //         &mut game.proposed_steps,
-    //         &mut game.death_row,
-    //         game.size_x,
-    //         game.size_y,
-    //         &mut game.objects,
-    //     )
-    //     // */
-    // });
+        player.parse(
+            &s,
+            false,
+            &mut game.proposed_steps,
+            &mut game.death_row,
+            game.size_x,
+            game.size_y,
+            &mut game.objects,
+        )
+        // 
+    }); */
 }
