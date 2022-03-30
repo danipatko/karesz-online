@@ -1,9 +1,44 @@
-use std::{collections::HashMap, fs};
+use std::fs;
 pub mod karesz;
 mod prepare;
 mod run;
-use karesz::{Game, GameActions};
+use karesz::{Game, GameActions, PlayerScore};
 use rand::Rng;
+use rocket::serde::Serialize;
+
+#[derive(Serialize, Debug)]
+pub struct GameResult {
+    winner: String,
+    draw: bool,
+    scoreboard: Vec<PlayerScore>,
+}
+
+impl GameResult {
+    pub fn to_json(&self) -> String {
+        return format!(
+            "{{ \"winner\": \"{}\", \"draw\": {}, \"scoreboard\": [{}] }}",
+            self.winner,
+            self.draw,
+            self.scoreboard
+                .iter()
+                .map(|s| format!(
+                    "{{ \"placement\":{}, \"name\": \"{}\", \"kills\": {}, \"steps\":[{}], \"survived\": {}, \"death\": \"{}\" }}",
+                    s.place,
+                    s.name,
+                    s.kills,
+                    s.steps
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
+                    s.rounds_survived,
+                    s.reason_of_death
+                ))
+                .collect::<Vec<String>>()
+                .join(", ")
+        );
+    }
+}
 
 // the directory where testing files and dlls are stored
 const TESTING_DIRECTORY: &str = if cfg!(windows) {
@@ -26,7 +61,7 @@ pub fn run_multiplayer(
     size_x: u32,
     size_y: u32,
     map: &String,
-) -> Result<HashMap<u8, karesz::PlayerScore>, String> {
+) -> Result<GameResult, String> {
     let mut game: Game;
     // generate game
     match Game::new_custom(players, size_x, size_y, map) {
@@ -98,9 +133,9 @@ pub fn run_multiplayer(
 
             return game.parse(id, &s);
         }
-    }); // */
-        // remove leftover files
-        // FIXME: windows won't let you remove dll files
+    });
+    // remove leftover files
+    // FIXME: windows won't let you remove dll files
     match fs::remove_file(format!("{}/{}.dll", TESTING_DIRECTORY, &key)) {
         Ok(_) => println!("Removed file"),
         Err(e) => println!("Failed to remove dll file: '{}'", e),
@@ -110,7 +145,11 @@ pub fn run_multiplayer(
         Err(e) => println!("Failed to remove cs file: '{}'", e),
     }
 
-    Ok(game.scoreboard)
+    Ok(GameResult {
+        scoreboard: game.scoreboard,
+        winner: game.winner,
+        draw: game.draw,
+    })
 }
 
 pub fn run_single(code: &str, map: &str, start_x: u32, start_y: u32, size_x: u32, size_y: u32) {

@@ -1,4 +1,5 @@
 use rocket::serde::Deserialize;
+use serde::Serialize;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -17,12 +18,14 @@ pub struct Player<'r> {
     pub name: &'r str,
     pub code: &'r str,
 }
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct PlayerScore {
     pub name: String,
     pub kills: u8,
     pub steps: Vec<u8>,
     pub place: u8,
+    pub rounds_survived: u32,
+    pub reason_of_death: &'static str,
 }
 
 #[derive(Debug)]
@@ -30,12 +33,13 @@ pub struct Game {
     pub players: HashMap<u8, Karesz>,
     pub proposed_steps: HashMap<(u32, u32), Vec<u8>>, // hashmap containing player id's for that position
     pub objects: HashMap<(u32, u32), u8>,
-    pub death_row: Vec<u8>,
-    pub scoreboard: HashMap<u8, PlayerScore>, // id, (placement, steps, kills)
+    pub death_row: Vec<(u8, &'static str)>,
+    pub scoreboard: Vec<PlayerScore>, // id, (placement, steps, kills)
     pub round: u32,
-    pub winner: u8,
+    pub winner: String,
     pub size_x: u32,
     pub size_y: u32,
+    pub draw: bool,
 }
 
 // obtain objects from map string + size x, y
@@ -70,17 +74,17 @@ pub fn get_players(players: &Vec<Player>, size_x: u32, size_y: u32) -> HashMap<u
     // align players evenly on the x axis
     let unit = size_x / (players.len() + 1) as u32;
     let y = size_y / 2;
-    for i in 1..players.len() + 1 {
+    for i in 0..players.len() {
         res.insert(
-            i as u8 - 1,
+            i as u8,
             Karesz {
-                position: (i as u32 * unit, y),
+                position: ((i + 1) as u32 * unit, y),
                 rotation: 0,
-                id: i as u8 - 1,
+                id: i as u8,
                 is_moving: false,
                 kills: 0,
                 steps: vec![],
-                name: players[i as usize - 1].name.to_string(),
+                name: players[i].name.to_string(),
             },
         );
     }
@@ -92,11 +96,11 @@ pub trait GameActions {
     fn round(&mut self) -> Option<u8>;
     // make steps
     fn make_steps(
-        &mut self, /*, players: &mut HashMap<u8, Karesz>, proposed_steps: &mut HashMap<(u32, u32), std::vec::Vec<u8>>, death_row: &mut Vec<u8>*/
+        &mut self, /*, players: &mut HashMap<u8, Karesz>, proposed_steps: &mut HashMap<(u32, u32), std::vec::Vec<u8>>, death_row: &mut Vec<(u8, &'static str)>*/
     );
     // remove players on death row
     fn kill_row(
-        &mut self, /*, death_row: &mut Vec<u8>, players: &mut HashMap<u8, Karesz>*/
+        &mut self, /*, death_row: &mut Vec<(u8, &'static str)>, players: &mut HashMap<u8, Karesz>*/
     ) -> bool;
     // use for multiplayer
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8>;
@@ -129,7 +133,7 @@ pub trait Moves {
     fn step(
         &mut self,
         proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>,
-        death_row: &mut Vec<u8>,
+        death_row: &mut Vec<(u8, &'static str)>,
         size_x: u32,
         size_y: u32,
         objects: &HashMap<(u32, u32), u8>,
@@ -162,7 +166,7 @@ pub trait Moves {
         s: &Vec<&str>,
         multi: bool,
         proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>,
-        death_row: &mut Vec<u8>,
+        death_row: &mut Vec<(u8, &'static str)>,
         size_x: u32,
         size_y: u32,
         objects: &mut HashMap<(u32, u32), u8>,
@@ -207,7 +211,7 @@ impl Moves for Karesz {
     fn step(
         &mut self,
         proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>,
-        death_row: &mut Vec<u8>,
+        death_row: &mut Vec<(u8, &'static str)>,
         size_x: u32,
         size_y: u32,
         objects: &HashMap<(u32, u32), u8>,
@@ -217,7 +221,10 @@ impl Moves for Karesz {
         // attempt to step out of map
         if fwd == self.position || !self.can_step(size_x, size_y, objects, fwd) {
             println!("Player {} attempted to step out of bounds", self.id);
-            death_row.push(self.id);
+            death_row.push((
+                self.id,
+                "Player attempted to step out of bounds or into a wall",
+            ));
         // if someone's already at a position, push id
         } else if proposed_steps.contains_key(&fwd) {
             proposed_steps.get_mut(&fwd).unwrap().push(self.id);
@@ -297,7 +304,7 @@ impl Moves for Karesz {
         s: &Vec<&str>,
         multi: bool,
         proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>,
-        death_row: &mut Vec<u8>,
+        death_row: &mut Vec<(u8, &'static str)>,
         size_x: u32,
         size_y: u32,
         objects: &mut HashMap<(u32, u32), u8>,
@@ -408,11 +415,12 @@ impl GameActions for Game {
                 objects,
                 proposed_steps: HashMap::new(),
                 death_row: Vec::new(),
-                scoreboard: HashMap::new(),
+                scoreboard: Vec::new(),
                 round: 0,
-                winner: 0,
+                winner: String::new(),
                 size_x,
                 size_y,
+                draw: false,
             }),
             None => None,
         }
@@ -426,11 +434,12 @@ impl GameActions for Game {
             objects: HashMap::new(),
             proposed_steps: HashMap::new(),
             death_row: Vec::new(),
-            scoreboard: HashMap::new(),
+            scoreboard: Vec::new(),
             round: 0,
-            winner: 0,
+            winner: String::new(),
             size_x: 20,
             size_y: 20,
+            draw: false,
         })
     }
 
@@ -440,7 +449,8 @@ impl GameActions for Game {
             if players_here.len() > 1 {
                 for elem in players_here {
                     println!("Player {} stepped on the same field as others", elem);
-                    self.death_row.push(*elem);
+                    self.death_row
+                        .push((*elem, "Player stepped on the same field as others"));
                 }
                 return;
             }
@@ -450,7 +460,8 @@ impl GameActions for Game {
             for (id, player) in &mut self.players {
                 if player.position == *position && !player.is_moving {
                     println!("Player {} was stepped on by Player {}", id, players_here[0]);
-                    self.death_row.push(*id);
+                    self.death_row
+                        .push((*id, "Player was stepped on by another player"));
                     did_kill = true;
                 }
                 player.is_moving = false;
@@ -469,35 +480,33 @@ impl GameActions for Game {
     fn kill_row(&mut self) -> bool {
         // everyone dies in the same round
         if self.death_row.len() == self.players.len() {
-            for id in &self.death_row {
+            self.draw = true;
+            for (id, reason) in &self.death_row {
                 let player = self.players.get(id).unwrap();
-                self.scoreboard.insert(
-                    player.id,
-                    PlayerScore {
-                        name: player.name.clone(),
-                        kills: player.kills,
-                        steps: player.steps.clone(),
-                        place: 1u8,
-                    },
-                );
+                self.scoreboard.push(PlayerScore {
+                    name: player.name.clone(),
+                    kills: player.kills,
+                    steps: player.steps.clone(),
+                    place: 1u8,
+                    reason_of_death: reason,
+                    rounds_survived: self.round,
+                });
                 self.players.remove(id);
             }
-            self.winner = 0;
             return true;
         }
 
         // remove everybody in death row
-        for id in &self.death_row {
+        for (id, reason) in &self.death_row {
             let player = self.players.get(id).unwrap();
-            self.scoreboard.insert(
-                player.id,
-                PlayerScore {
-                    name: player.name.clone(),
-                    kills: player.kills,
-                    steps: player.steps.clone(),
-                    place: self.players.len() as u8,
-                },
-            );
+            self.scoreboard.push(PlayerScore {
+                name: player.name.clone(),
+                kills: player.kills,
+                steps: player.steps.clone(),
+                place: self.players.len() as u8,
+                reason_of_death: reason,
+                rounds_survived: self.round,
+            });
             self.players.remove(id);
         }
 
@@ -505,16 +514,15 @@ impl GameActions for Game {
         if self.players.len() == 1 {
             let id = *self.players.keys().last().unwrap();
             let player = self.players.get(&id).unwrap();
-            self.scoreboard.insert(
-                id,
-                PlayerScore {
-                    name: player.name.clone(),
-                    kills: player.kills,
-                    steps: player.steps.clone(),
-                    place: 1u8,
-                },
-            );
-            self.winner = id;
+            self.scoreboard.push(PlayerScore {
+                name: player.name.clone(),
+                kills: player.kills,
+                steps: player.steps.clone(),
+                place: 1u8,
+                reason_of_death: "",
+                rounds_survived: self.round,
+            });
+            self.winner = player.name.clone();
             return true;
         }
 
@@ -524,10 +532,10 @@ impl GameActions for Game {
 
     fn round(&mut self) -> Option<u8> {
         self.make_steps();
+        self.round += 1;
         if self.kill_row() {
             return Some(8u8);
         }
-        self.round += 1;
         None
     }
 

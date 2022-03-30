@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate rocket;
-// use rocket::response::status;
+use rocket::response::content;
 use rocket::serde::json::Json;
 use rocket::serde::Deserialize;
 mod create;
@@ -65,15 +65,18 @@ struct MultiplayerRequestCustom<'a> {
 
 // multiplayer, custom map
 #[post("/mp/custom", data = "<req>")]
-fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> &'static str {
+fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> content::Json<String> /*rocket_contrib::json::Json<create::GameResult>*/
+{
     match create::run_multiplayer(&req.players, req.size_x, req.size_y, &req.map) {
         Ok(x) => {
             println!("{:?}", x);
-            return "OK";
+            return content::Json(x.to_json());
+            // return rocket_contrib::json::Json(x);
         }
         Err(x) => {
             println!("{}", x);
-            return "NOT OK";
+            return content::Json(format!("{{\"error\": \"{}\"}}", x));
+            // return content::Json(format!("{{ \"error\": \"{}\" }}", x));
         }
     }
 }
