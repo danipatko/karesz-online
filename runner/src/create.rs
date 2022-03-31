@@ -5,6 +5,9 @@ mod run;
 use karesz::{Game, GameActions, PlayerScore};
 use rand::Rng;
 use rocket::serde::Serialize;
+use std::collections::HashMap;
+
+use crate::create::karesz::Moves;
 
 #[derive(Serialize, Debug)]
 pub struct GameResult {
@@ -40,6 +43,25 @@ impl GameResult {
     }
 }
 
+pub struct PlaygroundResult {
+    pub steps: Vec<u8>,
+    pub rounds: u32,
+}
+
+impl PlaygroundResult {
+    pub fn to_json(&self) -> String {
+        return format!(
+            "{{ \"steps\": [{}], \"rounds\": {} }}",
+            self.steps
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+            self.rounds
+        );
+    }
+}
+
 // the directory where testing files and dlls are stored
 const TESTING_DIRECTORY: &str = if cfg!(windows) {
     "C:/Users/Dani/home/Projects/karesz-online/testing"
@@ -61,7 +83,7 @@ pub fn run_multiplayer(
     size_x: u32,
     size_y: u32,
     map: &String,
-) -> Result<GameResult, String> {
+) -> Result<String, String> {
     let mut game: Game;
     // generate game
     match Game::new_custom(players, size_x, size_y, map) {
@@ -149,64 +171,55 @@ pub fn run_multiplayer(
         scoreboard: game.scoreboard,
         winner: game.winner,
         draw: game.draw,
-    })
+    }
+    .to_json())
 }
 
-pub fn run_single(code: &str, map: &str, start_x: u32, start_y: u32, size_x: u32, size_y: u32) {
-
-    /*
-    // values
-    let mut game = Game {
-        size_x: 10,
-        size_y: 10,
-        round: 0,
-        objects: HashMap::new(),
-        players: HashMap::from(),
-        proposed_steps: HashMap::new(),
-        death_row: Vec::new(),
-        winner: 0,
-        scoreboard: HashMap::new(),
-    };
-    let mut player = Karesz {
-        id: 0,
-        position: (5, 5),
-        rotation: 0,
-        steps: Vec::new(),
-        is_moving: false,
-        kills: 0,
-    };
-    // game.players.insert(0, player
+pub fn run_single(
+    code: &str,
+    map: &str,
+    start_x: u32,
+    start_y: u32,
+    rotation: u8,
+    size_x: u32,
+    size_y: u32,
+) -> Result<String, String> {
     let key = rand_str(10);
-    let code = "void FELADAT()
-        {
-            /* Fordulj(jobbra);
-            while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }*/
-    while(!Kilépek_e_a_pályáról()) {
-                Lépj();
-            }
-            Lépj();
-        }"
-    .to_string();
-
-    // Write to file
-    match fs::write(
-        "./Program.cs",
-        prepare::create_single_player_template(code, &key, &key),
-    ) {
-        Ok(_) => println!("Write OK"),
-        Err(e) => println!("uh oh: {}", e),
+    // parse map
+    let mut objects: HashMap<(u32, u32), u8>;
+    match karesz::parse_map(map, size_x, size_y) {
+        Some(x) => objects = x,
+        None => {
+            return Err(String::from("Failed parse map: possibly malformatted"));
+        }
     }
+    // add player
+    let mut player = karesz::Karesz {
+        id: 0,
+        kills: 0,
+        is_moving: false,
+        name: String::from(""),
+        position: (start_x, start_y),
+        rotation,
+        steps: Vec::new(),
+    };
 
     // compile
-    match run::compile() {
-        Ok(exit_code) => println!("Compile exited with code {}", exit_code),
-        Err(e) => println!("{}", e),
+    match prepare::create_single_player_template(code.to_string(), &rand_str(10), &key) {
+        // if ok, write to file and compile
+        Ok(x) => match run::compile(&x, TESTING_DIRECTORY, &key) {
+            Ok(_) => println!("Compile OK\n {}", x),
+            Err(e) => {
+                return Err(format!("Failed to start game: \n{}", e));
+            }
+        },
+        Err(e) => {
+            return Err(format!("Failed to start game: \n{}", e));
+        }
     }
 
     // run
-    run::run(move |s| {
+    run::run(TESTING_DIRECTORY, &key, |s| {
         let s = s.trim();
         let s: Vec<&str> = s.split(" ").collect();
         println!(">> {:?}", s);
@@ -216,15 +229,24 @@ pub fn run_single(code: &str, map: &str, start_x: u32, start_y: u32, size_x: u32
             return None;
         }
 
-        player.parse(
-            &s,
-            false,
-            &mut game.proposed_steps,
-            &mut game.death_row,
-            game.size_x,
-            game.size_y,
-            &mut game.objects,
-        )
-        // 
-    }); */
+        player.parse_single(&s, size_x, size_y, &mut objects)
+        //
+    });
+
+    // remove leftover files
+    // FIXME: windows won't let you remove dll files
+    match fs::remove_file(format!("{}/{}.dll", TESTING_DIRECTORY, &key)) {
+        Ok(_) => println!("Removed file"),
+        Err(e) => println!("Failed to remove dll file: '{}'", e),
+    }
+    match fs::remove_file(format!("{}/{}.cs", TESTING_DIRECTORY, &key)) {
+        Ok(_) => println!("Removed file"),
+        Err(e) => println!("Failed to remove cs file: '{}'", e),
+    }
+
+    Ok(PlaygroundResult {
+        rounds: player.steps.len() as u32,
+        steps: player.steps,
+    }
+    .to_json())
 }

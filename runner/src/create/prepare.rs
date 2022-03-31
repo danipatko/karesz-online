@@ -1,5 +1,4 @@
 use regex::Regex;
-use rocket::futures::stream::ReuniteError;
 
 enum Std {
     Out,
@@ -44,17 +43,6 @@ const _RULES: [Rule; 21] = [
         std: Std::None,
         replace: r"sárga",
         with: "5",
-    },
-    // replace with turn values
-    Rule {
-        std: Std::None,
-        replace: r"jobbra",
-        with: "1",
-    },
-    Rule {
-        std: Std::None,
-        replace: r"balra",
-        with: "-1",
     },
     // other
     Rule {
@@ -131,6 +119,17 @@ const _RULES: [Rule; 21] = [
         std: Std::In,
         replace: r"Kilépek_e_a_pályáról\s*\(\s*\)",
         with: "a\",\"1",
+    },
+    // replace with turn values
+    Rule {
+        std: Std::None,
+        replace: r"jobbra",
+        with: "1",
+    },
+    Rule {
+        std: Std::None,
+        replace: r"balra",
+        with: "-1",
     },
 ];
 

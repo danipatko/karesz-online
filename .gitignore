@@ -6,3 +6,4 @@ app/.env.*
 app/.next
 runner/target
 testing/*
+cp.js

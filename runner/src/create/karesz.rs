@@ -161,12 +161,19 @@ pub trait Moves {
     // return own direction
     fn looking_at(&self) -> u8;
     //
-    fn parse(
+    fn parse_multi(
         &mut self,
         s: &Vec<&str>,
-        multi: bool,
         proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>,
         death_row: &mut Vec<(u8, &'static str)>,
+        size_x: u32,
+        size_y: u32,
+        objects: &mut HashMap<(u32, u32), u8>,
+    ) -> Option<u8>;
+
+    fn parse_single(
+        &mut self,
+        s: &Vec<&str>,
         size_x: u32,
         size_y: u32,
         objects: &mut HashMap<(u32, u32), u8>,
@@ -182,7 +189,7 @@ impl Moves for Karesz {
             position.0 += 1
         } else if rotation == 2 && position.1 > 0 {
             position.1 -= 1
-        } else if position.0 > 0 {
+        } else if rotation == 3 && position.0 > 0 {
             position.0 -= 1
         }
         position
@@ -253,7 +260,7 @@ impl Moves for Karesz {
     // check if able to step
     fn can_i_step(&self, size_x: u32, size_y: u32, objects: &HashMap<(u32, u32), u8>) -> bool {
         let fwd = self.forward(self.position, self.rotation);
-        !self.out_of_bounds(size_x, size_y, fwd) && !self.is_wall(objects, fwd)
+        fwd != self.position && self.can_step(size_x, size_y, objects, fwd)
     }
     // check if player objects contain a rock at player position
     fn is_rock_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8 {
@@ -277,7 +284,8 @@ impl Moves for Karesz {
     }
     // check if forward is out of bounds
     fn is_on_edge(&self, size_x: u32, size_y: u32) -> u8 {
-        if self.out_of_bounds(size_x, size_y, self.forward(self.position, self.rotation)) {
+        let fwd = self.forward(self.position, self.rotation);
+        if fwd == self.position || self.out_of_bounds(size_x, size_y, fwd) {
             1
         } else {
             0
@@ -299,10 +307,9 @@ impl Moves for Karesz {
     }
 
     // parses a command
-    fn parse(
+    fn parse_multi(
         &mut self,
         s: &Vec<&str>,
-        multi: bool,
         proposed_steps: &mut HashMap<(u32, u32), Vec<u8>>,
         death_row: &mut Vec<(u8, &'static str)>,
         size_x: u32,
@@ -318,10 +325,105 @@ impl Moves for Karesz {
             match s[2] {
                 "0" => {
                     self.steps.push(0x0);
-                    if multi {
-                        self.step(proposed_steps, death_row, size_x, size_y, objects);
-                        None
-                    } else if self.step_single(size_x, size_y, objects) {
+                    self.step(proposed_steps, death_row, size_x, size_y, objects);
+                    None
+                }
+                "1" => {
+                    self.steps.push(0x1);
+                    self.turn(-1);
+                    None
+                }
+                "2" => {
+                    self.steps.push(0x2);
+                    self.turn(1);
+                    None
+                }
+                "3" => {
+                    // no value
+                    if s.len() < 4 {
+                        return None;
+                    }
+
+                    if s[3] == "-1" {
+                        self.turn(-1);
+                        self.steps.push(0x1);
+                    } else if s[3] == "1" {
+                        self.turn(1);
+                        self.steps.push(0x2);
+                    }
+                    None
+                }
+                "4" => {
+                    self.steps.push(0x4);
+                    self.pick_up_rock(objects);
+                    None
+                }
+                "5" => {
+                    self.steps.push(0x5);
+                    if s.len() < 4 {
+                        self.place_rock(objects, 2);
+                        return None;
+                    }
+                    let mut value = s[3].parse::<u8>().unwrap();
+                    // clamp value and place
+                    value = if value < 2 {
+                        2
+                    } else if value > 5 {
+                        5
+                    } else {
+                        value
+                    };
+                    self.place_rock(objects, value);
+                    None
+                }
+                "6" => {
+                    self.steps.push(0x6);
+                    Some(self.looking_at())
+                }
+                "7" => {
+                    self.steps.push(0x7);
+                    Some(self.is_rock_under(objects))
+                }
+                "8" => {
+                    self.steps.push(0x8);
+                    Some(self.what_is_under(objects))
+                }
+                "9" => {
+                    self.steps.push(0x9);
+                    Some(self.is_wall_in_front(objects))
+                }
+                "a" => {
+                    self.steps.push(0xa);
+                    Some(self.is_on_edge(size_x, size_y))
+                }
+                _ => None,
+            }
+        };
+        println!(
+            "res: {:?} pos: {:?}, rot: {}, steps: {:?} \n",
+            res, self.position, self.rotation, self.steps
+        );
+        res
+    }
+
+    // parse as single (instead of passing empty hashmaps to the original function i literally just copy pasted the code without them)
+    fn parse_single(
+        &mut self,
+        s: &Vec<&str>,
+        size_x: u32,
+        size_y: u32,
+        objects: &mut HashMap<(u32, u32), u8>,
+    ) -> Option<u8> {
+        print!(
+            "    [{}] pos: {:?}, rot: {} => ",
+            self.id, self.position, self.rotation
+        );
+
+        let res: Option<u8> = {
+            match s[2] {
+                "0" => {
+                    self.steps.push(0x0);
+                    if self.step_single(size_x, size_y, objects) {
                         Some(8) // die
                     } else {
                         None
@@ -541,9 +643,8 @@ impl GameActions for Game {
 
     fn parse(&mut self, id: u8, s: &Vec<&str>) -> Option<u8> {
         let player = self.players.get_mut(&id).unwrap();
-        return player.parse(
+        return player.parse_multi(
             s,
-            true,
             &mut self.proposed_steps,
             &mut self.death_row,
             self.size_x,

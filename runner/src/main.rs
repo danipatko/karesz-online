@@ -19,14 +19,16 @@ fn index() -> &'static str {
 //     code: &'r str,
 // }
 
-// #[derive(Deserialize, Debug)]
-// struct SinglePlayerRequestCustom<'r> {
-//     map: &'r str,
-//     start_x: u32,
-//     start_y: u32,
-//     rotation: u8,
-//     code: &'r str,
-// }
+#[derive(Deserialize, Debug)]
+struct SinglePlayerRequestCustom<'r> {
+    map: &'r str,
+    start_x: u32,
+    start_y: u32,
+    size_y: u32,
+    size_x: u32,
+    rotation: u8,
+    code: &'r str,
+}
 
 // // singleplayer, load an existing map
 // #[post("/sp/map/<mapname>", data = "<req>")]
@@ -38,15 +40,28 @@ fn index() -> &'static str {
 //     "xd"
 // }
 
-// // singleplayer, parse a map from string
-// #[post("/sp/custom", data = "<req>")]
-// fn singleplayer_custom(req: Json<SinglePlayerRequestCustom<'_>>) -> &'static str {
-//     println!(
-//         "start from ({}, {} | {}) in map {}",
-//         req.start_x, req.start_y, req.rotation, req.map
-//     );
-//     "xd"
-// }
+// singleplayer, parse a map from string
+#[post("/sp/custom", data = "<req>")]
+fn singleplayer_custom(req: Json<SinglePlayerRequestCustom<'_>>) -> content::Json<String> {
+    match create::run_single(
+        req.code,
+        req.map,
+        req.start_x,
+        req.start_y,
+        req.rotation,
+        req.size_x,
+        req.size_y,
+    ) {
+        Ok(result) => {
+            println!("{}", result);
+            return content::Json(result);
+        }
+        Err(e) => {
+            println!("{}", e);
+            return content::Json(format!("{{ \"error\":\"{}\" }}", e));
+        }
+    }
+}
 
 // #[derive(Deserialize, Debug)]
 // struct MultiplayerRequest<'r> {
@@ -65,12 +80,11 @@ struct MultiplayerRequestCustom<'a> {
 
 // multiplayer, custom map
 #[post("/mp/custom", data = "<req>")]
-fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> content::Json<String> /*rocket_contrib::json::Json<create::GameResult>*/
-{
+fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> content::Json<String> {
     match create::run_multiplayer(&req.players, req.size_x, req.size_y, &req.map) {
         Ok(x) => {
-            println!("{:?}", x);
-            return content::Json(x.to_json());
+            println!("Sending back: {:?}", x);
+            return content::Json(x);
             // return rocket_contrib::json::Json(x);
         }
         Err(x) => {
@@ -94,7 +108,7 @@ fn rocket() -> _ {
         routes![
             index,
             //singleplayer_map,
-            //singleplayer_custom,
+            singleplayer_custom,
             multiplayer_custom,
             //multiplayer_map
         ],
