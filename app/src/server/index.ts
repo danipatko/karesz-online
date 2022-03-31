@@ -1,8 +1,9 @@
 import { createServer } from 'http';
 import next from 'next';
 import { Server } from 'socket.io';
-import SessionManager from '../lib/karesz/game/manager';
-import { randCode } from '../lib/karesz/util';
+import SessionManager from '../lib/karesz/manager';
+
+const randCode = () => Math.floor(1000 + Math.random() * 9000);
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';

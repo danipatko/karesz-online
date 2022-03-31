@@ -1,28 +1,21 @@
 {
     "compilerOptions": {
-        /* Visit https://aka.ms/tsconfig.json to read more about this file */
-        "incremental": true /* Enable incremental compilation */,
-        "tsBuildInfoFile": "./build/.tsbuildinfo" /* Specify the folder for .tsbuildinfo incremental compilation files. */,
-        "target": "ESNext" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
-        "lib": [
-            "ESNext.String"
-        ] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
-        "module": "CommonJS" /* Specify what module code is generated. */,
-        "rootDir": "./src" /* Specify the root folder within your source files. */,
-        "outDir": "./build" /* Specify an output folder for all emitted files. */,
-        "removeComments": true /* Disable emitting comments. */,
-        "newLine": "lf" /* Set the newline character for emitting files. */,
-        "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility. */,
-        "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
-        "strict": true /* Enable all strict type-checking options. */,
-        "skipDefaultLibCheck": true /* Skip type checking .d.ts files that are included with TypeScript. */,
-        "skipLibCheck": true
+        "esModuleInterop": true,
+        "target": "es5",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "preserve",
+        "incremental": true,
+        "downlevelIteration": true
     },
-    "include": ["src/server/**/*.ts"],
-    "exclude": [
-        "**/node_modules",
-        "src/pages/**/*",
-        "**/*.tsx",
-        "next-env.d.ts"
-    ]
+    "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["node_modules"]
 }
