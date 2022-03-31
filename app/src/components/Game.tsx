@@ -1,5 +1,4 @@
-import type { Game as GameType } from '../lib/front/game';
-import ScoreBoard from './ScoreBoard';
+import type { Game as GameType } from '../lib/hooks/game';
 import Edit from './Edit';
 
 const Game = ({ game }: { game: GameType }) => {

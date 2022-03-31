@@ -6,7 +6,9 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                back: '#111111',
+                karesz: '#1020f3',
+                'karesz-light': '#1f2eff',
+                back: '#1c1c1c',
                 main: '#333C4A',
                 'main-highlight': '#555E6C',
                 fore: '#323EDD',

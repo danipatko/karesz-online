@@ -2,9 +2,9 @@ import { NextPageContext } from 'next';
 import Router from 'next/router';
 import { useRef } from 'react';
 import Game from '../../components/Game';
-import PreJoin from '../../components/PreJoin';
+import PreJoin from '../../components/multi/PreJoin';
 import ScoreBoard from '../../components/ScoreBoard';
-import { GameState, useGame } from '../../lib/front/game';
+import { GameState, useGame } from '../../lib/hooks/game';
 
 const code = `void FELADAT() {
     Console.WriteLine("hello world");

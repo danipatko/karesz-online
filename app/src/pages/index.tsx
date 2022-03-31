@@ -1,9 +1,15 @@
 import type { NextPage } from 'next';
-import { Monaco } from '@monaco-editor/react';
-import { getCompletionItems } from '../lib/front/autocomplete';
-import ScoreBoard from '../components/ScoreBoard';
-import Router from 'next/router';
-import Edit from '../components/Edit';
+// import { Monaco } from '@monaco-editor/react';
+// import { getCompletionItems } from '../lib/front/autocomplete';
+import { useState } from 'react';
+import _Home from '../components/subpages/Home';
+import Docs from '../components/subpages/Docs';
+import Multiplayer from '../components/subpages/Multiplayer';
+import Playground from '../components/subpages/Playground';
+import Edit from '../components/subpages/Edit';
+import { View } from '../lib/front/types';
+import Navbar from '../components/head/Navbar';
+import { useGame } from '../lib/hooks/game';
 
 const code = `
 void FELADAT() {
@@ -11,13 +17,26 @@ void FELADAT() {
 }
 `;
 
-const Home: NextPage = () => {
+const Home: NextPage = (props: any) => {
+    const [view, setView] = useState<View>(View.Home);
+    const [game, functions] = useGame(0);
+
     return (
-        <div className='bg-back h-screen w-full'>
-            <div className='text-white'>{1111}</div>
-            <div className='p-5'>
+        <div className='bg-back h-screen'>
+            <Navbar selected={view} select={setView} />
+            {view === View.Home ? (
+                <_Home />
+            ) : view === View.Edit ? (
                 <Edit />
-            </div>
+            ) : view === View.Playground ? (
+                <Playground />
+            ) : view === View.Multiplayer ? (
+                <Multiplayer game={game} functions={functions} />
+            ) : view === View.Docs ? (
+                <Docs />
+            ) : (
+                <div>Uh oh - how'd you get here?</div>
+            )}
         </div>
     );
 };

@@ -1,33 +1,42 @@
-import { PlayerScore } from '../karesz/core/types';
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 interface Player {
-    name: string;
-    id: string;
-    ready: boolean;
-    wins: number;
+    name: string; // display name
+    id: string; // socket id
+    ready: boolean; // submitted code and ready
+    wins: number; // win count
 }
 
 export enum GameState {
-    notfound = 0,
-    prejoin = 1,
-    joined = 2,
-    running = 3,
+    disconnected = 0, // not initted
+    notfound = 1, // if game is not found
+    prejoin = 2, // code is correct, promt name
+    joined = 3, // idle
+    running = 4, // game is running
+}
+
+// this is the struct returned by the runner
+export interface ScoreBoard {
+    players: {
+        name: string;
+        place: number;
+        steps: number[];
+        kills: number;
+        rounds_survived: number;
+        reason_of_death: string;
+    }[];
+    winner: string;
+    draw: boolean;
 }
 
 export interface Game {
-    connected: boolean;
+    connected: boolean; // connected to server
     players: { [id: string]: Player };
-    code: number;
-    host: string;
-    state: GameState;
-    round: {
-        exitCode: number;
-        errors: string;
-        output: string;
-    };
-    scoreBoard: { [id: string]: PlayerScore };
+    code: number; // game code
+    host: string; // the id of the host
+    state: GameState; // current state
+    scoreBoard: ScoreBoard;
     playerCount: number;
 }
 
@@ -38,21 +47,21 @@ export const useGame = (
     {
         startGame: () => void;
         submit: (s: string) => void;
+        prejoin: (code: number) => void;
         join: (name: string) => void;
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
     const [state, setState] = useState<Game>({
         connected: false,
-        state: GameState.notfound,
+        state: GameState.disconnected,
         code,
         host: '',
         players: {},
-        scoreBoard: {},
-        round: {
-            errors: '',
-            exitCode: -1,
-            output: '',
+        scoreBoard: {
+            draw: false,
+            players: [],
+            winner: '',
         },
         playerCount: 0,
     });
@@ -73,9 +82,8 @@ export const useGame = (
                         ...data,
                         state: GameState.joined,
                         connected: true,
-                        scoreBoard: {},
-                        round: { errors: '', exitCode: -1, output: '' },
                         playerCount: s.playerCount,
+                        scoreBoard: s.scoreBoard,
                     };
                 });
                 // */
@@ -116,23 +124,14 @@ export const useGame = (
             }
         );
         // called on game end
-        socket.on(
-            'scoreboard_update',
-            (scoreBoard: {
-                exitCode: number;
-                results: { [id: string]: PlayerScore };
-                errors: string;
-                output: string;
-            }) => {
-                setState((s) => {
-                    return {
-                        ...s,
-                        scoreBoard: scoreBoard.results,
-                        round: { ...scoreBoard },
-                    };
-                });
-            }
-        );
+        socket.on('scoreboard_update', (scoreBoard: ScoreBoard) => {
+            setState((s) => {
+                return {
+                    ...s,
+                    scoreBoard,
+                };
+            });
+        });
         // host change
         socket.on('host_change', ({ host }: { host: string }) => {
             if (socket === null) return;
@@ -158,16 +157,16 @@ export const useGame = (
             });
         });
 
-        socket.emit('prejoin', { code });
-
         setSocket(socket);
     }, [setSocket]);
 
+    // start game (as host)
     const startGame = () => {
         if (socket === null || socket.id !== state.host) return;
         socket.emit('start_game');
     };
 
+    // enter the display name for a pending game join
     const join = (name: string) => {
         if (socket === null) return;
 
@@ -177,9 +176,16 @@ export const useGame = (
         });
     };
 
+    // upload code to server
     const submit = (code: string) => {
         if (socket !== null) socket.emit('submit', { code });
     };
 
-    return [state, { startGame, submit, join }];
+    // enter code for game
+    const prejoin = (code: number) => {
+        if (socket === null) return;
+        socket.emit('prejoin', { code });
+    };
+
+    return [state, { startGame, submit, prejoin, join }];
 };
