@@ -93,6 +93,7 @@ export default class Session {
 
     // remove a player from the game
     public removePlayer(socket: Socket): void {
+        console.log(`${socket.id} disconnected`);
         this.players.delete(socket.id);
         // end of session
         if (this.players.size < 1) {

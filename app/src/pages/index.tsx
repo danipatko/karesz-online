@@ -18,7 +18,7 @@ void FELADAT() {
 `;
 
 const Home: NextPage = (props: any) => {
-    const [view, setView] = useState<View>(View.Multiplayer);
+    const [view, setView] = useState<View>(View.Edit);
     const [game, functions] = useGame(0);
 
     return (
@@ -26,17 +26,15 @@ const Home: NextPage = (props: any) => {
             <Navbar selected={view} select={setView} />
             {view === View.Home ? (
                 <_Home />
-            ) : view === View.Edit ? (
-                <Edit />
             ) : view === View.Playground ? (
                 <Playground />
             ) : view === View.Multiplayer ? (
                 <Multiplayer game={game} functions={functions} />
             ) : view === View.Docs ? (
                 <Docs />
-            ) : (
-                <div>Uh oh - how'd you get here?</div>
-            )}
+            ) : null}
+            {/* NOTE: the switch can't be applied for monace, because the contents get reset every time it is rendered */}
+            <Edit shown={view === View.Edit} />
         </div>
     );
 };

@@ -1,13 +1,10 @@
 import type { Game as GameType } from '../lib/hooks/game';
-import Edit from './Edit';
 
 const Game = ({ game }: { game: GameType }) => {
     return (
         <div className='bg-back h-screen w-full'>
             <div className='text-white'>{game.code}</div>
-            <div className='p-5'>
-                <Edit />
-            </div>
+            <div className='p-5'></div>
         </div>
     );
 };

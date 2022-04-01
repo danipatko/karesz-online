@@ -8,7 +8,8 @@ module.exports = {
             colors: {
                 karesz: '#1020f3',
                 'karesz-light': '#1f2eff',
-                back: '#1c1c1c',
+                back: '#0F1419',
+                'back-vs': '#2f2f2f',
                 main: '#333C4A',
                 'main-highlight': '#555E6C',
                 fore: '#323EDD',

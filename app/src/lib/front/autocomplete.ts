@@ -17,18 +17,6 @@ export const getCompletionItems = (monaco: Monaco): any[] => {
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         },
         {
-            label: 'balra',
-            kind: monaco.languages.CompletionItemKind.Constant,
-            documentation: '-90˚',
-            insertText: 'balra',
-        },
-        {
-            label: 'jobbra',
-            kind: monaco.languages.CompletionItemKind.Constant,
-            documentation: '90°',
-            insertText: 'jobbra',
-        },
-        {
             label: 'Fordulj_jobbra',
             kind: monaco.languages.CompletionItemKind.Function,
             documentation: 'Karesz jobbra fordul 90 fokkal.',
