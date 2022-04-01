@@ -38,6 +38,7 @@ export interface Game {
     state: GameState; // current state
     scoreBoard: ScoreBoard;
     playerCount: number;
+    modeCreate: boolean; // if the game is being created
 }
 
 export const useGame = (
@@ -47,14 +48,18 @@ export const useGame = (
     {
         startGame: () => void;
         submit: (s: string) => void;
-        prejoin: (code: number) => void;
+        preJoin: (code: number) => void;
         join: (name: string) => void;
+        create: (name: string) => void;
+        preCreate: () => void;
+        exit: () => void;
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
     const [state, setState] = useState<Game>({
         connected: false,
         state: GameState.disconnected,
+        modeCreate: false,
         code,
         host: '',
         players: {},
@@ -84,6 +89,7 @@ export const useGame = (
                         connected: true,
                         playerCount: s.playerCount,
                         scoreBoard: s.scoreBoard,
+                        modeCreate: s.modeCreate,
                     };
                 });
                 // */
@@ -142,7 +148,7 @@ export const useGame = (
                 });
             }
         });
-        // choose a username
+        // check if a game exists and how many players are in it
         socket.on('prejoin', ({ playerCount }: { playerCount: number }) => {
             console.log(`Prejoin count: ${playerCount} code: ${code} ------`);
             setState((s) => {
@@ -150,7 +156,7 @@ export const useGame = (
                     ...s,
                     playerCount,
                     state:
-                        playerCount < 0
+                        playerCount < 0 // count is -1 if game does not exist
                             ? GameState.notfound
                             : GameState.prejoin,
                 };
@@ -182,10 +188,42 @@ export const useGame = (
     };
 
     // enter code for game
-    const prejoin = (code: number) => {
+    const preJoin = (code: number) => {
         if (socket === null) return;
         socket.emit('prejoin', { code });
     };
 
-    return [state, { startGame, submit, prejoin, join }];
+    // create new game
+    const preCreate = () => {
+        setState((s) => {
+            return { ...s, state: GameState.prejoin, modeCreate: true };
+        });
+    };
+
+    // create new game
+    const create = (name: string) => {
+        if (socket === null) return;
+        socket.emit('create', { name });
+    };
+
+    // exit an existing session or just return to enter code
+    const exit = () => {
+        if (state.connected && socket != null) socket.disconnect();
+        setState((s) => {
+            return { ...s, state: GameState.disconnected };
+        });
+    };
+
+    return [
+        state,
+        {
+            startGame,
+            submit,
+            preJoin,
+            join,
+            preCreate,
+            create,
+            exit,
+        },
+    ];
 };

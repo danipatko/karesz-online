@@ -35,8 +35,7 @@ io.on('connection', (socket) => {
 
         const game = gameManager.get(code);
         socket.emit('prejoin', {
-            playerCount:
-                code != 0 && game === undefined ? -1 : game?.playerCount ?? 0,
+            playerCount: game === undefined ? -1 : game.playerCount,
         });
     });
 

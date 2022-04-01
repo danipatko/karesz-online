@@ -1,5 +1,7 @@
 import { Game, GameState } from '../../lib/hooks/game';
 import PreJoin from '../multi/PreJoin';
+import Join from '../multi/Join';
+import Main from '../multi/Main';
 
 const Multiplayer = ({
     game,
@@ -9,26 +11,35 @@ const Multiplayer = ({
     functions: {
         startGame: () => void;
         submit: (s: string) => void;
-        prejoin: (code: number) => void;
+        preJoin: (code: number) => void;
         join: (name: string) => void;
+        create: (name: string) => void;
+        preCreate: () => void;
+        exit: () => void;
     };
 }) => {
     return (
-        <div className='w-full flex justify-center items-center'>
+        <div className='text-white'>
+            Multiplayer
+            <div>{game.connected ? 'Connected' : 'Not connected'}</div>
             <div>
-                Multiplayer
-                <div>{game.connected ? 'Connected' : 'Not connected'}</div>
-                <div>
-                    {game.state === GameState.disconnected ? (
-                        <PreJoin code={1} onJoin={() => {}} playerCount={2} />
-                    ) : game.state === GameState.prejoin ? (
-                        'Enter display name'
-                    ) : game.state === GameState.notfound ? (
-                        'Not found'
-                    ) : (
-                        'Connected'
-                    )}
-                </div>
+                {game.state === GameState.disconnected ? (
+                    <Join
+                        onJoin={functions.preJoin}
+                        onCreate={functions.preCreate}
+                    />
+                ) : game.state === GameState.prejoin ? (
+                    <PreJoin
+                        modeCreate={game.modeCreate}
+                        code={game.code}
+                        onJoin={functions.join}
+                        playerCount={game.playerCount}
+                    />
+                ) : game.state === GameState.notfound ? (
+                    'Not found'
+                ) : (
+                    <Main />
+                )}
             </div>
         </div>
     );
