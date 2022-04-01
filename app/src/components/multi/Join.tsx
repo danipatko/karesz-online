@@ -7,15 +7,18 @@ const Join = ({
     onJoin: (code: number) => void;
     onCreate: () => void;
 }) => {
-    const nameField = useRef<HTMLInputElement>(null as any);
+    const codeField = useRef<HTMLInputElement>(null as any);
+
+    const onChange = () => {
+        let text = codeField.current.value;
+        // replace everything but numbers and select first 4 letters
+        text = text.replace(/[^\d]/gm, '').substring(0, 4);
+        codeField.current.value = text;
+    };
 
     const join = () => {
-        let text = nameField.current.value;
-        // filter text
-        text = text.trim().substring(0, 100).replace(/[^\d]/gm, '');
-        console.log(text);
+        let text = codeField.current.value;
         const code = parseInt(text);
-        // TODO: error message or onchange correction
         if (code > 9999 || code < 1000) return;
         onJoin(code);
     };
@@ -28,7 +31,8 @@ const Join = ({
                 </h1>
                 <div>
                     <input
-                        ref={nameField}
+                        onChange={onChange}
+                        ref={codeField}
                         type='text'
                         placeholder='Code'
                         className='p-2 text-white text-xl outline-none border-2 bg-main border-main-highlight rounded-md transition-colors focus:border-fore'

@@ -13,12 +13,14 @@ const PreJoin = ({
 }) => {
     const nameField = useRef<HTMLInputElement>(null as any);
 
-    const join = () => {
+    const onChange = () => {
         let text = nameField.current.value;
         // filter text
-        text = text.trim().substring(0, 100).replace(/\s+/gm, '');
-        onJoin(text);
+        text = text.replace(/[^a-zA-Z\d\-\.\_]/gm, '').substring(0, 100);
+        nameField.current.value = text;
     };
+
+    const join = () => onJoin(nameField.current.value);
 
     return (
         <div className='flex justify-center items-center'>
@@ -35,6 +37,7 @@ const PreJoin = ({
                 )}
                 <div className='mb-5'>
                     <input
+                        onChange={onChange}
                         ref={nameField}
                         type='text'
                         placeholder='Display name'

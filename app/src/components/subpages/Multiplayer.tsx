@@ -1,4 +1,5 @@
-import { Game, GameState } from '../../lib/hooks/game';
+import { Game } from '../../lib/hooks/game';
+import { GameState } from '../../lib/shared/types';
 import PreJoin from '../multi/PreJoin';
 import Join from '../multi/Join';
 import Main from '../multi/Main';
@@ -38,7 +39,7 @@ const Multiplayer = ({
                 ) : game.state === GameState.notfound ? (
                     'Not found'
                 ) : (
-                    <Main />
+                    <Main game={game} />
                 )}
             </div>
         </div>

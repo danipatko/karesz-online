@@ -36,98 +36,98 @@ host:
 
 */
 
-export default class SessionManager {
+interface MapConfig {
+    map?: string | undefined;
+    type: string;
+    size_x: number;
+    size_y: number;
+}
+
+export default class Session {
     protected players: Map<string, Player> = new Map<string, Player>();
     protected state: GameState = GameState.waiting;
-    protected host: string;
-    protected code: number;
-    protected lastWinner: string = '';
-    public destroy: () => void;
+    protected host: string = ''; // the id of the host player
+    protected code: number; // randomly generated code
+    public destroy: () => void; // this is a callback function to remove this instance from the map
 
-    public get playerCount(): number {
-        return this.players.size;
-    }
+    // create a new instance of a game
+    static create = (code: number, destroy: () => void): Session =>
+        new Session(code, destroy);
 
-    constructor({
-        code,
-        name,
-        socket,
-        remove,
-    }: {
-        socket: Socket;
-        code: number;
-        name: string;
-        remove: () => void;
-    }) {
+    private constructor(code: number, destroy: () => void) {
         this.code = code;
-        this.host = socket.id;
-        this.destroy = remove;
-        this.addPlayer({ name, socket });
+        this.destroy = destroy;
     }
 
-    /**
-     * Set host of game
-     */
-    protected setHost(id: string) {
-        const host = this.players.get(id);
-        if (host === undefined) return;
-
-        this.host = id;
-        host.socket.on('disconnect', () => {
-            this.players.delete(host.id);
-            // delete session
-            if (this.players.size === 0) this.destroy();
-            this.announce('left', { id: host.id });
-            // find new host
-            this.setHost(Object.keys(this.players)[0]);
-        });
-
-        // start game event
-        host.socket.on(
-            'start_game',
-            ({ mapType }: { mapType: 'empty' | 'parse' | 'load' }) => {
-                this.startGame({ mapType: 'empty', mapSize: { x: 10, y: 10 } });
-            }
-        );
-
-        this.announce('host_change', { host: id });
-    }
-
-    /**
-     * Emit an event for every player
-     */
-    private announce(
-        ev:
-            | 'left' // player left
-            | 'joined' // player joined
-            | 'player_update' // player ready
-            | 'state_update' // game start / end
-            | 'host_change' // new host
-            | 'scoreboard_update', // on game end
-        params?: object
-    ): void {
+    // Emit an event for every player
+    private announce(ev: string, params?: object): void {
+        console.log(`Announce '${ev}' to ${this.players.size} player(s)`);
         for (const player of this.players.values())
             player.socket.emit(ev, { ...params });
     }
 
-    /**
-     * Append a new player.
-     * @returns the index of the current player
-     */
-    public addPlayer({ name, socket }: { name: string; socket: Socket }): void {
-        const player: Player = {
-            name,
+    // set the host of the game
+    private setHost(socket: Socket, noemit: boolean = false): void {
+        this.host = socket.id;
+        // set startgame listener
+        socket.on('start_game', (config: MapConfig) => this.startGame(config));
+        if (!noemit) this.announce('host_change', { host: socket.id });
+    }
+
+    // adds a new player to the game (chainable)
+    public addPlayer(socket: Socket, name: string): Session {
+        if (this.players.size < 1) this.setHost(socket, true);
+        this.players.set(socket.id, {
             socket,
             id: socket.id,
-            ready: false,
+            name: name.replace(/[^a-zA-Z\d\-\.\_]/gm, '').substring(0, 100),
             code: '',
+            ready: false,
             wins: 0,
-        };
+        });
+        this.addListeners(socket);
+        this.fetchState(socket);
+        this.announce('joined', { id: socket.id, name, ready: false, wins: 0 });
+        return this;
+    }
+
+    // remove a player from the game
+    public removePlayer(socket: Socket): void {
+        this.players.delete(socket.id);
+        // end of session
+        if (this.players.size < 1) {
+            this.destroy();
+            return;
+        }
+        this.announce('left', { id: socket.id });
+        // choose new host
+        if (socket.id === this.host)
+            this.setHost(this.players.values().next().value.socket);
+    }
+
+    // gets the current state of the game for new players
+    private fetchState(socket: Socket): void {
+        const players: { [id: string]: {} } = {};
+        for (const [k, p] of this.players.entries())
+            players[k] = { name: p.name, wins: p.wins, ready: p.ready, id: k };
+
+        socket.emit('fetch', {
+            players,
+            code: this.code,
+            state: this.state,
+            host: this.host,
+        });
+    }
+
+    // add default events to a players socket
+    private addListeners(socket: Socket): void {
+        // handle disconnect
+        socket.on('disconnect', () => this.removePlayer(socket));
 
         // handle user submitting code
         socket.on('submit', ({ code }: { code: string }) => {
             if (this.state == GameState.running) return;
-            const p = this.players.get(player.id);
+            const p = this.players.get(socket.id);
             if (p === undefined) return;
             this.players.set(p.id, { ...p, code, ready: true });
             this.announce('player_update', { id: p.id, ready: true });
@@ -141,74 +141,14 @@ export default class SessionManager {
             this.players.set(p.id, { ...p, code: '', ready: false });
             this.announce('player_update', { id: p.id, ready: false });
         });
-
-        // join event for others
-        this.announce('joined', {
-            id: player.id,
-            name: player.name,
-            ready: false,
-            wins: 0,
-        });
-
-        this.players.set(player.id, player);
-        if (this.players.size == 1) this.setHost(player.id);
-
-        // create a list of joined people
-        const players: {
-            [id: string]: {
-                name: string;
-                wins: number;
-                ready: boolean;
-                id: string;
-            };
-        } = {};
-        for (const [k, p] of this.players.entries())
-            players[k] = { name: p.name, wins: p.wins, ready: p.ready, id: k };
-
-        socket.emit('fetch', {
-            players,
-            host: this.host,
-            code: this.code,
-        });
     }
 
-    /**
-     * Remove a player by it's id
-     */
-    public removePlayer(id: string): void {
-        const player = this.players.get(id);
-        this.players.delete(id);
-        this.announce('left', { name: player?.name });
+    public get playerCount(): number {
+        return this.players.size;
     }
 
     /**
      * Start the game
      */
-    public async startGame({
-        map,
-        mapType,
-        mapSize,
-    }: {
-        map?: string;
-        mapType: 'parse' | 'empty' | 'load';
-        mapSize: { x: number; y: number };
-    }): Promise<void> {
-        this.state = GameState.running;
-        this.announce('state_update', { state: GameState.running });
-
-        // TODO: load maps
-        const players = Array.from(this.players.values()).map((x) => {
-            return { name: x.id, code: x.code };
-        });
-        const result = await fetch(`127.0.0.1:8000/mp/custom`, {
-            method: 'POST',
-            body: JSON.stringify({
-                players,
-                map: map ?? '',
-                size_x: mapSize.x,
-                size_y: mapSize.y,
-            }),
-        });
-        console.log(await result.json());
-    }
+    public async startGame(config: MapConfig): Promise<void> {}
 }

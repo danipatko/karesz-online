@@ -7,7 +7,7 @@ import Docs from '../components/subpages/Docs';
 import Multiplayer from '../components/subpages/Multiplayer';
 import Playground from '../components/subpages/Playground';
 import Edit from '../components/subpages/Edit';
-import { View } from '../lib/front/types';
+import { View } from '../lib/shared/types';
 import Navbar from '../components/head/Navbar';
 import { useGame } from '../lib/hooks/game';
 
