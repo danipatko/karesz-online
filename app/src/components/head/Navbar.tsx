@@ -17,9 +17,9 @@ const NavItem = ({
     return (
         <div
             style={{
-                borderBottomColor: selected ? '#005eff' : '#666666',
+                borderBottomColor: selected ? '#005eff' : 'transparent',
             }}
-            className='text-white hover:bg-[#252525] p-2 border-b-[3px] flex-1 text-center font-semibold text-lg select-none cursor-pointer'
+            className='text-white hover:bg-[#252525] p-2 border-b-[3px] flex-1 text-center font-semibold text-base select-none cursor-pointer'
             onClick={onClick}
         >
             {children}
@@ -36,9 +36,6 @@ const Navbar = ({
 }) => {
     return (
         <nav>
-            <div className='py-1 px-3 text-white font-semibold text-lg'>
-                Karesz online
-            </div>
             <div className='flex bg-back gap-0'>
                 <NavItem
                     selected={selected == View.Home}

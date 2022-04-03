@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+    .hidden-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .hidden-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
     .dark {
         @apply bg-zinc-800;
     }
