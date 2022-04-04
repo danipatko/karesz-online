@@ -2,7 +2,6 @@ import Editor, { Monaco } from '@monaco-editor/react';
 import { useEffect, useRef, useState } from 'react';
 import { getCompletionItems } from '../../lib/front/autocomplete';
 import useScripts from '../../lib/hooks/scripts';
-import { Lines } from '../util';
 
 const Edit = ({ shown }: { shown: boolean }) => {
     const [loading, setLoading] = useState<boolean>(true);
@@ -34,13 +33,9 @@ const Edit = ({ shown }: { shown: boolean }) => {
 
     useEffect(() => {
         // Wait for end of resize events
-        let timeout: NodeJS.Timeout;
-        window.onresize = () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                resize();
-            }, 200);
-        };
+        resize();
+        window.addEventListener('load', resize);
+        window.addEventListener('resize', resize);
     });
 
     return (

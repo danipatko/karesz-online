@@ -64,6 +64,8 @@ const getSteps = (x: number, y: number, arr: number[]): State[] => {
         x = s.x;
         y = s.y;
     });
+
+    console.log(res);
     return res;
 };
 
@@ -76,6 +78,7 @@ const useKaresz = ({
     speed: number;
 }): [
     { players: Karesz[]; playing: boolean },
+    number,
     { play: () => void; pause: () => void; reset: () => void }
 ] => {
     const [timer, setTimer] = useState<NodeJS.Timer>(null as any);
@@ -98,6 +101,7 @@ const useKaresz = ({
     });
 
     const stop = () => {
+        console.log('A');
         clearInterval(timer);
         setState((s) => {
             return { ...s, playing: false };
@@ -110,7 +114,7 @@ const useKaresz = ({
     };
 
     const play = () => {
-        setTimer(setInterval(round, speed));
+        setTimer((t) => setInterval(round, 1000));
         setState((s) => {
             return { ...s, playing: true };
         });
@@ -121,7 +125,7 @@ const useKaresz = ({
         setIndex(0);
     };
 
-    return [state, { play, pause: stop, reset }];
+    return [state, index, { play, pause: stop, reset }];
 };
 
 export default useKaresz;
