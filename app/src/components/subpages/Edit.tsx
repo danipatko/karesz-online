@@ -8,7 +8,7 @@ const Edit = ({ shown }: { shown: boolean }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [fontSize, setFontSize] = useState<number>(20);
     const [width, setWidth] = useState<string>('200px');
-    const [currentText, setText] = useState<string>('');
+    const [currentText, setText] = useState<string>(`// heheheha \n\n\n`);
     const sideBar = useRef<HTMLDivElement>(null as any);
 
     const handleEditorWillMount = (monaco: Monaco) => {
@@ -59,17 +59,19 @@ const Edit = ({ shown }: { shown: boolean }) => {
             >
                 <div
                     ref={sideBar}
-                    className='bg-back-vs text-white min-w-[20vw]'
+                    className='bg-back-vs text-white min-w-[20vw] flex flex-col justify-between'
                 >
-                    <FontSize
-                        size={fontSize}
-                        decr={() => setFontSize((x) => x - 1)}
-                        incr={() => setFontSize((x) => x + 1)}
-                    />
                     <ScriptLoader
                         current={currentText}
                         setCurrent={(s) => setText(s)}
                     />
+                    <div className='flex justify-center'>
+                        <FontSize
+                            size={fontSize}
+                            decr={() => setFontSize((x) => x - 1)}
+                            incr={() => setFontSize((x) => x + 1)}
+                        />
+                    </div>
                 </div>
                 <div className='flex-1'>
                     <Editor
@@ -81,7 +83,7 @@ const Edit = ({ shown }: { shown: boolean }) => {
                         }}
                         value={currentText}
                         defaultLanguage='csharp'
-                        defaultValue={`// heheheha \n\n\n`}
+                        defaultValue={currentText}
                         theme='vs-dark'
                         beforeMount={handleEditorWillMount}
                         onMount={() => {
@@ -108,7 +110,7 @@ const FontSize = ({
     decr: () => void;
 }) => {
     return (
-        <div className='flex border-2 border-gray-500 gap-2 text-sm'>
+        <div className='flex  gap-2 text-sm'>
             <div
                 onClick={decr}
                 className='hover:bg-[#3f3f3f] p-2 cursor-pointer'
@@ -152,14 +154,13 @@ const ScriptLoader = ({
 
     const rm = (name: string) => {
         if (name === 'unsaved') return;
-        console.log(name);
-        setCurrent('unsaved');
+        setCurrent(unsaved);
         setSelected('unsaved');
         remove(name);
     };
 
     return (
-        <>
+        <div>
             <div className='py-1 px-2 font-semibold text-[#aaa] uppercase text-sm '>
                 scripts
             </div>
@@ -187,14 +188,9 @@ const ScriptLoader = ({
             </div>
 
             <div className='flex justify-center mt-10'>
-                <button
-                    className='p-2 bg-karesz text-center'
-                    onClick={() => save('TEST', current)}
-                >
-                    Save current as
-                </button>
+                <SaveAs onSubmit={(name) => save(name, current)} />
             </div>
-        </>
+        </div>
     );
 };
 
@@ -227,6 +223,29 @@ const ScOption = ({
                     <i className='fa fa-x'></i>
                 </div>
             ) : null}
+        </div>
+    );
+};
+
+const SaveAs = ({ onSubmit }: { onSubmit: (name: string) => void }) => {
+    const nameField = useRef<HTMLInputElement>(null as any);
+    const submit = () => {
+        const a = nameField.current.value.replaceAll(/[^A-Za-z\d\-\.]/gm, '');
+        if (a.length) onSubmit(a);
+        nameField.current.value = '';
+    };
+
+    return (
+        <div className='p-2 flex gap-4'>
+            <input
+                ref={nameField}
+                type='text'
+                placeholder='Save current as...'
+                className='p-2 outline-none border-b-2 border-b-[#666] text-white bg-back-vs transition-colors focus:border-karesz-light'
+            />
+            <button onClick={submit} className='text-white text-lg'>
+                <i className='fa fa-floppy-disk'></i>
+            </button>
         </div>
     );
 };

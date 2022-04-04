@@ -18,7 +18,7 @@ void FELADAT() {
 `;
 
 const Home: NextPage = (props: any) => {
-    const [view, setView] = useState<View>(View.Edit);
+    const [view, setView] = useState<View>(View.Playground);
     const [game, functions] = useGame(0);
 
     return (

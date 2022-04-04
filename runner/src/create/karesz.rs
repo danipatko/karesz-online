@@ -393,7 +393,7 @@ impl Moves for Karesz {
                     Some(self.is_wall_in_front(objects))
                 }
                 "a" => {
-                    self.steps.push(0xa);
+                    self.steps.push(0x3);
                     Some(self.is_on_edge(size_x, size_y))
                 }
                 _ => None,
@@ -529,7 +529,7 @@ impl GameActions for Game {
     }
 
     // create a new game with a predefined map
-    fn new_load(players: &Vec<Player>, map: &str) -> Option<Self> {
+    fn new_load(players: &Vec<Player>, _map: &str) -> Option<Self> {
         // TODO: Load map by name
         Some(Game {
             players: get_players(players, 20, 20),

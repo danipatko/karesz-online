@@ -15,3 +15,10 @@ export enum GameState {
     joined = 3, // idle
     running = 4, // game is running
 }
+
+export interface Player {
+    name: string;
+    steps: number[];
+    kills: number;
+    rounds_survived: number;
+}
