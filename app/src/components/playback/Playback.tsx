@@ -5,7 +5,7 @@ import useKaresz from '../../lib/hooks/karesz';
 const Object = ({ size, x, y }: { size: number; x: number; y: number }) => {
     return (
         <div
-            className='bg-red-400 absolute'
+            className='bg-red-600 absolute'
             style={{
                 width: size,
                 height: size,
@@ -55,22 +55,26 @@ const Playback = ({
 }) => {
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
-    const [karesz, index, { play, pause, reset }] = useKaresz({
+    const [index, setIndex] = useState<number>(0);
+    const [karesz, { play, pause, reset }] = useKaresz({
         data: {
             players: [
                 {
-                    kills: 0,
                     name: 'karex',
-                    rounds_survived: 0,
                     steps: [
                         0, 3, 0, 3, 0, 3, 0, 3, 2, 0, 3, 0, 3, 0, 3, 2, 0, 3, 0,
-                        3,
                     ],
+                    start: {
+                        x: 5,
+                        y: 5,
+                        rotation: 0,
+                    },
                 },
             ],
-            rounds: 10,
+            rounds: 20,
         },
-        speed: 600,
+        speed: 0.9,
+        setIndex,
     });
 
     const adjust = () => {
@@ -81,8 +85,7 @@ const Playback = ({
         adjust();
         window.addEventListener('load', adjust);
         window.addEventListener('resize', adjust);
-        play();
-    }, [play]);
+    }, []);
 
     // get x and y coordinates of the event
     const onClickHandler = (e: any) => {
@@ -94,11 +97,11 @@ const Playback = ({
     };
 
     return (
-        <div>
+        <div className='text-white'>
             <div
                 onClick={onClickHandler}
                 ref={container}
-                className='bg-white h-[80vw] w-[80vw] m-5'
+                className='bg-slate-800 h-[80vw] w-[80vw] m-5'
                 style={{
                     backgroundImage: showGrid
                         ? `url('/grids/grid-${size}.svg')`
@@ -110,19 +113,30 @@ const Playback = ({
                     <Karesz
                         size={tileSize}
                         key={i}
-                        rotation={player.steps[index].rotation}
-                        x={player.steps[index].x}
-                        y={player.steps[index].y}
+                        rotation={player.state.rotation}
+                        x={player.state.x}
+                        y={player.state.y}
                         name={player.name}
                     />
                 ))}
-                ;
+
                 <Object size={tileSize} x={10} y={2} />
                 <Object size={tileSize} x={11} y={2} />
                 <Object size={tileSize} x={12} y={2} />
                 <Object size={tileSize} x={13} y={2} />
                 <Object size={tileSize} x={14} y={2} />
-                <Karesz size={tileSize} x={1} y={2} rotation={1} />
+            </div>
+            <button className='px-2' onClick={play}>
+                PLAY
+            </button>
+            <button className='px-2' onClick={pause}>
+                PAUSE
+            </button>
+            <button className='px-2' onClick={reset}>
+                RESET
+            </button>
+            <div>
+                {karesz.isPlaying ? 'PLAYING' : 'STOPPED'} | {index}
             </div>
         </div>
     );

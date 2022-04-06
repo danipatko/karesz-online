@@ -10,6 +10,7 @@ import Edit from '../components/subpages/Edit';
 import { View } from '../lib/shared/types';
 import Navbar from '../components/head/Navbar';
 import { useGame } from '../lib/hooks/game';
+import Errors from '../components/head/Error';
 
 const code = `
 void FELADAT() {
@@ -19,7 +20,11 @@ void FELADAT() {
 
 const Home: NextPage = (props: any) => {
     const [view, setView] = useState<View>(View.Playground);
-    const [game, functions] = useGame(0);
+    const [game, functions] = useGame(0, () => {});
+    const [errors, setErrors] = useState<string[]>([
+        'Test errror lorem ipsum dolor sit amet',
+        'Test error 2',
+    ]);
 
     return (
         <div className='bg-back h-screen'>
@@ -35,6 +40,15 @@ const Home: NextPage = (props: any) => {
             ) : null}
             {/* NOTE: the switch can't be applied for monace, because the contents get reset every time it is rendered */}
             <Edit shown={view === View.Edit} />
+            <Errors
+                errors={errors}
+                onRemove={(i) =>
+                    setErrors((e) => {
+                        e.splice(i, 1);
+                        return [...e];
+                    })
+                }
+            />
         </div>
     );
 };

@@ -35,7 +35,8 @@ export interface Game {
 }
 
 export const useGame = (
-    code: number
+    code: number,
+    onError: (error: string) => void
 ): [
     Game,
     {

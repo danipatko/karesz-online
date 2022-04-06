@@ -19,6 +19,9 @@ export enum GameState {
 export interface Player {
     name: string;
     steps: number[];
-    kills: number;
-    rounds_survived: number;
+    start: {
+        x: number;
+        y: number;
+        rotation: number;
+    };
 }

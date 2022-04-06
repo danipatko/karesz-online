@@ -236,7 +236,7 @@ const SaveAs = ({ onSubmit }: { onSubmit: (name: string) => void }) => {
                 ref={nameField}
                 type='text'
                 placeholder='Save current as...'
-                className='p-2 outline-none border-b-2 border-b-[#666] text-white bg-back-vs transition-colors focus:border-karesz-light'
+                className='p-2 flex-1 w-[80%] outline-none border-b-2 border-b-[#666] text-white bg-back-vs transition-colors focus:border-karesz-light'
             />
             <button onClick={submit} className='text-white text-lg'>
                 <i className='fa fa-floppy-disk'></i>

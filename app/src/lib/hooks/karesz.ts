@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Player } from '../shared/types';
 /*
  * STEPS
@@ -25,14 +25,17 @@ interface Karesz {
     steps: State[];
 }
 
+const clamp = (val: number, min: number, max: number) =>
+    val > max ? max : val < min ? min : val;
+
 const forward = (
     x: number,
     y: number,
     rotation: number
 ): { x: number; y: number } => {
-    if (rotation === 0) return { x, y: y + 1 };
+    if (rotation === 0) return { x, y: y - 1 };
     else if (rotation === 1) return { x: x + 1, y };
-    else if (rotation === 2) return { x, y: y - 1 };
+    else if (rotation === 2) return { x, y: y + 1 };
     else return { x: x - 1, y };
 };
 
@@ -52,80 +55,114 @@ const getState = (c: number, x: number, y: number, rotation: number): State => {
     }
 };
 
-// x y is the starting position, array is the steps
-// TODO: obtaion starting position and rotation from the server
-const getSteps = (x: number, y: number, arr: number[]): State[] => {
-    let rot = 0;
-    const res: State[] = [];
-    arr.map((x) => {
-        const s = getState(x, x, y, rot);
-        res.push(s);
-        rot = s.rotation;
-        x = s.x;
-        y = s.y;
+const getSteps = (
+    start: { x: number; y: number; rotation: number },
+    arr: number[]
+): State[] => {
+    let state: State = { c: -1, ...start };
+    const result: State[] = [state];
+    arr.map((command) => {
+        state = getState(command, state.x, state.y, state.rotation);
+        result.push(state);
     });
-
-    console.log(res);
-    return res;
+    return result;
 };
 
 // function responsible for the playback
 const useKaresz = ({
     data,
     speed,
+    setIndex,
 }: {
     data: { players: Player[]; rounds: number };
     speed: number;
+    setIndex: Dispatch<SetStateAction<number>>;
 }): [
-    { players: Karesz[]; playing: boolean },
-    number,
+    { players: { name: string; state: State }[]; isPlaying: boolean },
     { play: () => void; pause: () => void; reset: () => void }
 ] => {
-    const [timer, setTimer] = useState<NodeJS.Timer>(null as any);
-    const [index, setIndex] = useState<number>(0);
-    const [state, setState] = useState<{ players: Karesz[]; playing: boolean }>(
-        { players: [], playing: false }
-    );
+    const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
+    const [players, setPlayers] = useState<Karesz[]>([]);
+    // this is the object where the current values need to be rendered
+    const [state, setState] = useState<{
+        players: {
+            name: string;
+            state: State;
+        }[];
+        isPlaying: boolean;
+    }>({
+        players: data.players.map((x) => {
+            return { name: x.name, state: { c: -1, ...x.start } };
+        }),
+        isPlaying: false,
+    });
+
+    // get a specific step by index
+    const getStep = (index: number) =>
+        players.map((p) => {
+            return {
+                name: p.name,
+                state: p.steps[index],
+            };
+        });
 
     useEffect(() => {
         // calculate the steps
-        setState((s) => {
-            for (const player of data.players) {
-                s.players.push({
+        setPlayers((players) => {
+            for (const player of data.players)
+                players.push({
                     name: player.name,
-                    steps: getSteps(0, 0, player.steps),
+                    steps: getSteps(player.start, player.steps),
                 });
-            }
-            return s;
+
+            return players;
         });
-    });
+    }, []);
 
     const stop = () => {
-        console.log('A');
+        console.log('stopping...');
         clearInterval(timer);
         setState((s) => {
-            return { ...s, playing: false };
+            return { ...s, isPlaying: false };
         });
     };
 
+    // increment the index, stop if reached the end othervise update the state
     const round = () => {
-        if (index >= data.rounds) stop();
-        else setIndex((i) => i + 1);
-    };
+        setIndex((i) => {
+            if (i + 1 > data.rounds) return 0;
 
-    const play = () => {
-        setTimer((t) => setInterval(round, 1000));
-        setState((s) => {
-            return { ...s, playing: true };
+            setState((s) => {
+                return {
+                    ...s,
+                    players: getStep(i),
+                };
+            });
+
+            return i + 1;
         });
     };
 
+    // set an interval and set isPlaying
+    const play = () => {
+        setState((s) => {
+            return { ...s, isPlaying: true };
+        });
+        setTimer(
+            setInterval(() => round(), (1 - clamp(speed, 0.0001, 1)) * 600)
+        );
+    };
+
+    // stops the game and resets players to the start position
     const reset = () => {
         stop();
         setIndex(0);
+        setState((s) => {
+            return { ...s, players: getStep(0) };
+        });
     };
 
-    return [state, index, { play, pause: stop, reset }];
+    return [state, { play, pause: stop, reset }];
 };
 
 export default useKaresz;
