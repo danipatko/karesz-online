@@ -5,9 +5,11 @@ const PreJoin = ({
     onJoin,
     code,
     playerCount,
+    cancel,
 }: {
     modeCreate: boolean;
     onJoin: (name: string) => void;
+    cancel: () => void;
     code: number;
     playerCount: number;
 }) => {
@@ -41,7 +43,7 @@ const PreJoin = ({
                         ref={nameField}
                         type='text'
                         placeholder='Display name'
-                        className='p-2 text-white text-xl outline-none border-2 bg-main border-main-highlight rounded-md transition-colors focus:border-karesz-light'
+                        className='p-2 text-white text-xl outline-none border-[3px] bg-main border-main-highlight rounded-md transition-colors focus:border-karesz'
                     />
                 </div>
                 <button
@@ -50,6 +52,12 @@ const PreJoin = ({
                 >
                     {modeCreate ? 'Create' : 'Join'}
                 </button>
+                <div
+                    onClick={cancel}
+                    className='mt-5 text-karesz font-bold hover:underline cursor-pointer'
+                >
+                    Back
+                </div>
             </div>
         </div>
     );

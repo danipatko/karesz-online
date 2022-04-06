@@ -1,13 +1,20 @@
 import Editor, { Monaco } from '@monaco-editor/react';
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { getCompletionItems } from '../../lib/front/autocomplete';
 import useScripts from '../../lib/hooks/scripts';
 
-const Edit = ({ shown }: { shown: boolean }) => {
+const Edit = ({
+    shown,
+    content,
+    setContent,
+}: {
+    shown: boolean;
+    content: string;
+    setContent: Dispatch<SetStateAction<string>>;
+}) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [fontSize, setFontSize] = useState<number>(20);
     const [width, setWidth] = useState<string>('200px');
-    const [currentText, setText] = useState<string>(`// heheheha \n\n\n`);
     const sideBar = useRef<HTMLDivElement>(null as any);
 
     const handleEditorWillMount = (monaco: Monaco) => {
@@ -23,12 +30,15 @@ const Edit = ({ shown }: { shown: boolean }) => {
 
     const onChange = (value: string | undefined, event: any) => {
         if (value === undefined) return;
-        setText(value);
+        setContent(value);
     };
 
     const resize = () => {
         // calculate width (100% - sideBar width - padding)
-        setWidth(window.innerWidth - sideBar.current.clientWidth - 16 + 'px');
+        if (sideBar.current)
+            setWidth(
+                window.innerWidth - sideBar.current.clientWidth - 16 + 'px'
+            );
     };
 
     useEffect(() => {
@@ -57,8 +67,8 @@ const Edit = ({ shown }: { shown: boolean }) => {
                     className='bg-back-vs text-white min-w-[20vw] flex flex-col justify-between'
                 >
                     <ScriptLoader
-                        current={currentText}
-                        setCurrent={(s) => setText(s)}
+                        current={content}
+                        setCurrent={(s) => setContent(s)}
                     />
                     <div className='flex justify-center'>
                         <FontSize
@@ -76,9 +86,9 @@ const Edit = ({ shown }: { shown: boolean }) => {
                             automaticLayout: true,
                             suggestSelection: 'first',
                         }}
-                        value={currentText}
+                        value={content}
                         defaultLanguage='csharp'
-                        defaultValue={currentText}
+                        defaultValue={content}
                         theme='vs-dark'
                         beforeMount={handleEditorWillMount}
                         onMount={() => {

@@ -70,6 +70,9 @@ export const useGame = (
         const socket = io();
         /* BIND DEFAULT EVENTS TO SOCKET */
 
+        // basic error handling
+        socket.on('error', ({ error }: { error: string }) => onError(error));
+
         // called after joining
         socket.on(
             'fetch',
@@ -168,8 +171,10 @@ export const useGame = (
             }) => {
                 console.log(`EV: info found: ${found} ${playerCount} ${code}`);
                 setState((s) => {
-                    if (!found) return { ...s, state: GameState.notfound };
-                    else
+                    if (!found) {
+                        onError(`Game could not be found.`);
+                        return { ...s, state: GameState.notfound };
+                    } else
                         return {
                             ...s,
                             playerCount,
@@ -199,6 +204,10 @@ export const useGame = (
     const join = (name: string) => {
         if (socket === null) return;
         console.log(`EM: join as ${name}`);
+        if (!name.replace(/[^a-zA-Z\d\-\.\_]/gm, '').length) {
+            onError('Please enter a valid name.');
+            return;
+        }
         socket.emit(state.modeCreate ? 'create' : 'join', {
             name,
             code: state.code,
@@ -235,8 +244,8 @@ export const useGame = (
 
     // exit an existing session or just return to enter code
     const exit = () => {
-        // if (state.connected && socket != null) socket.disconnect();
         console.log(`EM: exit`);
+        if (state.connected && socket != null) socket.emit('exit');
         setState((s) => {
             return { ...s, state: GameState.disconnected };
         });

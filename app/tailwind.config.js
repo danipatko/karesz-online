@@ -6,8 +6,8 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                karesz: '#1020f3',
-                'karesz-light': '#1f2eff',
+                karesz: '#005eff',
+                'karesz-light': '#227fff',
                 back: '#0F1419',
                 'back-vs': '#2f2f2f',
                 main: '#333C4A',

@@ -45,7 +45,8 @@ io.on('connection', (socket) => {
         const game = gameManager.get(code);
         // game not found
         if (game === undefined) {
-            console.log(`Game ${code} was not found`);
+            console.log(`Game ${code} could not be found`);
+            socket.emit('error', { error: `Game ${code} could not be found` });
             return;
         }
         console.log(`Adding ${name} to existing game ${code} ...'`); // debug

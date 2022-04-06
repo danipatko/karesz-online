@@ -18,7 +18,7 @@ const Errors = ({
 
 const Error = ({ error, onClose }: { error: string; onClose: () => void }) => {
     return (
-        <div className='flex gap-4 justify-between p-2 rounded-md bg-slate-700 select-none'>
+        <div className='flex gap-4 justify-between p-3 rounded-md bg-slate-700 select-none'>
             <div className='text-base text-white font-semibold'>{error}</div>
             <div>
                 <span

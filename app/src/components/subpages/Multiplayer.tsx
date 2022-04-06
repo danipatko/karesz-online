@@ -7,7 +7,9 @@ import Main from '../multi/Main';
 const Multiplayer = ({
     game,
     functions,
+    onError,
 }: {
+    onError: (error: string) => void;
     game: Game;
     functions: {
         startGame: () => void;
@@ -24,20 +26,21 @@ const Multiplayer = ({
             Multiplayer
             <div>{game.connected ? 'Connected' : 'Not connected'}</div>
             <div>
-                {game.state === GameState.disconnected ? (
+                {game.state === GameState.disconnected ||
+                game.state === GameState.notfound ? (
                     <Join
+                        onError={onError}
                         onJoin={functions.preJoin}
                         onCreate={functions.preCreate}
                     />
                 ) : game.state === GameState.prejoin ? (
                     <PreJoin
+                        cancel={functions.exit}
                         modeCreate={game.modeCreate}
                         code={game.code}
                         onJoin={functions.join}
                         playerCount={game.playerCount}
                     />
-                ) : game.state === GameState.notfound ? (
-                    'Not found'
                 ) : (
                     <Main game={game} />
                 )}

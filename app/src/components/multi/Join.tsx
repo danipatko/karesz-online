@@ -3,9 +3,11 @@ import { useRef } from 'react';
 const Join = ({
     onJoin,
     onCreate,
+    onError,
 }: {
     onJoin: (code: number) => void;
     onCreate: () => void;
+    onError: (error: string) => void;
 }) => {
     const codeField = useRef<HTMLInputElement>(null as any);
 
@@ -19,7 +21,10 @@ const Join = ({
     const join = () => {
         let text = codeField.current.value;
         const code = parseInt(text);
-        if (code > 9999 || code < 1000) return;
+        if (code > 9999 || code < 1000) {
+            onError('Please enter a legit code');
+            return;
+        }
         onJoin(code);
     };
 
@@ -35,7 +40,7 @@ const Join = ({
                         ref={codeField}
                         type='text'
                         placeholder='Code'
-                        className='p-2 text-white text-xl outline-none border-2 bg-main border-main-highlight rounded-md transition-colors focus:border-fore'
+                        className='p-2 text-white text-xl outline-none border-[3px] bg-main border-main-highlight rounded-md transition-colors focus:border-karesz'
                     />
                 </div>
                 <div className='my-5'>

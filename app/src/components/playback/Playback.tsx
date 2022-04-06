@@ -101,7 +101,7 @@ const Playback = ({
             <div
                 onClick={onClickHandler}
                 ref={container}
-                className='bg-slate-800 h-[80vw] w-[80vw] m-5'
+                className='bg-slate-800 h-[80vh] w-[80vh] m-5 '
                 style={{
                     backgroundImage: showGrid
                         ? `url('/grids/grid-${size}.svg')`

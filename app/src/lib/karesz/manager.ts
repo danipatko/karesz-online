@@ -124,6 +124,7 @@ export default class Session {
     private addListeners(socket: Socket): void {
         // handle disconnect
         socket.on('disconnect', () => this.removePlayer(socket));
+        socket.on('exit', () => this.removePlayer(socket));
 
         // handle user submitting code
         socket.on('submit', ({ code }: { code: string }) => {

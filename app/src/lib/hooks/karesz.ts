@@ -145,6 +145,7 @@ const useKaresz = ({
 
     // set an interval and set isPlaying
     const play = () => {
+        if (state.isPlaying) return;
         setState((s) => {
             return { ...s, isPlaying: true };
         });

@@ -12,19 +12,28 @@ import Navbar from '../components/head/Navbar';
 import { useGame } from '../lib/hooks/game';
 import Errors from '../components/head/Error';
 
-const code = `
+const code = `// Start your code here...
 void FELADAT() {
-    Console.WriteLine("hello world");
+    Lépj();
 }
 `;
 
 const Home: NextPage = (props: any) => {
     const [view, setView] = useState<View>(View.Playground);
-    const [game, functions] = useGame(0, () => {});
-    const [errors, setErrors] = useState<string[]>([
-        'Test errror lorem ipsum dolor sit amet',
-        'Test error 2',
-    ]);
+    const [content, setContent] = useState<string>(code);
+    const [errors, setErrors] = useState<{ error: string; id: number }[]>([]);
+    const err = (error: string) => {
+        const id = Date.now();
+        setErrors((e) => [...e, { error, id }]);
+        setTimeout(
+            () =>
+                setErrors((e) => {
+                    return [...e.filter((e) => e.id !== id)];
+                }),
+            4000
+        );
+    };
+    const [game, functions] = useGame(0, err);
 
     return (
         <div className='bg-back h-screen'>
@@ -34,14 +43,18 @@ const Home: NextPage = (props: any) => {
             ) : view === View.Playground ? (
                 <Playground />
             ) : view === View.Multiplayer ? (
-                <Multiplayer game={game} functions={functions} />
+                <Multiplayer onError={err} game={game} functions={functions} />
             ) : view === View.Docs ? (
                 <Docs />
             ) : null}
-            {/* NOTE: the switch can't be applied for monace, because the contents get reset every time it is rendered */}
-            <Edit shown={view === View.Edit} />
+            {/* NOTE: the switch can't be applied for monaco, because the contents get reset every time it is rendered */}
+            <Edit
+                shown={view === View.Edit}
+                content={content}
+                setContent={setContent}
+            />
             <Errors
-                errors={errors}
+                errors={errors.map((x) => x.error)}
                 onRemove={(i) =>
                     setErrors((e) => {
                         e.splice(i, 1);
@@ -54,42 +67,3 @@ const Home: NextPage = (props: any) => {
 };
 
 export default Home;
-
-/* 
-
-<button onClick={fetchState}>Log state</button>
-            <div>
-                <input type='number' id='code' />
-            </div>
-            <div>
-                <input type='text' placeholder='name' id='name' />
-            </div>
-            <button onClick={joinGame}>join</button>
-
-            {game.connected ? (
-                <div>
-                    <div>
-                        <div>Code: {game.code}</div>
-                        <div>Host: {game.host}</div>
-                        <div>Last winner: {game.lastWinner}</div>
-                        <div>Phase: {game.state}</div>
-                        <div>Player data: {JSON.stringify(game.players)}</div>
-                    </div>
-                    <div>
-                        <ScoreBoard players={game.players} />
-                    </div>
-                </div>
-            ) : (
-                <div>Not yet joined</div>
-            )}
-
-<div>
-                <Editor
-                    height='90vh'
-                    defaultLanguage='csharp'
-                    defaultValue='// heheheha'
-                    theme='vs-dark'
-                    beforeMount={handleEditorWillMount}
-                />
-            </div>
-*/
