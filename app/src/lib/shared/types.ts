@@ -25,3 +25,10 @@ export interface Player {
         rotation: number;
     };
 }
+
+export interface IPlayer {
+    name: string; // display name
+    id: string; // socket id
+    ready: boolean; // submitted code and ready
+    wins: number; // win count
+}

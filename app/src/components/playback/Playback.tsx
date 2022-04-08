@@ -56,26 +56,28 @@ const Playback = ({
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
     const [index, setIndex] = useState<number>(0);
-    const [karesz, { play, pause, reset }] = useKaresz({
-        data: {
-            players: [
-                {
-                    name: 'karex',
-                    steps: [
-                        0, 3, 0, 3, 0, 3, 0, 3, 2, 0, 3, 0, 3, 0, 3, 2, 0, 3, 0,
-                    ],
-                    start: {
-                        x: 5,
-                        y: 5,
-                        rotation: 0,
+    const [karesz, objects, { play, pause, reset }, { setBlock, stepTo }] =
+        useKaresz({
+            data: {
+                players: [
+                    {
+                        name: 'karex',
+                        steps: [
+                            0, 3, 0, 3, 0, 3, 0, 3, 2, 0, 3, 0, 3, 0, 3, 2, 0,
+                            3, 0,
+                        ],
+                        start: {
+                            x: 5,
+                            y: 5,
+                            rotation: 0,
+                        },
                     },
-                },
-            ],
-            rounds: 20,
-        },
-        speed: 0.9,
-        setIndex,
-    });
+                ],
+                rounds: 20,
+            },
+            speed: 0.9,
+            setIndex,
+        });
 
     const adjust = () => {
         if (container.current) setSize(container.current.clientWidth / size);
@@ -97,11 +99,31 @@ const Playback = ({
     };
 
     return (
-        <div className='text-white'>
+        <div className='text-white m-5'>
+            <div className='flex gap-5 p-2'>
+                <button
+                    className='text-xl px-2 fa fa-play hover:text-[#0f0]'
+                    onClick={play}
+                ></button>
+                <button
+                    className='text-xl px-2 fa fa-pause hover:text-karesz'
+                    onClick={pause}
+                ></button>
+                <button
+                    className='text-xl px-2 fa fa-square hover:text-[#f00]'
+                    onClick={reset}
+                ></button>
+                <div
+                    style={{ color: karesz.isPlaying ? '#0f0' : '#f00' }}
+                    className='text-base font-semibold'
+                >
+                    {karesz.isPlaying ? 'Playing' : 'Stopped'}
+                </div>
+            </div>
             <div
                 onClick={onClickHandler}
                 ref={container}
-                className='bg-slate-800 h-[80vh] w-[80vh] m-5 '
+                className='bg-slate-800 h-[80vh] w-[80vh]'
                 style={{
                     backgroundImage: showGrid
                         ? `url('/grids/grid-${size}.svg')`
@@ -126,17 +148,16 @@ const Playback = ({
                 <Object size={tileSize} x={13} y={2} />
                 <Object size={tileSize} x={14} y={2} />
             </div>
-            <button className='px-2' onClick={play}>
-                PLAY
-            </button>
-            <button className='px-2' onClick={pause}>
-                PAUSE
-            </button>
-            <button className='px-2' onClick={reset}>
-                RESET
-            </button>
-            <div>
-                {karesz.isPlaying ? 'PLAYING' : 'STOPPED'} | {index}
+
+            <div className='p-2'>
+                <input
+                    type='range'
+                    min={0}
+                    max={20 - 1}
+                    value={index}
+                    onChange={(e) => stepTo(parseInt(e.target.value))}
+                    className='slider'
+                />
             </div>
         </div>
     );

@@ -23,28 +23,24 @@ const Multiplayer = ({
 }) => {
     return (
         <div className='text-white'>
-            Multiplayer
-            <div>{game.connected ? 'Connected' : 'Not connected'}</div>
-            <div>
-                {game.state === GameState.disconnected ||
-                game.state === GameState.notfound ? (
-                    <Join
-                        onError={onError}
-                        onJoin={functions.preJoin}
-                        onCreate={functions.preCreate}
-                    />
-                ) : game.state === GameState.prejoin ? (
-                    <PreJoin
-                        cancel={functions.exit}
-                        modeCreate={game.modeCreate}
-                        code={game.code}
-                        onJoin={functions.join}
-                        playerCount={game.playerCount}
-                    />
-                ) : (
-                    <Main game={game} />
-                )}
-            </div>
+            {game.state === GameState.disconnected ||
+            game.state === GameState.notfound ? (
+                <Join
+                    onError={onError}
+                    onJoin={functions.preJoin}
+                    onCreate={functions.preCreate}
+                />
+            ) : game.state === GameState.prejoin ? (
+                <PreJoin
+                    cancel={functions.exit}
+                    modeCreate={game.modeCreate}
+                    code={game.code}
+                    onJoin={functions.join}
+                    playerCount={game.playerCount}
+                />
+            ) : (
+                <Main game={game} />
+            )}
         </div>
     );
 };

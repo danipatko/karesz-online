@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { GameState } from '../shared/types';
-
-interface Player {
-    name: string; // display name
-    id: string; // socket id
-    ready: boolean; // submitted code and ready
-    wins: number; // win count
-}
+import { GameState, IPlayer as Player } from '../shared/types';
 
 // this is the struct returned by the runner
 export interface ScoreBoard {

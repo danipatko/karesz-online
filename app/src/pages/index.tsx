@@ -30,7 +30,7 @@ const Home: NextPage = (props: any) => {
                 setErrors((e) => {
                     return [...e.filter((e) => e.id !== id)];
                 }),
-            4000
+            3900
         );
     };
     const [game, functions] = useGame(0, err);

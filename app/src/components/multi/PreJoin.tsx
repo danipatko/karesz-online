@@ -25,7 +25,7 @@ const PreJoin = ({
     const join = () => onJoin(nameField.current.value);
 
     return (
-        <div className='flex justify-center items-center'>
+        <div className='flex justify-center items-center h-[80vh]'>
             <div className='bg-main rounded-md p-10 text-center'>
                 <h1 className='text-white font-semibold text-2xl mb-5'>
                     {modeCreate ? 'Creating new game' : `Join #${code}`}

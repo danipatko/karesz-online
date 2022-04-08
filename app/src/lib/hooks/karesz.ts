@@ -79,11 +79,17 @@ const useKaresz = ({
     setIndex: Dispatch<SetStateAction<number>>;
 }): [
     { players: { name: string; state: State }[]; isPlaying: boolean },
-    { play: () => void; pause: () => void; reset: () => void }
+    { [key: string]: number },
+    { play: () => void; pause: () => void; reset: () => void },
+    {
+        stepTo: (step: number) => void;
+        setBlock: (type: number, x: number, y: number) => void;
+    }
 ] => {
     const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
     const [players, setPlayers] = useState<Karesz[]>([]);
     // this is the object where the current values need to be rendered
+    const [objects, setObjects] = useState<{ [key: string]: number }>({});
     const [state, setState] = useState<{
         players: {
             name: string;
@@ -163,7 +169,31 @@ const useKaresz = ({
         });
     };
 
-    return [state, { play, pause: stop, reset }];
+    // go to a step
+    const stepTo = (step: number) => {
+        step = clamp(step, 0, data.rounds - 1);
+        if (state.isPlaying) stop();
+        setIndex(step);
+        setState((s) => {
+            return { ...s, players: getStep(step) };
+        });
+    };
+
+    // set the block at a specific position
+    const setBlock = (type: number, x: number, y: number) => {
+        setObjects((o) => {
+            if (type === 0) {
+                delete o[`${x}-${y}`];
+                return { ...o };
+            }
+            return {
+                ...o,
+                [`${x}-${y}`]: type,
+            };
+        });
+    };
+
+    return [state, objects, { play, pause: stop, reset }, { stepTo, setBlock }];
 };
 
 export default useKaresz;
