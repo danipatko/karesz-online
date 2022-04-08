@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import useKaresz from '../../lib/hooks/karesz';
+import { aliases } from '../../lib/front/aliases';
+import useKaresz, { State } from '../../lib/hooks/karesz';
 
 // TODO: textures
 const Object = ({ size, x, y }: { size: number; x: number; y: number }) => {
@@ -17,16 +18,10 @@ const Object = ({ size, x, y }: { size: number; x: number; y: number }) => {
 
 const Karesz = ({
     size,
-    x,
-    y,
-    rotation,
-    name,
+    state,
 }: {
     size: number;
-    x: number;
-    y: number;
-    rotation: number;
-    name?: string;
+    state: { x: number; y: number; rotation: number };
 }) => {
     return (
         <div
@@ -36,9 +31,9 @@ const Karesz = ({
                 backgroundSize: 'contain',
                 width: size,
                 height: size,
-                transform: `translate(${100 * x}%,${100 * y}%) rotate(${
-                    (rotation % 4) * 90
-                }deg)`,
+                transform: `translate(${100 * state.x}%,${
+                    100 * state.y
+                }%) rotate(${(state.rotation % 4) * 90}deg)`,
             }}
         ></div>
     );
@@ -100,7 +95,7 @@ const Playback = ({
 
     return (
         <div className='text-white m-5'>
-            <div className='flex gap-5 p-2'>
+            <div className='flex gap-5 p-2 items-center'>
                 <button
                     className='text-xl px-2 fa fa-play hover:text-[#0f0]'
                     onClick={play}
@@ -119,6 +114,7 @@ const Playback = ({
                 >
                     {karesz.isPlaying ? 'Playing' : 'Stopped'}
                 </div>
+                <PlayerInfo players={karesz.players} />
             </div>
             <div
                 onClick={onClickHandler}
@@ -132,14 +128,7 @@ const Playback = ({
                 }}
             >
                 {karesz.players.map((player, i) => (
-                    <Karesz
-                        size={tileSize}
-                        key={i}
-                        rotation={player.state.rotation}
-                        x={player.state.x}
-                        y={player.state.y}
-                        name={player.name}
-                    />
+                    <Karesz size={tileSize} key={i} state={player.state} />
                 ))}
 
                 <Object size={tileSize} x={10} y={2} />
@@ -158,6 +147,58 @@ const Playback = ({
                     onChange={(e) => stepTo(parseInt(e.target.value))}
                     className='slider'
                 />
+            </div>
+        </div>
+    );
+};
+
+const PlayerInfo = ({
+    players,
+}: {
+    players: { name: string; state: State }[];
+}) => {
+    const [selected, select] = useState<number>(0);
+
+    return (
+        <div className='text-white p-3 flex border-separate border-gray-300 flex-1 justify-end'>
+            <div className='border-r border-r-gray-600 px-4'>
+                Tracking{' '}
+                <span className='font-semibold'>
+                    <select
+                        onChange={(e) => select(parseInt(e.target.value))}
+                        name='select-karesz'
+                        className='outline-none border-none bg-transparent text-white'
+                    >
+                        {players.map((x, i) => (
+                            <option
+                                className='bg-slate-800 rounded-none'
+                                key={i}
+                                value={i}
+                            >
+                                {x.name}
+                            </option>
+                        ))}
+                    </select>
+                </span>
+            </div>
+            <div className='border-r border-r-gray-600 px-4 w-[140px] text-center'>
+                Position{' '}
+                <span className='text-karesz-light font-bold '>
+                    {players[selected].state.x}:{players[selected].state.y}
+                </span>
+            </div>
+            <div className='border-r border-r-gray-600 px-4 w-[160px] text-center'>
+                Looking{' '}
+                <span className='text-karesz-light font-bold'>
+                    {
+                        ['UP', 'RIGHT', 'DOWN', 'LEFT'][
+                            players[selected].state.rotation
+                        ]
+                    }
+                </span>
+            </div>
+            <div className='px-4 w-[200px] text-center'>
+                {aliases[players[selected].state.c]}
             </div>
         </div>
     );

@@ -11,12 +11,10 @@ const Players = ({ players, host }: { players: Player[]; host: string }) => {
                         className='p-2 bg-slate-800 border-b-[3px] border-b-karesz '
                     >
                         <div className='text-base font-semibold text-white max-w-20vw overflow-x-hidden'>
+                            {x.name.substring(0, 30)}{' '}
                             {x.id === host ? (
-                                <>
-                                    <i className='fa fa-shield text-lg text-[#0f0]'></i>{' '}
-                                </>
+                                <i className='fa fa-shield text-sm text-[#0f0]'></i>
                             ) : null}
-                            {x.name.substring(0, 30)}
                         </div>
                         <div className='text-sm text-gray-400 flex justify-between gap-3'>
                             <div

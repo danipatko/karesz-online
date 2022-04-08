@@ -5,7 +5,7 @@ import Players from './Players';
 const Main = ({ game }: { game: Game }) => {
     return (
         <div>
-            <div className='flex items-center'>
+            <div className='flex items-center mx-3'>
                 <div className='text-3xl font-bold p-5'>#{game.code}</div>
                 <Players
                     players={[
@@ -18,11 +18,15 @@ const Main = ({ game }: { game: Game }) => {
                     ]}
                     host={game.host}
                 />
+                <div className='p-5 bg-karesz rounded-md text-xl font-bold'>
+                    READY
+                </div>
             </div>
             <div className='flex'>
                 <div className='flex-1'>
                     <Playback onClick={() => {}} showGrid={true} size={20} />
                 </div>
+                <div className='flex-1'></div>
             </div>
             <div>{JSON.stringify(game)}</div>
         </div>

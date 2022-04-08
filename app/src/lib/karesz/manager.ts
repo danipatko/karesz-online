@@ -11,8 +11,9 @@ interface Player {
 }
 
 enum GameState {
-    waiting = 0,
-    running = 1,
+    idle = 0, // waiting for host to start
+    waiting = 1, // waiting for players to ready
+    running = 2, // running
 }
 
 /* 
@@ -36,11 +37,11 @@ host:
 
 */
 
-interface MapConfig {
-    map?: string | undefined;
-    type: string;
-    size_x: number;
-    size_y: number;
+interface CustomMap {
+    map: string; // the matrix as a string or the map name
+    type: 'load' | 'parse';
+    x: number;
+    y: number;
 }
 
 export default class Session {
@@ -48,6 +49,7 @@ export default class Session {
     protected state: GameState = GameState.waiting;
     protected host: string = ''; // the id of the host player
     protected code: number; // randomly generated code
+    protected map: CustomMap | undefined = undefined;
     public destroy: () => void; // this is a callback function to remove this instance from the map
 
     // create a new instance of a game
@@ -70,7 +72,10 @@ export default class Session {
     private setHost(socket: Socket, noemit: boolean = false): void {
         this.host = socket.id;
         // set startgame listener
-        socket.on('start_game', (config: MapConfig) => this.startGame(config));
+        socket.on('start_game', (config: CustomMap) => {
+            this.map = config;
+            this.state = GameState.waiting;
+        });
         if (!noemit) this.announce('host_change', { host: socket.id });
     }
 
@@ -87,7 +92,7 @@ export default class Session {
         });
         this.addListeners(socket);
         this.fetchState(socket);
-        this.announce('joined', { id: socket.id, name, ready: false, wins: 0 });
+        this.announce('joined', { id: socket.id, name, ready: false });
         return this;
     }
 
@@ -128,21 +133,47 @@ export default class Session {
 
         // handle user submitting code
         socket.on('submit', ({ code }: { code: string }) => {
-            if (this.state == GameState.running) return;
-            const p = this.players.get(socket.id);
-            if (p === undefined) return;
-            this.players.set(p.id, { ...p, code, ready: true });
-            this.announce('player_update', { id: p.id, ready: true });
+            // don't submit while running
+            if (this.state === GameState.running) {
+                socket.emit('error', { error: `Please wait for game to end` });
+                return;
+            }
+            const player = this.players.get(socket.id);
+            if (player === undefined) return;
+            // make player ready
+            this.players.set(player.id, { ...player, code, ready: true });
+            this.announce('player_update', { id: player.id, ready: true });
+            // start game if everyone is ready
+            if (this.state === GameState.waiting) {
+                if (this.isEveryoneReady) {
+                    this.state = GameState.running;
+                    this.announce('state_update', { state: this.state });
+                    if (this.map) this.startGame(this.map);
+                }
+            }
         });
 
         // unsubmit code
         socket.on('unsubmit', () => {
-            if (this.state == GameState.running) return;
+            // can't unsubmit while running
+            if (this.state == GameState.running) {
+                socket.emit('error', {
+                    error: 'Can not unsubmit while running',
+                });
+                return;
+            }
             const p = this.players.get(socket.id);
             if (p === undefined) return;
+
             this.players.set(p.id, { ...p, code: '', ready: false });
             this.announce('player_update', { id: p.id, ready: false });
         });
+    }
+
+    private get isEveryoneReady(): boolean {
+        for (const player of this.players.values())
+            if (!player.ready) return false;
+        return true;
     }
 
     public get playerCount(): number {
@@ -152,5 +183,7 @@ export default class Session {
     /**
      * Start the game
      */
-    public async startGame(config: MapConfig): Promise<void> {}
+    public async startGame(config: CustomMap): Promise<void> {
+        //TODO: make request to rust server, set everyone unready, emit results
+    }
 }

@@ -17,14 +17,11 @@ export interface ScoreBoard {
 }
 
 export interface Game {
-    connected: boolean; // connected to server
-    players: { [id: string]: Player };
+    state: GameState; // current state
     code: number; // game code
     host: string; // the id of the host
-    state: GameState; // current state
-    scoreBoard: ScoreBoard;
-    playerCount: number;
-    modeCreate: boolean; // if the game is being created
+    players: { [id: string]: Player };
+    isHost: boolean;
 }
 
 export const useGame = (
@@ -32,6 +29,7 @@ export const useGame = (
     onError: (error: string) => void
 ): [
     Game,
+    { create: boolean; inLobby: number },
     {
         startGame: () => void;
         submit: (s: string) => void;
@@ -43,20 +41,100 @@ export const useGame = (
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
+    // basic info pre join
+    const [meta, setMeta] = useState<{ create: boolean; inLobby: number }>({
+        create: false,
+        inLobby: 0,
+    });
+    // the game state
     const [state, setState] = useState<Game>({
-        connected: false,
         state: GameState.disconnected,
-        modeCreate: false,
         code,
         host: '',
         players: {},
-        scoreBoard: {
-            draw: false,
-            players: [],
-            winner: '',
-        },
-        playerCount: 0,
+        isHost: false,
     });
+    const [scoreBoard, setScoreBoard] = useState<ScoreBoard | null>(null);
+
+    /* HANDLER FUNCTIONS */
+
+    // emitted after joining session: contains the game host, players and code
+    const fetch = (data: {
+        host: string;
+        players: { [id: string]: Player };
+        code: number;
+    }) =>
+        setState({
+            ...data,
+            state: GameState.joined,
+            isHost: data.host === socket.id,
+        });
+
+    // emitted when the game starts or ends
+    const stateUpdate = ({ state }: { state: number }) =>
+        setState((s) => {
+            return { ...s, state };
+        });
+
+    // emitted when a player joins
+    const onJoin = (p: { name: string; id: string; ready: boolean }) =>
+        setState((s) => {
+            return {
+                ...s,
+                players: { ...s.players, [p.id]: { ...p, wins: 0 } },
+            };
+        });
+
+    // emitted when a player leaves
+    const onLeave = ({ id }: { id: string }) =>
+        setState((s) => {
+            onError(`${s.players[id]} has left the game.`);
+            delete s.players[id];
+            return { ...s };
+        });
+
+    // emitted when a player signals ready (or unready)
+    const playerUpdate = ({ id, ready }: { id: string; ready: boolean }) => {
+        console.log(`EV: player_update ${id} ${ready}`);
+        setState((s) => {
+            s.players[id].ready = ready;
+            return { ...s };
+        });
+    };
+
+    // emitted on scoreboard update
+    const scoreboardUpdate = (scoreBoard: ScoreBoard) =>
+        setScoreBoard(scoreBoard);
+
+    // emitted on a host change
+    const onHostChange = ({ host }: { host: string }) =>
+        setState((s) => {
+            return { ...s, host, isHost: s.host === host };
+        });
+
+    // emitted when a player fetches info about a game (either not found or provided with the code and number of players)
+    const onInfo = ({
+        playerCount,
+        found,
+        code,
+    }: {
+        playerCount: number;
+        found: boolean;
+        code: number;
+    }) => {
+        setState((s) => {
+            if (!found) {
+                onError(`Game could not be found.`);
+                return { ...s, state: GameState.disconnected };
+            }
+            setMeta((m) => Object({ ...m, inLobby: playerCount }));
+            return {
+                ...s,
+                state: GameState.prejoin,
+                code,
+            };
+        });
+    };
 
     // init function
     useEffect(() => {
@@ -65,121 +143,16 @@ export const useGame = (
 
         // basic error handling
         socket.on('error', ({ error }: { error: string }) => onError(error));
-
-        // called after joining
-        socket.on(
-            'fetch',
-            (data: {
-                host: string;
-                players: { [id: string]: Player };
-                code: number;
-            }) => {
-                console.log(`EV: fetch ${JSON.stringify(data)}`);
-                setState((s) => {
-                    return {
-                        ...s,
-                        ...data,
-                        state: GameState.joined,
-                        connected: true,
-                    };
-                });
-                // */
-            }
-        );
-
-        // called on phase update
-        socket.on('state_update', ({ state: _state }: { state: number }) => {
-            console.log(`EV: state_update ${_state}`);
-            setState((s) => {
-                return { ...s, state: _state };
-            });
-        });
-
-        // called when a player joins
-        socket.on(
-            'joined',
-            (p: { name: string; id: string; ready: boolean; wins: number }) => {
-                console.log(`EV: joined ${JSON.stringify(p)}`);
-                setState((s) => {
-                    s.players[p.id] = p;
-                    return { ...s };
-                });
-            }
-        );
-
-        // called when a player leaves
-        socket.on('left', ({ id }: { id: string }) => {
-            console.log(`EV: left ${id}`);
-            setState((s) => {
-                delete s.players[id];
-                return { ...s };
-            });
-        });
-
-        // called when a player signals ready (or unready)
-        socket.on(
-            'player_update',
-            ({ id, ready }: { id: string; ready: boolean }) => {
-                console.log(`EV: player_update ${id} ${ready}`);
-                setState((s) => {
-                    s.players[id].ready = ready;
-                    return { ...s };
-                });
-            }
-        );
-
-        // called on game end
-        socket.on('scoreboard_update', (scoreBoard: ScoreBoard) => {
-            console.log(`EV: scoreboard_update ${JSON.stringify(scoreBoard)}`);
-            setState((s) => {
-                return {
-                    ...s,
-                    scoreBoard,
-                };
-            });
-        });
-
-        // host change
-        socket.on('host_change', ({ host }: { host: string }) => {
-            if (socket === null) return;
-            console.log(`EV: host_change ${host}`);
-
-            setState((s) => {
-                return { ...s, host };
-            });
-            // TODO: alert user about becoming host
-        });
-
-        // check if a game exists and how many players are in it
-        socket.on(
-            'info',
-            ({
-                playerCount,
-                found,
-                code,
-            }: {
-                playerCount: number;
-                found: boolean;
-                code: number;
-            }) => {
-                console.log(`EV: info found: ${found} ${playerCount} ${code}`);
-                setState((s) => {
-                    if (!found) {
-                        onError(`Game could not be found.`);
-                        return { ...s, state: GameState.notfound };
-                    } else
-                        return {
-                            ...s,
-                            playerCount,
-                            state: GameState.prejoin,
-                            code,
-                        };
-                });
-            }
-        );
-
-        // called when the game is started but failed to execute
-        socket.on('start_failed', (data) =>
+        socket.on('fetch', fetch);
+        socket.on('state_update', stateUpdate);
+        socket.on('joined', onJoin);
+        socket.on('left', onLeave);
+        socket.on('player_update', playerUpdate);
+        socket.on('scoreboard_update', scoreboardUpdate);
+        socket.on('host_change', onHostChange);
+        socket.on('info', onInfo);
+        // TODO: show the compiler logs to the user to find the error
+        socket.on('compile_error', (data) =>
             console.log(`Faield to start game\n`, data)
         );
 
@@ -201,7 +174,7 @@ export const useGame = (
             onError('Please enter a valid name.');
             return;
         }
-        socket.emit(state.modeCreate ? 'create' : 'join', {
+        socket.emit(meta.create ? 'create' : 'join', {
             name,
             code: state.code,
         });
@@ -223,9 +196,8 @@ export const useGame = (
     // create new game
     const preCreate = () => {
         console.log(`EM: preCreate`);
-        setState((s) => {
-            return { ...s, state: GameState.prejoin, modeCreate: true };
-        });
+        setMeta((m) => Object({ ...m, create: true }));
+        setState((s) => Object({ ...s, state: GameState.prejoin }));
     };
 
     // create new game
@@ -237,8 +209,8 @@ export const useGame = (
 
     // exit an existing session or just return to enter code
     const exit = () => {
-        console.log(`EM: exit`);
-        if (state.connected && socket != null) socket.emit('exit');
+        if (state.state !== GameState.disconnected && socket !== null)
+            socket.emit('exit');
         setState((s) => {
             return { ...s, state: GameState.disconnected };
         });
@@ -246,6 +218,7 @@ export const useGame = (
 
     return [
         state,
+        meta,
         {
             startGame,
             submit,

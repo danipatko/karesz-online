@@ -33,7 +33,7 @@ const Home: NextPage = (props: any) => {
             3900
         );
     };
-    const [game, functions] = useGame(0, err);
+    const [game, meta, functions] = useGame(0, err);
 
     return (
         <div className='bg-back h-screen'>
@@ -43,7 +43,12 @@ const Home: NextPage = (props: any) => {
             ) : view === View.Playground ? (
                 <Playground />
             ) : view === View.Multiplayer ? (
-                <Multiplayer onError={err} game={game} functions={functions} />
+                <Multiplayer
+                    onError={err}
+                    game={game}
+                    meta={meta}
+                    functions={functions}
+                />
             ) : view === View.Docs ? (
                 <Docs />
             ) : null}

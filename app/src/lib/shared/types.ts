@@ -10,10 +10,10 @@ export enum View {
 
 export enum GameState {
     disconnected = 0, // not initted
-    notfound = 1, // if game is not found
-    prejoin = 2, // code is correct, promt name
-    joined = 3, // idle
-    running = 4, // game is running
+    prejoin = 1, // code is correct, promt name
+    joined = 2, // idle
+    wating = 3, // host started the game, but not everyone is ready
+    running = 3, // everyone is ready, start game
 }
 
 export interface Player {

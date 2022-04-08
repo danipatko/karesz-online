@@ -13,7 +13,7 @@ import { Player } from '../shared/types';
  * 8 - mi van alattam
  * 9 - van e előttem fal
  */
-interface State {
+export interface State {
     x: number;
     y: number;
     rotation: number;
