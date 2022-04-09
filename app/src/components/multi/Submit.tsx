@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 
 interface Checks {
     [key: string]: boolean;
-    'has entry': boolean;
-    'no imports': boolean;
+    'has FELADAT entry': boolean;
+    'has no imports': boolean;
     'uses functions': boolean;
     // syntax errors ?
     ok: boolean;
@@ -14,14 +14,15 @@ const anyFunction =
 
 const check = (content: string): Checks => {
     const res: Checks = {
-        'has entry': true,
-        'no imports': true,
+        'has FELADAT entry': true,
+        'has no imports': true,
         'uses functions': true,
         ok: true,
     };
     if (!content.match(/void\s+FELADAT\s*\(\s*\)[\s\n]*{/gm))
-        res['has entry'] = false;
-    if (content.match(/using\s+(\(|[A-za-z]+)/gm)) res['no imports'] = false;
+        res['has FELADAT entry'] = false;
+    if (content.match(/using\s+(\(|[A-za-z]+)/gm))
+        res['has no imports'] = false;
     if (!content.match(anyFunction)) res['uses functions'] = false;
 
     return {
@@ -44,9 +45,9 @@ const Submit = ({
     onSubmit: () => void;
 }) => {
     const [checks, setChecks] = useState<Checks>({
-        'has entry': true,
+        'has FELADAT entry': true,
         ok: true,
-        'no imports': true,
+        'has no imports': true,
         'uses functions': true,
     });
 
@@ -57,11 +58,13 @@ const Submit = ({
     return (
         <div
             style={{ display: shown ? 'flex' : 'none' }}
-            className='fixed top-0 left-0 w-[100vw] h-[100vh] bg-[rgba(0,0,0,60%)] flex justify-center items-center'
+            className='fadein fixed top-0 left-0 w-[100vw] h-[100vh] bg-[rgba(0,0,0,60%)] flex justify-center items-center z-50'
         >
-            <div className='flex rounded-md text-white max-h-[70vh] max-w-[70vw] overflow-hidden'>
-                <div className='p-4 bg-main rounded-l-md'>
-                    <div className='text-lg font-semibold'>Check your code</div>
+            <div className='slidein flex rounded-md text-white max-h-[70vh] max-w-[70vw] overflow-hidden'>
+                <div className='p-6 bg-main rounded-l-md'>
+                    <div className='text-lg font-semibold'>
+                        Check if your code...
+                    </div>
                     <div className='my-3'>
                         <ul>
                             {Object.keys(checks).map((x, i) => (
@@ -75,6 +78,10 @@ const Submit = ({
                                 </li>
                             ))}
                         </ul>
+                        <div className='text-xs my-2 text-zinc-300'>
+                            <i className='text-[#ff0] fa fa-lightbulb'></i> Tip:
+                            wrap your code in an infinite loop
+                        </div>
                     </div>
                     <div className='flex justify-between gap-6'>
                         <button

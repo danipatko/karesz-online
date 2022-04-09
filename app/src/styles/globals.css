@@ -33,6 +33,45 @@
         }
     }
 
+    .fadein {
+        animation: fadein 0.3s ease-in-out;
+    }
+
+    @keyframes fadein {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .slidein {
+        animation: slidein 0.3s ease-in-out;
+    }
+
+    @keyframes slidein {
+        0% {
+            transform: translateY(100vh);
+        }
+        100% {
+            transform: translateY(0);
+        }
+    }
+
+    .spin {
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
     .dark {
         @apply bg-zinc-800;
     }

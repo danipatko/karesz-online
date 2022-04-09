@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Game, ScoreBoard } from '../../lib/hooks/game';
 import Playback from '../playback/Playback';
+import MapEditor from './MapEditor';
 import Players from './Players';
 import Scoreboard from './Scoreboard';
 import Submit from './Submit';
@@ -15,6 +16,7 @@ const Main = ({
     current: string;
 }) => {
     const [submitShown, showSubmit] = useState<boolean>(false);
+    const [selected, setSelected] = useState<number>(0);
 
     return (
         <div>
@@ -29,7 +31,7 @@ const Main = ({
             </div>
             <div className='flex m-5 gap-4'>
                 <div className='flex-1'>
-                    <Playback onClick={() => {}} showGrid={true} size={20} />
+                    <Playback selected={selected} showGrid={true} size={20} />
                 </div>
                 <div className='flex-1 flex flex-col gap-4'>
                     <Scoreboard sb={scoreboard} />
@@ -39,8 +41,12 @@ const Main = ({
                         onSubmit={() => {}}
                         shown={submitShown}
                     />
-                    <div className='flex-1 bg-slate-800'></div>
-                    <div className='flex-1 bg-slate-800'>
+                    <MapEditor
+                        selected={selected}
+                        setSelected={setSelected}
+                        clearAll={() => {}}
+                    />
+                    <div className='flex-1 bg-main rounded-md'>
                         <button onClick={() => showSubmit(true)} className=''>
                             SUBMIT
                         </button>

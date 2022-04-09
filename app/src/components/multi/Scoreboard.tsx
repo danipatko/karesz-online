@@ -2,7 +2,7 @@ import { ScoreBoard } from '../../lib/hooks/game';
 
 const Scoreboard = ({ sb }: { sb: ScoreBoard | null }) => {
     return (
-        <div className='p-2 flex-1 bg-slate-800 border-b-[3px] border-b-karesz text-white'>
+        <div className='p-2 flex-1 bg-main rounded-md text-white'>
             {sb ? (
                 <>
                     <div className='flex gap-4 justify-between font-bold text-lg'>

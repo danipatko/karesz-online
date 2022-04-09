@@ -3,7 +3,7 @@ import { aliases } from '../../lib/front/aliases';
 import useKaresz, { State } from '../../lib/hooks/karesz';
 
 // TODO: textures
-const Object = ({ size, x, y }: { size: number; x: number; y: number }) => {
+const Obj = ({ size, x, y }: { size: number; x: number; y: number }) => {
     return (
         <div
             className='bg-red-600 absolute'
@@ -42,11 +42,12 @@ const Karesz = ({
 const Playback = ({
     size,
     showGrid,
-    onClick,
+    selected,
 }: {
     size: 10 | 20 | 30 | 40;
     showGrid: boolean;
-    onClick: (x: number, y: number) => void;
+    selected: number;
+    // onClick: (x: number, y: number) => number;
 }) => {
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
@@ -88,9 +89,11 @@ const Playback = ({
     // get x and y coordinates of the event
     const onClickHandler = (e: any) => {
         const rect = e.target.getBoundingClientRect();
-        onClick(
+        console.log(selected);
+        setBlock(
             Math.floor((e.clientX - rect.left) / tileSize),
-            Math.floor((e.clientY - rect.top) / tileSize)
+            Math.floor((e.clientY - rect.top) / tileSize),
+            selected
         );
     };
 
@@ -147,11 +150,16 @@ const Playback = ({
                     <Karesz size={tileSize} key={i} state={player.state} />
                 ))}
 
-                <Object size={tileSize} x={10} y={2} />
-                <Object size={tileSize} x={11} y={2} />
-                <Object size={tileSize} x={12} y={2} />
-                <Object size={tileSize} x={13} y={2} />
-                <Object size={tileSize} x={14} y={2} />
+                {Object.keys(objects).map((o, i) => {
+                    return (
+                        <Obj
+                            key={i}
+                            size={tileSize}
+                            x={parseInt(o.split('-')[0])}
+                            y={parseInt(o.split('-')[1])}
+                        />
+                    );
+                })}
             </div>
 
             <div className='p-2'>
@@ -184,7 +192,7 @@ const PlayerInfo = ({
             <i className='fa fa-gear'></i>
         </div>
     ) : (
-        <div className='absolute flex m-2 text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-50'>
+        <div className='absolute flex m-2 text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-30 rounded-md'>
             <div className='flex-1'>
                 <div>
                     Tracking{' '}
