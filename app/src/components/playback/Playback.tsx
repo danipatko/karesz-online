@@ -51,6 +51,7 @@ const Playback = ({
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
     const [index, setIndex] = useState<number>(0);
+    const [speed, setSpeed] = useState<number>(50);
     const [karesz, objects, { play, pause, reset }, { setBlock, stepTo }] =
         useKaresz({
             data: {
@@ -70,7 +71,7 @@ const Playback = ({
                 ],
                 rounds: 20,
             },
-            speed: 0.9,
+            speed,
             setIndex,
         });
 
@@ -113,6 +114,20 @@ const Playback = ({
                     className='text-base font-semibold'
                 >
                     {karesz.isPlaying ? 'Playing' : 'Stopped'}
+                </div>
+                <div className='flex items-center gap-2'>
+                    <div>Tick</div>
+                    <input
+                        type='range'
+                        className='slider'
+                        min={1}
+                        max={2000}
+                        step={1}
+                        name='speed'
+                        value={speed}
+                        onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                    />
+                    <div className='font-bold text-karesz-light'>{speed}ms</div>
                 </div>
             </div>
             <div
@@ -164,12 +179,12 @@ const PlayerInfo = ({
     return !shown ? (
         <div
             onClick={() => show(true)}
-            className='p-2 rounded-full text-white text-lg'
+            className='absolute m-2 px-1.5 rounded-full inline-block bg-[rgba(0,0,0,50%)] text-white text-lg cursor-pointer'
         >
-            &#10005;
+            <i className='fa fa-gear'></i>
         </div>
     ) : (
-        <div className='top-0 right-0 flex text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-50'>
+        <div className='absolute flex m-2 text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-50'>
             <div className='flex-1'>
                 <div>
                     Tracking{' '}
@@ -214,7 +229,7 @@ const PlayerInfo = ({
             <div>
                 <div
                     onClick={() => show(false)}
-                    className='px-2 rounded-full text-white text-lg bg-slate-800 hover:text-karesz hover:bg-slate-600'
+                    className='px-2 rounded-full text-white text-lg cursor-pointer'
                 >
                     &#10005;
                 </div>

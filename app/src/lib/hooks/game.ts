@@ -7,7 +7,7 @@ export interface ScoreBoard {
     players: {
         name: string;
         place: number;
-        steps: number[];
+        steps?: number[];
         kills: number;
         rounds_survived: number;
         reason_of_death: string;
@@ -30,6 +30,7 @@ export const useGame = (
 ): [
     Game,
     { create: boolean; inLobby: number },
+    ScoreBoard | null,
     {
         startGame: () => void;
         submit: (s: string) => void;
@@ -54,7 +55,7 @@ export const useGame = (
         players: {},
         isHost: false,
     });
-    const [scoreBoard, setScoreBoard] = useState<ScoreBoard | null>(null);
+    const [scoreboard, setScoreboard] = useState<ScoreBoard | null>(null);
 
     /* HANDLER FUNCTIONS */
 
@@ -104,7 +105,7 @@ export const useGame = (
 
     // emitted on scoreboard update
     const scoreboardUpdate = (scoreBoard: ScoreBoard) =>
-        setScoreBoard(scoreBoard);
+        setScoreboard(scoreBoard);
 
     // emitted on a host change
     const onHostChange = ({ host }: { host: string }) =>
@@ -219,6 +220,7 @@ export const useGame = (
     return [
         state,
         meta,
+        scoreboard,
         {
             startGame,
             submit,

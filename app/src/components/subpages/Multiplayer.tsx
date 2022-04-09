@@ -1,4 +1,4 @@
-import { Game } from '../../lib/hooks/game';
+import { Game, ScoreBoard } from '../../lib/hooks/game';
 import { GameState } from '../../lib/shared/types';
 import PreJoin from '../multi/PreJoin';
 import Join from '../multi/Join';
@@ -7,12 +7,16 @@ import Main from '../multi/Main';
 const Multiplayer = ({
     game,
     meta,
+    scoreboard,
     functions,
     onError,
+    current,
 }: {
     onError: (error: string) => void;
     game: Game;
     meta: { create: boolean; inLobby: number };
+    scoreboard: ScoreBoard | null;
+    current: string;
     functions: {
         startGame: () => void;
         submit: (s: string) => void;
@@ -40,7 +44,7 @@ const Multiplayer = ({
                     playerCount={meta.inLobby}
                 />
             ) : (
-                <Main game={game} />
+                <Main current={current} game={game} scoreboard={scoreboard} />
             )}
         </div>
     );

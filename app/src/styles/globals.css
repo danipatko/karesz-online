@@ -59,4 +59,17 @@
     html {
         @apply bg-back;
     }
+
+    .sb > thead > tr > th {
+        @apply font-semibold text-left text-sm;
+    }
+
+    .sb td {
+        @apply text-sm border-y border-slate-600;
+    }
+
+    .sb td,
+    .sb th {
+        @apply p-2;
+    }
 }

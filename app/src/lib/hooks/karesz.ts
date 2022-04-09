@@ -155,9 +155,7 @@ const useKaresz = ({
         setState((s) => {
             return { ...s, isPlaying: true };
         });
-        setTimer(
-            setInterval(() => round(), (1 - clamp(speed, 0.0001, 1)) * 600)
-        );
+        setTimer(setInterval(() => round(), clamp(speed, 1, 2000))); // default speed is 50ms
     };
 
     // stops the game and resets players to the start position
