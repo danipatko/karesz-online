@@ -67,7 +67,7 @@ export const useGame = (
         setState({
             ...data,
             state: GameState.joined,
-            isHost: data.host === socket.id,
+            isHost: data.host === socket?.id,
         });
 
     // emitted when the game starts or ends

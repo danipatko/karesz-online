@@ -94,7 +94,7 @@ const Playback = ({
     };
 
     return (
-        <div className='text-white m-5'>
+        <div className='text-white'>
             <div className='flex gap-5 p-2 items-center'>
                 <button
                     className='text-xl px-2 fa fa-play hover:text-[#0f0]'
@@ -114,12 +114,11 @@ const Playback = ({
                 >
                     {karesz.isPlaying ? 'Playing' : 'Stopped'}
                 </div>
-                <PlayerInfo players={karesz.players} />
             </div>
             <div
                 onClick={onClickHandler}
                 ref={container}
-                className='bg-slate-800 h-[80vh] w-[80vh]'
+                className='bg-slate-800 h-[75vh] w-[75vh]'
                 style={{
                     backgroundImage: showGrid
                         ? `url('/grids/grid-${size}.svg')`
@@ -127,6 +126,8 @@ const Playback = ({
                     backgroundSize: showGrid ? 'cover' : 'none',
                 }}
             >
+                <PlayerInfo players={karesz.players} />
+
                 {karesz.players.map((player, i) => (
                     <Karesz size={tileSize} key={i} state={player.state} />
                 ))}
@@ -158,47 +159,65 @@ const PlayerInfo = ({
     players: { name: string; state: State }[];
 }) => {
     const [selected, select] = useState<number>(0);
+    const [shown, show] = useState<boolean>(false);
 
-    return (
-        <div className='text-white p-3 flex border-separate border-gray-300 flex-1 justify-end'>
-            <div className='border-r border-r-gray-600 px-4'>
-                Tracking{' '}
-                <span className='font-semibold'>
-                    <select
-                        onChange={(e) => select(parseInt(e.target.value))}
-                        name='select-karesz'
-                        className='outline-none border-none bg-transparent text-white'
-                    >
-                        {players.map((x, i) => (
-                            <option
-                                className='bg-slate-800 rounded-none'
-                                key={i}
-                                value={i}
-                            >
-                                {x.name}
-                            </option>
-                        ))}
-                    </select>
-                </span>
+    return !shown ? (
+        <div
+            onClick={() => show(true)}
+            className='p-2 rounded-full text-white text-lg'
+        >
+            &#10005;
+        </div>
+    ) : (
+        <div className='top-0 right-0 flex text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-50'>
+            <div className='flex-1'>
+                <div>
+                    Tracking{' '}
+                    <span className='font-semibold'>
+                        <select
+                            onChange={(e) => select(parseInt(e.target.value))}
+                            name='select-karesz'
+                            className='outline-none border-none bg-transparent text-white'
+                        >
+                            {players.map((x, i) => (
+                                <option
+                                    className='bg-slate-800 rounded-none'
+                                    key={i}
+                                    value={i}
+                                >
+                                    {x.name}
+                                </option>
+                            ))}
+                        </select>
+                    </span>
+                </div>
+                <div>
+                    Position{' '}
+                    <span className='text-karesz-light font-bold '>
+                        {players[selected].state.x}:{players[selected].state.y}
+                    </span>
+                </div>
+                <div>
+                    Looking{' '}
+                    <span className='text-karesz-light font-bold'>
+                        {
+                            ['UP', 'RIGHT', 'DOWN', 'LEFT'][
+                                players[selected].state.rotation
+                            ]
+                        }
+                    </span>
+                </div>
+                <div className='font-bold text-karesz-light'>
+                    {aliases[players[selected].state.c]}
+                </div>
             </div>
-            <div className='border-r border-r-gray-600 px-4 w-[140px] text-center'>
-                Position{' '}
-                <span className='text-karesz-light font-bold '>
-                    {players[selected].state.x}:{players[selected].state.y}
-                </span>
-            </div>
-            <div className='border-r border-r-gray-600 px-4 w-[160px] text-center'>
-                Looking{' '}
-                <span className='text-karesz-light font-bold'>
-                    {
-                        ['UP', 'RIGHT', 'DOWN', 'LEFT'][
-                            players[selected].state.rotation
-                        ]
-                    }
-                </span>
-            </div>
-            <div className='px-4 w-[200px] text-center'>
-                {aliases[players[selected].state.c]}
+            <div>
+                <div
+                    onClick={() => show(false)}
+                    className='px-2 rounded-full text-white text-lg bg-slate-800 hover:text-karesz hover:bg-slate-600'
+                >
+                    &#10005;
+                </div>
             </div>
         </div>
     );

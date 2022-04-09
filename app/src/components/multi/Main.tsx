@@ -8,27 +8,22 @@ const Main = ({ game }: { game: Game }) => {
             <div className='flex items-center mx-3'>
                 <div className='text-3xl font-bold p-5'>#{game.code}</div>
                 <Players
-                    players={[
-                        { id: '', name: 'foo bar', ready: true, wins: 1 },
-                        { id: '', name: 'dadwa', ready: false, wins: 1 },
-                        { id: '', name: 'dasfbar', ready: true, wins: 0 },
-                        ...Object.keys(game.players).map(
-                            (x) => game.players[x]
-                        ),
-                    ]}
+                    players={Object.keys(game.players).map(
+                        (x) => game.players[x]
+                    )}
                     host={game.host}
                 />
-                <div className='p-5 bg-karesz rounded-md text-xl font-bold'>
-                    READY
-                </div>
             </div>
-            <div className='flex'>
+            <div className='flex m-5 gap-4'>
                 <div className='flex-1'>
                     <Playback onClick={() => {}} showGrid={true} size={20} />
                 </div>
-                <div className='flex-1'></div>
+                <div className='flex-1 flex flex-col gap-4'>
+                    <div className='flex-1 bg-slate-800'></div>
+                    <div className='flex-1 bg-slate-800'></div>
+                    <div className='flex-1 bg-slate-800'></div>
+                </div>
             </div>
-            <div>{JSON.stringify(game)}</div>
         </div>
     );
 };

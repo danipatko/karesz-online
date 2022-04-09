@@ -54,4 +54,9 @@
     .slider::-moz-range-thumb {
         @apply rounded-full w-4 h-4 bg-karesz cursor-pointer;
     }
+
+    body,
+    html {
+        @apply bg-back;
+    }
 }
