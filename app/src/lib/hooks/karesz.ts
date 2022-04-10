@@ -39,7 +39,11 @@ const forward = (
     else return { x: x - 1, y };
 };
 
-const getState = (c: number, x: number, y: number, rotation: number): State => {
+// calculate the next step of the player
+const getPlayerState = (
+    c: number,
+    { x, y, rotation }: { x: number; y: number; rotation: number }
+): State => {
     switch (c) {
         case 0:
             // forward
@@ -55,17 +59,51 @@ const getState = (c: number, x: number, y: number, rotation: number): State => {
     }
 };
 
-const getSteps = (
-    start: { x: number; y: number; rotation: number },
-    arr: number[]
-): State[] => {
-    let state: State = { c: -1, ...start };
-    const result: State[] = [state];
-    arr.map((command) => {
-        state = getState(command, state.x, state.y, state.rotation);
-        result.push(state);
-    });
-    return result;
+// check if player has placed a rock
+const getObjectState = (
+    c: number,
+    {
+        x,
+        y,
+    }: {
+        x: number;
+        y: number;
+    }
+): { [key: string]: number } | undefined => {
+    if (c > 11) return { [`${x}-${y}`]: c - 10 };
+    return undefined;
+};
+
+// get all the steps of the players and objects
+const getAllSteps = (
+    players: Player[],
+    rounds: number
+): [{ steps: State[]; name: string }[], { [key: string]: number }[]] => {
+    const playerStates: { steps: State[]; name: string }[] = players.map(
+        (x) => {
+            return { steps: [{ c: -1, ...x.start }], name: x.name };
+        }
+    );
+    // TODO: set zeroth step to the original map of the game
+    const objectStates: { [key: string]: number }[] = [{}];
+
+    for (let i = 0; i < rounds; i++) {
+        players.map((x, k) => {
+            playerStates[k].steps.push(
+                getPlayerState(x.steps[i], playerStates[k].steps[i])
+            );
+            objectStates[i + 1] = {
+                ...(i > 0 && objectStates[i]), // add state from previous round
+                ...objectStates[i + 1], // add state from previous player
+                // add state from current player
+                ...getObjectState(x.steps[i], {
+                    ...playerStates[k].steps[i],
+                }),
+            };
+        });
+    }
+
+    return [playerStates, objectStates];
 };
 
 // function responsible for the playback
@@ -78,34 +116,50 @@ const useKaresz = ({
     speed: number;
     setIndex: Dispatch<SetStateAction<number>>;
 }): [
-    { players: { name: string; state: State }[]; isPlaying: boolean },
+    // animation state
+    {
+        players: { name: string; state: State }[];
+        objects: { [key: string]: number };
+        isPlaying: boolean;
+    },
+    // map state
     { [key: string]: number },
+    // control functions
     { play: () => void; pause: () => void; reset: () => void },
+    // map editor functions
     {
         stepTo: (step: number) => void;
         setBlock: (type: number, x: number, y: number) => void;
     }
 ] => {
     const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
-    const [players, setPlayers] = useState<Karesz[]>([]);
-    // this is the object where the current values need to be rendered
+    // these are the calculated player steps
+    const [playerStates, setPlayerStates] = useState<Karesz[]>([]);
+    // these are the calculated object states
+    const [objectStates, setObjectStates] = useState<
+        { [key: string]: number }[]
+    >([]);
+    // this is for the map editor
     const [objects, setObjects] = useState<{ [key: string]: number }>({});
+    // this is the state used for animation
     const [state, setState] = useState<{
         players: {
             name: string;
             state: State;
         }[];
+        objects: { [key: string]: number };
         isPlaying: boolean;
     }>({
         players: data.players.map((x) => {
             return { name: x.name, state: { c: -1, ...x.start } };
         }),
+        objects: {}, // TODO: load the original map of the game
         isPlaying: false,
     });
 
     // get a specific step by index
     const getStep = (index: number) =>
-        players.map((p) => {
+        playerStates.map((p) => {
             return {
                 name: p.name,
                 state: p.steps[index],
@@ -114,15 +168,10 @@ const useKaresz = ({
 
     useEffect(() => {
         // calculate the steps
-        setPlayers((players) => {
-            for (const player of data.players)
-                players.push({
-                    name: player.name,
-                    steps: getSteps(player.start, player.steps),
-                });
-
-            return players;
-        });
+        const [players, objects] = getAllSteps(data.players, data.rounds);
+        console.log(players, objects);
+        setPlayerStates(players);
+        setObjectStates(objects);
     }, []);
 
     const stop = () => {
@@ -141,6 +190,7 @@ const useKaresz = ({
             setState((s) => {
                 return {
                     ...s,
+                    objects: objectStates[i],
                     players: getStep(i),
                 };
             });
@@ -163,7 +213,7 @@ const useKaresz = ({
         stop();
         setIndex(0);
         setState((s) => {
-            return { ...s, players: getStep(0) };
+            return { ...s, players: getStep(0), objects: objectStates[0] };
         });
     };
 
@@ -173,12 +223,17 @@ const useKaresz = ({
         if (state.isPlaying) stop();
         setIndex(step);
         setState((s) => {
-            return { ...s, players: getStep(step) };
+            return {
+                ...s,
+                players: getStep(step),
+                objects: objectStates[step],
+            };
         });
     };
 
     // set the block at a specific position
     const setBlock = (type: number, x: number, y: number) => {
+        console.log(`setting block at ${x}, ${y} to ${type}`);
         setObjects((o) => {
             if (type === 0) {
                 delete o[`${x}-${y}`];

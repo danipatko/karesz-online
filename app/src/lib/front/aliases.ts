@@ -10,4 +10,8 @@ export const aliases: { [key: number]: string } = {
     7: 'Van-e alattam kavics',
     8: 'Mi van alattam',
     9: 'Van-e előttem fal',
+    12: 'Tegyél le egy (fekete) kavicsot',
+    13: 'Tegyél le egy (piros) kavicsot',
+    14: 'Tegyél le egy (zöld) kavicsot',
+    15: 'Tegyél le egy (sárga) kavicsot',
 };
