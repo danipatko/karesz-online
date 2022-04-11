@@ -17,6 +17,9 @@ pub struct Karesz {
 pub struct Player<'r> {
     pub name: &'r str,
     pub code: &'r str,
+    pub start_x: u32,
+    pub start_y: u32,
+    pub start_rotation: u8,
 }
 #[derive(Serialize, Debug)]
 pub struct PlayerScore {
@@ -69,17 +72,14 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
 }
 
 // generate the karesz objects and starting positions
-pub fn get_players(players: &Vec<Player>, size_x: u32, size_y: u32) -> HashMap<u8, Karesz> {
+pub fn get_players(players: &Vec<Player>) -> HashMap<u8, Karesz> {
     let mut res = HashMap::new();
-    // align players evenly on the x axis
-    let unit = size_x / (players.len() + 1) as u32;
-    let y = size_y / 2;
     for i in 0..players.len() {
         res.insert(
             i as u8,
             Karesz {
-                position: ((i + 1) as u32 * unit, y),
-                rotation: 0,
+                position: (players[i].start_x, players[i].start_y),
+                rotation: players[i].start_rotation,
                 id: i as u8,
                 is_moving: false,
                 kills: 0,
@@ -359,8 +359,8 @@ impl Moves for Karesz {
                     None
                 }
                 "5" => {
-                    self.steps.push(0x5);
                     if s.len() < 4 {
+                        self.steps.push(0x12);
                         self.place_rock(objects, 2);
                         return None;
                     }
@@ -373,6 +373,7 @@ impl Moves for Karesz {
                     } else {
                         value
                     };
+                    self.steps.push(10 + value);
                     self.place_rock(objects, value);
                     None
                 }
@@ -513,7 +514,7 @@ impl GameActions for Game {
     fn new_custom(players: &Vec<Player>, size_x: u32, size_y: u32, map: &String) -> Option<Self> {
         match parse_map(map, size_x, size_y) {
             Some(objects) => Some(Game {
-                players: get_players(players, size_x, size_y),
+                players: get_players(players),
                 objects,
                 proposed_steps: HashMap::new(),
                 death_row: Vec::new(),
@@ -532,7 +533,7 @@ impl GameActions for Game {
     fn new_load(players: &Vec<Player>, _map: &str) -> Option<Self> {
         // TODO: Load map by name
         Some(Game {
-            players: get_players(players, 20, 20),
+            players: get_players(players),
             objects: HashMap::new(),
             proposed_steps: HashMap::new(),
             death_row: Vec::new(),

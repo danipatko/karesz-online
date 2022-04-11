@@ -22,12 +22,20 @@ export interface Game {
     host: string; // the id of the host
     players: { [id: string]: Player };
     isHost: boolean;
-    map: { map: { [key: string]: number }; size: number };
+    // information required to recreate the game
+    startState: {
+        map: {
+            objects: { [key: string]: number };
+            size: number;
+        };
+        players: Player[];
+        rounds: number;
+    };
 }
 
 export const useGame = (
     code: number,
-    onError: (error: string) => void
+    warn: (error: string) => void
 ): [
     Game,
     { create: boolean; inLobby: number },
@@ -58,8 +66,15 @@ export const useGame = (
         code,
         host: '',
         players: {},
-        map: { map: {}, size: 20 },
         isHost: false,
+        startState: {
+            map: {
+                objects: {},
+                size: 20,
+            },
+            rounds: 0,
+            players: [],
+        },
     });
     const [scoreboard, setScoreboard] = useState<ScoreBoard | null>(null);
 
@@ -70,12 +85,14 @@ export const useGame = (
         host: string;
         players: { [id: string]: Player };
         code: number;
-        map: { map: { [key: string]: number }; size: number };
     }) =>
-        setState({
-            ...data,
-            state: GameState.joined,
-            isHost: data.host === socket?.id,
+        setState((s) => {
+            return {
+                ...s,
+                ...data,
+                state: GameState.joined,
+                isHost: data.host === socket?.id,
+            };
         });
 
     // emitted when the game starts or ends
@@ -96,7 +113,7 @@ export const useGame = (
     // emitted when a player leaves
     const onLeave = ({ id }: { id: string }) =>
         setState((s) => {
-            onError(`${s.players[id]} has left the game.`);
+            warn(`${s.players[id]} has left the game.`);
             delete s.players[id];
             return { ...s };
         });
@@ -113,6 +130,9 @@ export const useGame = (
     // emitted on scoreboard update
     const scoreboardUpdate = (scoreBoard: ScoreBoard) =>
         setScoreboard(scoreBoard);
+
+    // emitted on game end
+    const gameEnd = (data: { winner: string; draw: boolean }) => {};
 
     // emitted on a host change
     const onHostChange = ({ host }: { host: string }) =>
@@ -132,7 +152,7 @@ export const useGame = (
     }) => {
         setState((s) => {
             if (!found) {
-                onError(`Game could not be found.`);
+                warn(`Game could not be found.`);
                 return { ...s, state: GameState.disconnected };
             }
             setMeta((m) => Object({ ...m, inLobby: playerCount }));
@@ -144,16 +164,6 @@ export const useGame = (
         });
     };
 
-    const onMapUpdate = (map: {
-        map: { [key: string]: number };
-        size: number;
-    }) => {
-        console.log(`EV: map_update`);
-        setState((s) => {
-            return { ...s, map };
-        });
-    };
-
     // init function
     useEffect(() => {
         const socket = io();
@@ -162,10 +172,9 @@ export const useGame = (
         // basic error handling
         socket.on('info', onInfo);
         socket.on('left', onLeave);
-        socket.on('error', ({ error }: { error: string }) => onError(error));
+        socket.on('error', ({ error }: { error: string }) => warn(error));
         socket.on('fetch', fetch);
         socket.on('joined', onJoin);
-        socket.on('map_update', onMapUpdate);
         socket.on('host_change', onHostChange);
         socket.on('state_update', stateUpdate);
         socket.on('player_update', playerUpdate);
@@ -199,7 +208,7 @@ export const useGame = (
         if (socket === null) return;
         console.log(`EM: join as ${name}`);
         if (!name.replace(/[^a-zA-Z\d\-\.\_]/gm, '').length) {
-            onError('Please enter a valid name.');
+            warn('Please enter a valid name.');
             return;
         }
         socket.emit(meta.create ? 'create' : 'join', {

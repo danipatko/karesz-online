@@ -85,9 +85,18 @@ export default class Session {
                     type: 'parse',
                     mapName: '',
                 };
-                this.announce('map_update', config);
             }
         );
+        // set map updater listener
+        socket.on('load_map', ({ map }: { map: string }) => {
+            // TODO: handle loading map
+            this.map = {
+                size: 20,
+                map: {},
+                type: 'parse',
+                mapName: map,
+            };
+        });
         if (!noemit) this.announce('host_change', { host: socket.id });
     }
 
