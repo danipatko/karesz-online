@@ -7,24 +7,28 @@ import Main from '../multi/Main';
 const Multiplayer = ({
     game,
     meta,
-    scoreboard,
-    functions,
     onError,
     current,
+    functions,
+    scoreboard,
 }: {
-    onError: (error: string) => void;
     game: Game;
     meta: { create: boolean; inLobby: number };
-    scoreboard: ScoreBoard | null;
+    onError: (error: string) => void;
     current: string;
+    scoreboard: ScoreBoard | null;
     functions: {
-        startGame: () => void;
-        submit: (s: string) => void;
-        preJoin: (code: number) => void;
-        join: (name: string) => void;
-        create: (name: string) => void;
-        preCreate: () => void;
         exit: () => void;
+        join: (name: string) => void;
+        submit: (s: string) => void;
+        create: (name: string) => void;
+        preJoin: (code: number) => void;
+        startGame: () => void;
+        preCreate: () => void;
+        uploadMap: (config: {
+            map: { [key: string]: number };
+            size: number;
+        }) => void;
     };
 }) => {
     return (
@@ -44,7 +48,13 @@ const Multiplayer = ({
                     playerCount={meta.inLobby}
                 />
             ) : (
-                <Main current={current} game={game} scoreboard={scoreboard} />
+                <Main
+                    map={game.map}
+                    updateMap={functions.uploadMap}
+                    current={current}
+                    game={game}
+                    scoreboard={scoreboard}
+                />
             )}
         </div>
     );

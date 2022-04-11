@@ -111,7 +111,9 @@ const useKaresz = ({
     data,
     speed,
     setIndex,
+    objects,
 }: {
+    objects: { [key: string]: number };
     data: { players: Player[]; rounds: number };
     speed: number;
     setIndex: Dispatch<SetStateAction<number>>;
@@ -122,14 +124,12 @@ const useKaresz = ({
         objects: { [key: string]: number };
         isPlaying: boolean;
     },
-    // map state
-    { [key: string]: number },
     // control functions
-    { play: () => void; pause: () => void; reset: () => void },
-    // map editor functions
     {
+        play: () => void;
+        pause: () => void;
+        reset: () => void;
         stepTo: (step: number) => void;
-        setBlock: (type: number, x: number, y: number) => void;
     }
 ] => {
     const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
@@ -139,8 +139,6 @@ const useKaresz = ({
     const [objectStates, setObjectStates] = useState<
         { [key: string]: number }[]
     >([]);
-    // this is for the map editor
-    const [objects, setObjects] = useState<{ [key: string]: number }>({});
     // this is the state used for animation
     const [state, setState] = useState<{
         players: {
@@ -153,7 +151,7 @@ const useKaresz = ({
         players: data.players.map((x) => {
             return { name: x.name, state: { c: -1, ...x.start } };
         }),
-        objects: {}, // TODO: load the original map of the game
+        objects, // TODO: load the original map of the game
         isPlaying: false,
     });
 
@@ -175,7 +173,6 @@ const useKaresz = ({
     }, []);
 
     const stop = () => {
-        console.log('stopping...');
         clearInterval(timer);
         setState((s) => {
             return { ...s, isPlaying: false };
@@ -231,22 +228,7 @@ const useKaresz = ({
         });
     };
 
-    // set the block at a specific position
-    const setBlock = (type: number, x: number, y: number) => {
-        console.log(`setting block at ${x}, ${y} to ${type}`);
-        setObjects((o) => {
-            if (type === 0) {
-                delete o[`${x}-${y}`];
-                return { ...o };
-            }
-            return {
-                ...o,
-                [`${x}-${y}`]: type,
-            };
-        });
-    };
-
-    return [state, objects, { play, pause: stop, reset }, { stepTo, setBlock }];
+    return [state, { play, pause: stop, reset, stepTo }];
 };
 
 export default useKaresz;

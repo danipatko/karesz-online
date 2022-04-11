@@ -6,12 +6,12 @@ import useKaresz, { State } from '../../lib/hooks/karesz';
 // TODO: textures
 const Obj = ({
     size,
-    position,
     type,
+    position,
 }: {
-    type: number;
     size: number;
-    position: number[];
+    type: number;
+    position: string; // two numbers separated by '-'
 }) => {
     return (
         <div
@@ -19,7 +19,7 @@ const Obj = ({
             style={{
                 borderRadius: type > 1 ? '100%' : '0',
                 backgroundColor: [
-                    'none',
+                    '#fff',
                     '#8f1110',
                     '#000',
                     '#f00',
@@ -28,9 +28,9 @@ const Obj = ({
                 ][type],
                 width: size,
                 height: size,
-                transform: `translate(${100 * position[0]}%,${
-                    100 * position[1]
-                }%)`,
+                transform: `translate(${
+                    100 * parseInt(position.split('-')[0])
+                }%,${100 * parseInt(position.split('-')[1])}%)`,
             }}
         ></div>
     );
@@ -61,58 +61,68 @@ const Karesz = ({
 
 const Playback = ({
     size,
+    view,
+    onClick,
     showGrid,
-    selected,
+    editorObjects,
+    playbackObjects,
 }: {
     size: 10 | 20 | 30 | 40;
+    view: 'edit' | 'play';
+    onClick: (x: number, y: number) => void;
     showGrid: boolean;
-    selected: number;
-    // onClick: (x: number, y: number) => number;
+    editorObjects: { [key: string]: number };
+    playbackObjects: { [key: string]: number };
 }) => {
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
+    // current step
     const [index, setIndex] = useState<number>(0);
+    // playback tick speed
     const [speed, setSpeed] = useState<number>(50);
-    const [karesz, objects, { play, pause, reset }, { setBlock, stepTo }] =
-        useKaresz({
-            data: {
-                players: [
-                    {
-                        name: 'karex',
-                        steps: [
-                            0, 12, 0, 12, 0, 12, 0, 13, 2, 0, 13, 0, 13, 0, 13,
-                            2, 0, 14, 0,
-                        ],
-                        start: {
-                            x: 5,
-                            y: 5,
-                            rotation: 0,
-                        },
+    // the animator object
+    const [karesz, { play, pause, reset, stepTo }] = useKaresz({
+        // this data object is obtained from the rust api
+        data: {
+            players: [
+                {
+                    name: 'karex',
+                    steps: [
+                        0, 12, 0, 12, 0, 12, 0, 13, 2, 0, 13, 0, 13, 0, 13, 2,
+                        0, 14, 0,
+                    ],
+                    start: {
+                        x: 5,
+                        y: 5,
+                        rotation: 0,
                     },
-                    {
-                        name: 'karex2',
-                        steps: [
-                            0, 12, 0, 12, 0, 12, 0, 13, 2, 0, 13, 0, 13, 0, 13,
-                            2, 0, 14, 0,
-                        ],
-                        start: {
-                            x: 7,
-                            y: 6,
-                            rotation: 0,
-                        },
+                },
+                {
+                    name: 'karex2',
+                    steps: [
+                        0, 12, 0, 12, 0, 12, 0, 13, 2, 0, 13, 0, 13, 0, 13, 2,
+                        0, 14, 0,
+                    ],
+                    start: {
+                        x: 7,
+                        y: 6,
+                        rotation: 0,
                     },
-                ],
-                rounds: 20,
-            },
-            speed,
-            setIndex,
-        });
-
+                },
+            ],
+            rounds: 20,
+        },
+        objects: playbackObjects,
+        speed,
+        setIndex,
+    });
+    // scale the container
     const adjust = () => {
         if (container.current) setSize(container.current.clientWidth / size);
     };
 
     useEffect(() => {
+        console.log(playbackObjects);
         adjust();
         window.addEventListener('load', adjust);
         window.addEventListener('resize', adjust);
@@ -121,12 +131,7 @@ const Playback = ({
     // get x and y coordinates of the event
     const onClickHandler = (e: any) => {
         const rect = container.current.getBoundingClientRect();
-        console.log(
-            Math.floor((e.clientX - rect.left) / tileSize),
-            Math.floor((e.clientY - rect.top) / tileSize)
-        );
-        setBlock(
-            selected,
+        onClick(
             Math.floor((e.clientX - rect.left) / tileSize),
             Math.floor((e.clientY - rect.top) / tileSize)
         );
@@ -169,51 +174,57 @@ const Playback = ({
                 </div>
             </div>
             <div
-                onClick={onClickHandler}
-                // onMouseMove={onClickHandler}
                 ref={container}
-                className='bg-slate-800 h-[75vh] w-[75vh]'
                 style={{
                     backgroundImage: showGrid
                         ? `url('/grids/grid-${size}.svg')`
                         : 'none',
                     backgroundSize: showGrid ? 'cover' : 'none',
                 }}
+                onClick={onClickHandler}
+                className='bg-slate-800 h-[75vh] w-[75vh]'
             >
                 <PlayerInfo players={karesz.players} />
 
-                {karesz.players.map((player, i) => (
-                    <Karesz size={tileSize} key={i} state={player.state} />
-                ))}
-
-                {Object.keys(karesz.objects).map((pos, i) => {
-                    return (
-                        <Obj
-                            type={karesz.objects[pos]}
-                            key={i}
-                            size={tileSize}
-                            position={pos.split('-').map((x) => parseInt(x))}
-                        />
-                    );
-                })}
-
-                {Object.keys(objects).map((o, i) => {
-                    return (
-                        <Obj
-                            type={objects[o]}
-                            key={i}
-                            size={tileSize}
-                            position={o.split('-').map((x) => parseInt(x))}
-                        />
-                    );
-                })}
+                {view == 'edit' ? (
+                    <>
+                        {Object.keys(editorObjects).map((pos, i) => {
+                            return (
+                                <Obj
+                                    key={i}
+                                    type={editorObjects[pos]}
+                                    size={tileSize}
+                                    position={pos}
+                                />
+                            );
+                        })}
+                    </>
+                ) : (
+                    <>
+                        {Object.keys(karesz.objects ?? {}).map((pos, i) => (
+                            <Obj
+                                key={i}
+                                size={tileSize}
+                                type={karesz.objects[pos]}
+                                position={pos}
+                            />
+                        ))}
+                        {Object.values(karesz.players).map((karesz, i) => (
+                            <Karesz
+                                key={i}
+                                size={tileSize}
+                                state={karesz.state}
+                            />
+                        ))}
+                    </>
+                )}
             </div>
 
             <div className='p-2'>
                 <input
-                    type='range'
                     min={0}
                     max={20 - 1}
+                    type='range'
                     value={index}
                     onChange={(e) => stepTo(parseInt(e.target.value))}
                     className='slider'

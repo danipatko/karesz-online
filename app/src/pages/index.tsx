@@ -44,12 +44,12 @@ const Home: NextPage = (props: any) => {
                 <Playground />
             ) : view === View.Multiplayer ? (
                 <Multiplayer
-                    onError={err}
                     game={game}
                     meta={meta}
+                    current={content}
+                    onError={err}
                     functions={functions}
                     scoreboard={scoreboard}
-                    current={content}
                 />
             ) : view === View.Docs ? (
                 <Docs />

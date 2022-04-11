@@ -22,6 +22,7 @@ export interface Game {
     host: string; // the id of the host
     players: { [id: string]: Player };
     isHost: boolean;
+    map: { map: { [key: string]: number }; size: number };
 }
 
 export const useGame = (
@@ -32,13 +33,17 @@ export const useGame = (
     { create: boolean; inLobby: number },
     ScoreBoard | null,
     {
-        startGame: () => void;
-        submit: (s: string) => void;
-        preJoin: (code: number) => void;
-        join: (name: string) => void;
-        create: (name: string) => void;
-        preCreate: () => void;
         exit: () => void;
+        join: (name: string) => void;
+        submit: (s: string) => void;
+        create: (name: string) => void;
+        preJoin: (code: number) => void;
+        startGame: () => void;
+        preCreate: () => void;
+        uploadMap: (config: {
+            map: { [key: string]: number };
+            size: number;
+        }) => void;
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
@@ -53,6 +58,7 @@ export const useGame = (
         code,
         host: '',
         players: {},
+        map: { map: {}, size: 20 },
         isHost: false,
     });
     const [scoreboard, setScoreboard] = useState<ScoreBoard | null>(null);
@@ -64,6 +70,7 @@ export const useGame = (
         host: string;
         players: { [id: string]: Player };
         code: number;
+        map: { map: { [key: string]: number }; size: number };
     }) =>
         setState({
             ...data,
@@ -137,21 +144,31 @@ export const useGame = (
         });
     };
 
+    const onMapUpdate = (map: {
+        map: { [key: string]: number };
+        size: number;
+    }) => {
+        setState((s) => {
+            return { ...s, map };
+        });
+    };
+
     // init function
     useEffect(() => {
         const socket = io();
         /* BIND DEFAULT EVENTS TO SOCKET */
 
         // basic error handling
+        socket.on('info', onInfo);
+        socket.on('left', onLeave);
         socket.on('error', ({ error }: { error: string }) => onError(error));
         socket.on('fetch', fetch);
-        socket.on('state_update', stateUpdate);
         socket.on('joined', onJoin);
-        socket.on('left', onLeave);
+        socket.on('map_update', onMapUpdate);
+        socket.on('host_change', onHostChange);
+        socket.on('state_update', stateUpdate);
         socket.on('player_update', playerUpdate);
         socket.on('scoreboard_update', scoreboardUpdate);
-        socket.on('host_change', onHostChange);
-        socket.on('info', onInfo);
         // TODO: show the compiler logs to the user to find the error
         socket.on('compile_error', (data) =>
             console.log(`Faield to start game\n`, data)
@@ -165,6 +182,15 @@ export const useGame = (
         if (socket === null || socket.id !== state.host) return;
         console.log(`EM: startGame`);
         socket.emit('start_game');
+    };
+
+    // update the starting map state
+    const uploadMap = (config: {
+        map: { [key: string]: number };
+        size: number;
+    }) => {
+        console.log(`EM: uploadMap`);
+        socket.emit('upload_map', config);
     };
 
     // enter the display name for a pending game join
@@ -229,6 +255,7 @@ export const useGame = (
             preCreate,
             create,
             exit,
+            uploadMap,
         },
     ];
 };

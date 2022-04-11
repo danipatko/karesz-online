@@ -38,10 +38,10 @@ host:
 */
 
 interface CustomMap {
-    map: string; // the matrix as a string or the map name
+    map: { [key: string]: number }; // the matrix as a string or the map name
     type: 'load' | 'parse';
-    x: number;
-    y: number;
+    size: number;
+    mapName: string;
 }
 
 export default class Session {
@@ -49,7 +49,7 @@ export default class Session {
     protected state: GameState = GameState.waiting;
     protected host: string = ''; // the id of the host player
     protected code: number; // randomly generated code
-    protected map: CustomMap | undefined = undefined;
+    protected map: CustomMap = { map: {}, type: 'load', size: 20, mapName: '' };
     public destroy: () => void; // this is a callback function to remove this instance from the map
 
     // create a new instance of a game
@@ -76,6 +76,25 @@ export default class Session {
             this.map = config;
             this.state = GameState.waiting;
         });
+        // set map updater listener
+        socket.on(
+            'update_map',
+            ({
+                map,
+                size,
+            }: {
+                map: { [key: string]: number };
+                size: number;
+            }) => {
+                this.map = {
+                    map,
+                    size,
+                    type: 'parse',
+                    mapName: '',
+                };
+                this.announce('map_update', { map, size });
+            }
+        );
         if (!noemit) this.announce('host_change', { host: socket.id });
     }
 
@@ -122,6 +141,7 @@ export default class Session {
             code: this.code,
             state: this.state,
             host: this.host,
+            map: { map: this.map.map, size: this.map.size },
         });
     }
 

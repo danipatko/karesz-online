@@ -1,10 +1,14 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 const MapEditor = ({
+    view,
+    setView,
     selected,
-    setSelected,
     clearAll,
+    setSelected,
 }: {
+    view: 'edit' | 'play';
+    setView: (view: 'edit' | 'play') => void;
     selected: number;
     setSelected: Dispatch<SetStateAction<number>>;
     clearAll: () => void;
@@ -13,14 +17,10 @@ const MapEditor = ({
         <div className='p-2 bg-main rounded-md'>
             <div className='flex justify-between'>
                 <div className='text-lg mb-4'>Edit map</div>
-                <div>
-                    <select className='outline-none border-none bg-main rounded-none'>
-                        <option value='0'>palya1</option>
-                        <option value='1'>palya2</option>
-                        <option value='2'>palya3</option>
-                        <option value='3'>palya4</option>
-                    </select>
-                </div>
+            </div>
+            <div>
+                <button onClick={() => setView('edit')}>Editor</button>
+                <button onClick={() => setView('play')}>Playback</button>
             </div>
             <div
                 onWheel={(e) => {
