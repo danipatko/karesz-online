@@ -79,20 +79,13 @@ export default class Session {
         // set map updater listener
         socket.on(
             'update_map',
-            ({
-                map,
-                size,
-            }: {
-                map: { [key: string]: number };
-                size: number;
-            }) => {
+            (config: { map: { [key: string]: number }; size: number }) => {
                 this.map = {
-                    map,
-                    size,
+                    ...config,
                     type: 'parse',
                     mapName: '',
                 };
-                this.announce('map_update', { map, size });
+                this.announce('map_update', config);
             }
         );
         if (!noemit) this.announce('host_change', { host: socket.id });

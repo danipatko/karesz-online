@@ -148,6 +148,7 @@ export const useGame = (
         map: { [key: string]: number };
         size: number;
     }) => {
+        console.log(`EV: map_update`);
         setState((s) => {
             return { ...s, map };
         });
@@ -190,7 +191,7 @@ export const useGame = (
         size: number;
     }) => {
         console.log(`EM: uploadMap`);
-        socket.emit('upload_map', config);
+        socket.emit('update_map', config);
     };
 
     // enter the display name for a pending game join

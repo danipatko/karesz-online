@@ -8,16 +8,11 @@ import Scoreboard from './Scoreboard';
 import Submit from './Submit';
 
 const Main = ({
-    map,
     game,
     current,
     updateMap,
     scoreboard,
 }: {
-    map: {
-        map: { [key: string]: number };
-        size: number;
-    };
     game: Game;
     current: string;
     updateMap: (config: {
@@ -36,7 +31,7 @@ const Main = ({
                 hide={() => showSubmit(false)}
                 shown={submitShown}
                 current={current}
-                onSubmit={() => updateMap(getMap())}
+                onSubmit={() => {}}
             />
             <div className='flex items-center mx-3'>
                 <div className='text-3xl font-bold p-5'>#{game.code}</div>
@@ -56,7 +51,7 @@ const Main = ({
                         view={_map.view}
                         onClick={(x, y) => setBlock(x, y, selected)}
                         showGrid={true}
-                        playbackObjects={map.map}
+                        playbackObjects={game.map.map}
                         editorObjects={_map.objects}
                     />
                 </div>
@@ -73,6 +68,11 @@ const Main = ({
                         <button onClick={() => showSubmit(true)} className=''>
                             SUBMIT
                         </button>
+                        <div>
+                            <button onClick={() => updateMap(getMap())}>
+                                Sumit map
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

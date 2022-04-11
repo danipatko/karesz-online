@@ -1,4 +1,3 @@
-import e from 'express';
 import { useEffect, useRef, useState } from 'react';
 import { aliases } from '../../lib/front/aliases';
 import useKaresz, { State } from '../../lib/hooks/karesz';

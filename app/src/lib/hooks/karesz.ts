@@ -77,15 +77,15 @@ const getObjectState = (
 // get all the steps of the players and objects
 const getAllSteps = (
     players: Player[],
-    rounds: number
+    rounds: number,
+    objects: { [key: string]: number }
 ): [{ steps: State[]; name: string }[], { [key: string]: number }[]] => {
     const playerStates: { steps: State[]; name: string }[] = players.map(
         (x) => {
             return { steps: [{ c: -1, ...x.start }], name: x.name };
         }
     );
-    // TODO: set zeroth step to the original map of the game
-    const objectStates: { [key: string]: number }[] = [{}];
+    const objectStates: { [key: string]: number }[] = [objects];
 
     for (let i = 0; i < rounds; i++) {
         players.map((x, k) => {
@@ -166,11 +166,15 @@ const useKaresz = ({
 
     useEffect(() => {
         // calculate the steps
-        const [players, objects] = getAllSteps(data.players, data.rounds);
-        console.log(players, objects);
+        const [players, _objects] = getAllSteps(
+            data.players,
+            data.rounds,
+            objects
+        );
+        console.log(players, _objects);
         setPlayerStates(players);
-        setObjectStates(objects);
-    }, []);
+        setObjectStates(_objects);
+    }, [objects]);
 
     const stop = () => {
         clearInterval(timer);

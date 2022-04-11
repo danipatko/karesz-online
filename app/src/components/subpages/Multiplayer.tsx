@@ -35,24 +35,23 @@ const Multiplayer = ({
         <div className='text-white'>
             {game.state === GameState.disconnected ? (
                 <Join
-                    onError={onError}
                     onJoin={functions.preJoin}
+                    onError={onError}
                     onCreate={functions.preCreate}
                 />
             ) : game.state === GameState.prejoin ? (
                 <PreJoin
-                    cancel={functions.exit}
-                    modeCreate={meta.create}
                     code={game.code}
+                    cancel={functions.exit}
                     onJoin={functions.join}
+                    modeCreate={meta.create}
                     playerCount={meta.inLobby}
                 />
             ) : (
                 <Main
-                    map={game.map}
-                    updateMap={functions.uploadMap}
-                    current={current}
                     game={game}
+                    current={current}
+                    updateMap={functions.uploadMap}
                     scoreboard={scoreboard}
                 />
             )}
