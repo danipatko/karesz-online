@@ -20,6 +20,7 @@ const Multiplayer = ({
     functions: {
         exit: () => void;
         join: (name: string) => void;
+        isHost: () => boolean;
         submit: (s: string) => void;
         create: (name: string) => void;
         preJoin: (code: number) => void;
@@ -46,6 +47,7 @@ const Multiplayer = ({
                 />
             ) : (
                 <Main
+                    isHost={functions.isHost()}
                     game={game}
                     current={current}
                     updateMap={functions.updateMap}

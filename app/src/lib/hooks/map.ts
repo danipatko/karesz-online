@@ -1,10 +1,10 @@
 import { useState } from 'react';
+import maps from '../front/maps';
 import { GameMap } from '../shared/types';
 
-interface MapProps {
-    size: 10 | 20 | 30 | 40;
+export interface MapProps {
+    map: GameMap;
     view: 'edit' | 'play';
-    objects: { [key: string]: number };
 }
 
 // map config editor
@@ -16,17 +16,24 @@ const useMap = (): [
         setView: (view: 'edit' | 'play') => void;
         setBlock: (x: number, y: number, type: number) => void;
         clearAll: () => void;
+        setType: (type: 'parse' | 'load') => void;
+        loadMap: (name: string) => void;
+        reset: (playback: GameMap) => void;
     }
 ] => {
     const [state, setState] = useState<MapProps>({
-        size: 20,
-        view: 'edit',
-        objects: {},
+        view: 'play',
+        map: {
+            load: '0',
+            size: 20,
+            type: 'parse',
+            objects: {},
+        },
     });
 
     // clear the entire map
     const clearAll = (): void => {
-        setState((s) => Object({ ...s, objects: {}, walls: {} }));
+        setState((s) => Object({ ...s, map: { ...s.map, objects: {} } }));
     };
 
     // set a block at a specific position
@@ -35,19 +42,22 @@ const useMap = (): [
         setState((s) => {
             // delete field
             if (type === 0) {
-                delete s.objects[`${x}-${y}`];
+                delete s.map.objects[`${x}-${y}`];
                 return { ...s };
             }
             return {
                 ...s,
-                objects: { ...s.objects, [`${x}-${y}`]: type },
+                map: {
+                    ...s.map,
+                    objects: { ...s.map.objects, [`${x}-${y}`]: type },
+                },
             };
         });
     };
 
     const setSize = (size: 10 | 20 | 30 | 40): void => {
         setState((s) => {
-            return { ...s, size };
+            return { ...s, map: { ...s.map, size } };
         });
     };
 
@@ -56,17 +66,48 @@ const useMap = (): [
             return { ...s, view };
         });
 
-    // returns the current contents of the editor
-    const getMap = (): GameMap => {
-        return {
-            load: '',
-            type: 'parse',
-            size: state.size,
-            objects: state.objects,
-        };
+    const setType = (type: 'parse' | 'load') => {
+        setState((s) => {
+            return { ...s, map: { ...s.map, type } };
+        });
     };
 
-    return [state, { clearAll, setBlock, setSize, setView, getMap }];
+    const loadMap = (name: string) => {
+        setState((s) => {
+            return {
+                ...s,
+                map: {
+                    ...s.map,
+                    type: 'load',
+                    load: name,
+                    objects: maps[name]?.objects ?? {},
+                    size: maps[name]?.size ?? 10,
+                },
+            };
+        });
+    };
+
+    // returns the current contents of the editor
+    const getMap = (): GameMap => state.map;
+
+    const reset = (playback: GameMap) =>
+        setState((s) => {
+            return { ...s, map: playback };
+        });
+
+    return [
+        state,
+        {
+            clearAll,
+            setBlock,
+            setSize,
+            setView,
+            getMap,
+            setType,
+            loadMap,
+            reset,
+        },
+    ];
 };
 
 export default useMap;

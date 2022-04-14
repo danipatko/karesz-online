@@ -102,9 +102,11 @@ const Playback = ({
     useEffect(() => {
         console.log(playbackObjects);
         adjust();
-        window.addEventListener('load', adjust);
-        window.addEventListener('resize', adjust);
-    }, []);
+        window.onload = () => {
+            window.addEventListener('load', adjust);
+            window.addEventListener('resize', adjust);
+        };
+    }, [size]);
 
     // get x and y coordinates of the event
     const onClickHandler = (e: any) => {
@@ -160,7 +162,7 @@ const Playback = ({
                     backgroundSize: showGrid ? 'cover' : 'none',
                 }}
                 onClick={onClickHandler}
-                className='bg-slate-800 h-[75vh] w-[75vh]'
+                className='bg-slate-800 h-[75vh] w-[75vh] relative overflow-hidden'
             >
                 <PlayerInfo players={karesz.players} />
 
@@ -177,7 +179,7 @@ const Playback = ({
                             );
                         })}
                     </>
-                ) : (
+                ) : karesz.isPlaying ? (
                     <>
                         {Object.keys(karesz.objects ?? {}).map((pos, i) => (
                             <Obj
@@ -192,6 +194,17 @@ const Playback = ({
                                 key={i}
                                 size={tileSize}
                                 state={karesz.state}
+                            />
+                        ))}
+                    </>
+                ) : (
+                    <>
+                        {Object.keys(playbackObjects ?? {}).map((pos, i) => (
+                            <Obj
+                                key={i}
+                                size={tileSize}
+                                type={playbackObjects[pos]}
+                                position={pos}
                             />
                         ))}
                     </>

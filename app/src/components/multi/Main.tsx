@@ -10,18 +10,20 @@ import Submit from './Submit';
 
 const Main = ({
     game,
+    isHost,
     current,
     updateMap,
     scoreboard,
 }: {
     game: Game;
+    isHost: boolean;
     current: string;
     updateMap: (map: GameMap) => void;
     scoreboard: SB | null;
 }) => {
     const [submitShown, showSubmit] = useState<boolean>(false);
-    const [selected, setSelected] = useState<number>(0);
-    const [_map, { clearAll, setBlock, setSize, setView, getMap }] = useMap();
+    const [block, setBlock] = useState<number>(0);
+    const [editor, functions] = useMap();
 
     return (
         <div>
@@ -42,36 +44,38 @@ const Main = ({
                 <div className='flex-1'>
                     <Playback
                         size={
-                            _map.view == 'edit'
-                                ? _map.size
-                                : (game.map.size as 10 | 20 | 30 | 40) // ouch
+                            editor.view == 'edit'
+                                ? (editor.map.size as 10 | 20 | 30 | 40)
+                                : (game.map.size as 10 | 20 | 30 | 40)
                         }
                         scoreboard={scoreboard}
-                        view={_map.view}
-                        onClick={(x, y) => setBlock(x, y, selected)}
+                        view={editor.view}
+                        onClick={(x, y) => functions.setBlock(x, y, block)}
                         showGrid={true}
                         playbackObjects={game.map.objects}
-                        editorObjects={_map.objects}
+                        editorObjects={editor.map.objects}
                     />
                 </div>
                 <div className='flex-1 flex flex-col gap-4'>
                     <Scoreboard scoreboard={scoreboard} />
                     <MapEditor
-                        view={_map.view}
-                        setView={setView}
+                        map={game.map}
+                        host={isHost}
+                        editor={editor}
+                        onSave={() => updateMap(functions.getMap())}
+                        loadMap={functions.loadMap}
+                        setType={functions.setType}
+                        setSize={functions.setSize}
+                        setView={functions.setView}
+                        onCancel={() => functions.reset(game.map)}
                         clearAll={() => {}}
-                        selected={selected}
-                        setSelected={setSelected}
+                        selected={block}
+                        setSelected={setBlock}
                     />
                     <div className='flex-1 bg-main rounded-md'>
                         <button onClick={() => showSubmit(true)} className=''>
                             SUBMIT
                         </button>
-                        <div>
-                            <button onClick={() => updateMap(getMap())}>
-                                Sumit map
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

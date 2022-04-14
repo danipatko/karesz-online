@@ -49,6 +49,7 @@ export const useGame = (
     {
         exit: () => void;
         join: (name: string) => void;
+        isHost: () => boolean;
         submit: (s: string) => void;
         create: (name: string) => void;
         preJoin: (code: number) => void;
@@ -129,19 +130,16 @@ export const useGame = (
         });
     };
 
-    // emitted on scoreboard update
+    // emitted on game end
     const scoreboardUpdate = (scoreboard: Scoreboard) =>
         setScoreboard(scoreboard);
 
-    // emitted on game end
-    const gameEnd = (data: { winner: string; draw: boolean }) => {};
-
     // emitted on a host change
-    const onHostChange = ({ host }: { host: string }) =>
+    const onHostChange = ({ host }: { host: string }) => {
         setState((s) => {
             return { ...s, host, isHost: s.host === host };
         });
-
+    };
     // emitted when a player fetches info about a game (either not found or provided with the code and number of players)
     const onInfo = ({
         playerCount,
@@ -166,6 +164,13 @@ export const useGame = (
         });
     };
 
+    const onMapUpdate = ({ map }: { map: GameMap }) => {
+        console.log(map);
+        setState((s) => {
+            return { ...s, map };
+        });
+    };
+
     // init function
     useEffect(() => {
         const socket = io();
@@ -177,10 +182,11 @@ export const useGame = (
         socket.on('error', ({ error }: { error: string }) => warn(error));
         socket.on('fetch', fetch);
         socket.on('joined', onJoin);
+        socket.on('game_end', scoreboardUpdate);
+        socket.on('map_update', onMapUpdate);
         socket.on('host_change', onHostChange);
         socket.on('state_update', stateUpdate);
         socket.on('player_update', playerUpdate);
-        socket.on('game_end', scoreboardUpdate);
         // TODO: show the compiler logs to the user to find the error
         socket.on('compile_error', (data) =>
             console.log(`Faield to start game\n`, data)
@@ -252,18 +258,21 @@ export const useGame = (
         });
     };
 
+    const isHost = (): boolean => state.host === socket?.id;
+
     return [
         state,
         meta,
         scoreboard,
         {
-            startGame,
+            join,
+            exit,
+            create,
+            isHost,
             submit,
             preJoin,
-            join,
             preCreate,
-            create,
-            exit,
+            startGame,
             updateMap,
         },
     ];
