@@ -1,35 +1,41 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { GameState, IPlayer as Player } from '../shared/types';
+import { GameMap, GameState, IPlayer as Player } from '../shared/types';
 
 // this is the struct returned by the runner
-export interface ScoreBoard {
-    players: {
-        name: string;
-        place: number;
-        steps?: number[];
-        kills: number;
-        rounds_survived: number;
-        reason_of_death: string;
-    }[];
-    winner: string;
+export interface Scoreboard {
     draw: boolean;
+    winner: string;
+    rounds: number;
+    players: {
+        [id: string]: {
+            place: number;
+            name: string;
+            kills: number;
+            steps: number[];
+            survived: number;
+            death: string;
+            start: {
+                x: number;
+                y: number;
+                rotation: number;
+            };
+        };
+    };
 }
 
 export interface Game {
     state: GameState; // current state
     code: number; // game code
     host: string; // the id of the host
-    players: { [id: string]: Player };
-    isHost: boolean;
-    // information required to recreate the game
-    startState: {
-        map: {
-            objects: { [key: string]: number };
-            size: number;
-        };
-        players: Player[];
-        rounds: number;
+    players: { [id: string]: Player }; // all players in lobby
+    isHost: boolean; // is the player the host
+    // info about the map
+    map: {
+        size: number;
+        load: string;
+        type: 'load' | 'parse';
+        objects: { [key: string]: number };
     };
 }
 
@@ -39,7 +45,7 @@ export const useGame = (
 ): [
     Game,
     { create: boolean; inLobby: number },
-    ScoreBoard | null,
+    Scoreboard | null,
     {
         exit: () => void;
         join: (name: string) => void;
@@ -48,10 +54,7 @@ export const useGame = (
         preJoin: (code: number) => void;
         startGame: () => void;
         preCreate: () => void;
-        uploadMap: (config: {
-            map: { [key: string]: number };
-            size: number;
-        }) => void;
+        updateMap: (map: GameMap) => void;
     }
 ] => {
     const [socket, setSocket] = useState<Socket>(null as any);
@@ -67,21 +70,20 @@ export const useGame = (
         host: '',
         players: {},
         isHost: false,
-        startState: {
-            map: {
-                objects: {},
-                size: 20,
-            },
-            rounds: 0,
-            players: [],
+        map: {
+            load: '',
+            type: 'parse',
+            size: 20,
+            objects: {},
         },
     });
-    const [scoreboard, setScoreboard] = useState<ScoreBoard | null>(null);
+    const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
 
     /* HANDLER FUNCTIONS */
 
     // emitted after joining session: contains the game host, players and code
     const fetch = (data: {
+        map: GameMap;
         host: string;
         players: { [id: string]: Player };
         code: number;
@@ -128,8 +130,8 @@ export const useGame = (
     };
 
     // emitted on scoreboard update
-    const scoreboardUpdate = (scoreBoard: ScoreBoard) =>
-        setScoreboard(scoreBoard);
+    const scoreboardUpdate = (scoreboard: Scoreboard) =>
+        setScoreboard(scoreboard);
 
     // emitted on game end
     const gameEnd = (data: { winner: string; draw: boolean }) => {};
@@ -178,7 +180,7 @@ export const useGame = (
         socket.on('host_change', onHostChange);
         socket.on('state_update', stateUpdate);
         socket.on('player_update', playerUpdate);
-        socket.on('scoreboard_update', scoreboardUpdate);
+        socket.on('game_end', scoreboardUpdate);
         // TODO: show the compiler logs to the user to find the error
         socket.on('compile_error', (data) =>
             console.log(`Faield to start game\n`, data)
@@ -195,12 +197,9 @@ export const useGame = (
     };
 
     // update the starting map state
-    const uploadMap = (config: {
-        map: { [key: string]: number };
-        size: number;
-    }) => {
+    const updateMap = (map: GameMap) => {
         console.log(`EM: uploadMap`);
-        socket.emit('update_map', config);
+        socket.emit('update_map', map);
     };
 
     // enter the display name for a pending game join
@@ -265,7 +264,7 @@ export const useGame = (
             preCreate,
             create,
             exit,
-            uploadMap,
+            updateMap,
         },
     ];
 };

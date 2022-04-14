@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { aliases } from '../../lib/front/aliases';
+import { Scoreboard } from '../../lib/hooks/game';
 import useKaresz, { State } from '../../lib/hooks/karesz';
 
 // TODO: textures
@@ -63,6 +64,7 @@ const Playback = ({
     view,
     onClick,
     showGrid,
+    scoreboard,
     editorObjects,
     playbackObjects,
 }: {
@@ -70,6 +72,7 @@ const Playback = ({
     view: 'edit' | 'play';
     onClick: (x: number, y: number) => void;
     showGrid: boolean;
+    scoreboard: Scoreboard | null;
     editorObjects: { [key: string]: number };
     playbackObjects: { [key: string]: number };
 }) => {
@@ -81,36 +84,12 @@ const Playback = ({
     const [speed, setSpeed] = useState<number>(50);
     // the animator object
     const [karesz, { play, pause, reset, stepTo }] = useKaresz({
-        // this data object is obtained from the rust api
-        data: {
-            players: [
-                {
-                    name: 'karex',
-                    steps: [
-                        0, 12, 0, 12, 0, 12, 0, 13, 2, 0, 13, 0, 13, 0, 13, 2,
-                        0, 14, 0,
-                    ],
-                    start: {
-                        x: 5,
-                        y: 5,
-                        rotation: 0,
-                    },
-                },
-                {
-                    name: 'karex2',
-                    steps: [
-                        0, 12, 0, 12, 0, 12, 0, 13, 2, 0, 13, 0, 13, 0, 13, 2,
-                        0, 14, 0,
-                    ],
-                    start: {
-                        x: 7,
-                        y: 6,
-                        rotation: 0,
-                    },
-                },
-            ],
-            rounds: 20,
-        },
+        players: scoreboard
+            ? Object.values(scoreboard.players).map((x) => {
+                  return { name: x.name, start: x.start, steps: x.steps };
+              })
+            : [],
+        rounds: scoreboard ? scoreboard.rounds : 0,
         objects: playbackObjects,
         speed,
         setIndex,
@@ -241,7 +220,7 @@ const PlayerInfo = ({
     const [selected, select] = useState<number>(0);
     const [shown, show] = useState<boolean>(false);
 
-    return !shown ? (
+    return !shown || !players.length ? (
         <div
             onClick={(e) => {
                 e.stopPropagation();

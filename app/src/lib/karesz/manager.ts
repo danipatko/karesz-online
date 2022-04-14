@@ -1,14 +1,43 @@
 import { Socket } from 'socket.io';
+import { GameMap } from '../shared/types';
 
 interface Player {
-    socket: Socket;
     id: string;
     code: string;
-    ready: boolean; // *
     name: string; // *
     wins: number; // *
+    ready: boolean; // *
+    socket: Socket;
     // * visible for all
 }
+
+interface StartState {
+    start_x: number;
+    start_y: number;
+    rotation: number;
+}
+
+interface PlayerStartState extends StartState {
+    code: string;
+    name: string;
+}
+
+type MultiPlayerResponse = {
+    error?: string;
+    draw: boolean;
+    winner: string;
+    rounds: number;
+    scoreboard: {
+        [name: string]: {
+            [key: string]: number | string | number[] | {};
+            kills: number;
+            place: number;
+            death: string;
+            steps: number[];
+            survived: number;
+        };
+    };
+};
 
 enum GameState {
     idle = 0, // waiting for host to start
@@ -37,19 +66,17 @@ host:
 
 */
 
-interface CustomMap {
-    map: { [key: string]: number }; // the matrix as a string or the map name
-    type: 'load' | 'parse';
-    size: number;
-    mapName: string;
-}
-
 export default class Session {
     protected players: Map<string, Player> = new Map<string, Player>();
     protected state: GameState = GameState.waiting;
     protected host: string = ''; // the id of the host player
     protected code: number; // randomly generated code
-    protected map: CustomMap = { map: {}, type: 'load', size: 20, mapName: '' };
+    protected map: GameMap = {
+        objects: {},
+        type: 'load',
+        size: 20,
+        load: '',
+    };
     public destroy: () => void; // this is a callback function to remove this instance from the map
 
     // create a new instance of a game
@@ -72,31 +99,40 @@ export default class Session {
     private setHost(socket: Socket, noemit: boolean = false): void {
         this.host = socket.id;
         // set startgame listener
-        socket.on('start_game', (config: CustomMap) => {
+        socket.on('start_game', (config: GameMap) => {
             this.map = config;
             this.state = GameState.waiting;
         });
         // set map updater listener
         socket.on(
             'update_map',
-            (config: { map: { [key: string]: number }; size: number }) => {
-                this.map = {
-                    ...config,
-                    type: 'parse',
-                    mapName: '',
-                };
+            (config: {
+                size: number;
+                type: 'parse' | 'load';
+                load?: string;
+                objects?: { [key: string]: number };
+            }) => {
+                if (config.type === 'parse' && config.objects)
+                    this.map = {
+                        load: '',
+                        type: 'parse',
+                        size: config.size,
+                        objects: config.objects,
+                    };
+                else if (config.load)
+                    this.map = {
+                        load: config.load,
+                        size: config.size,
+                        type: 'load',
+                        objects: {},
+                    };
+                else {
+                    socket.emit('error', { error: 'Bad request' });
+                    return;
+                }
+                this.announce('map_update', { map: this.map });
             }
         );
-        // set map updater listener
-        socket.on('load_map', ({ map }: { map: string }) => {
-            // TODO: handle loading map
-            this.map = {
-                size: 20,
-                map: {},
-                type: 'parse',
-                mapName: map,
-            };
-        });
         if (!noemit) this.announce('host_change', { host: socket.id });
     }
 
@@ -143,7 +179,7 @@ export default class Session {
             code: this.code,
             state: this.state,
             host: this.host,
-            map: { map: this.map.map, size: this.map.size },
+            map: this.map,
         });
     }
 
@@ -202,10 +238,102 @@ export default class Session {
         return this.players.size;
     }
 
+    private randCoord(): [number, number] {
+        return [
+            Math.floor(Math.random() * this.map.size),
+            Math.floor(Math.random() * this.map.size),
+        ];
+    }
+
+    // get player positions
+    private getPlayerStartingPostions(): { [key: string]: PlayerStartState } {
+        const res: { [key: string]: PlayerStartState } = {};
+
+        const isOccupied = (x: number, y: number): boolean => {
+            for (const { start_x, start_y } of Object.values(res)) {
+                if (start_x === x && start_y === y) return true;
+            }
+            return this.map.objects[`${x}-${y}`] !== undefined;
+        };
+
+        this.players.forEach((player) => {
+            let point = this.randCoord();
+            while (isOccupied(point[0], point[1])) point = this.randCoord();
+
+            res[player.id] = {
+                code: player.code,
+                name: player.id, // id is assigned as name
+                start_x: point[0],
+                start_y: point[1],
+                rotation: Math.floor(Math.random() * 4),
+            };
+        });
+
+        return res;
+    }
+
+    private getMap(): string {
+        let result = '';
+        for (let y = 0; y < this.map.size; y++) {
+            for (let x = 0; x < this.map.size; x++)
+                result += this.map.objects[`${x}-${y}`] || '0';
+            result += '\n';
+        }
+        return result;
+    }
+
     /**
      * Start the game
      */
-    public async startGame(config: CustomMap): Promise<void> {
-        //TODO: make request to rust server, set everyone unready, emit results
+    public async startGame(config: GameMap): Promise<void> {
+        const startState = this.getPlayerStartingPostions();
+        // TODO: make this a configurable option
+        const result = await fetch(`${'http://localhost:8000'}/mp/custom`, {
+            method: 'POST',
+            body: JSON.stringify({
+                players: startState,
+                size_x: this.map.size,
+                size_y: this.map.size,
+                map: this.getMap(),
+            }),
+        });
+
+        this.state = GameState.idle;
+        this.announce('state_update', { state: this.state });
+
+        if (!result.ok) {
+            this.announce('error', {
+                error: `Failed to start game ([${result.status}] ${result.statusText})`,
+            });
+            return;
+        }
+
+        const { error, draw, rounds, winner, scoreboard } =
+            (await result.json()) as MultiPlayerResponse;
+
+        // runtime or compile error -> show logs to players to find the error
+        if (error) {
+            this.announce('compile_error', { error });
+            return;
+        }
+
+        // update scoreboard with start state
+        for (const name in scoreboard) {
+            scoreboard[name] = {
+                ...scoreboard[name],
+                start: {
+                    x: startState[name].start_x,
+                    y: startState[name].start_y,
+                    rotation: startState[name].rotation,
+                },
+            };
+        }
+
+        this.announce('game_end', {
+            rounds,
+            draw,
+            winner,
+            players: scoreboard,
+        });
     }
 }

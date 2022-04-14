@@ -11,23 +11,25 @@ use crate::create::karesz::Moves;
 
 #[derive(Serialize, Debug)]
 pub struct GameResult {
-    winner: String,
     draw: bool,
+    winner: String,
+    rounds: u32,
     scoreboard: Vec<PlayerScore>,
 }
 
 impl GameResult {
     pub fn to_json(&self) -> String {
         return format!(
-            "{{ \"winner\": \"{}\", \"draw\": {}, \"scoreboard\": [{}] }}",
+            "{{ \"winner\": \"{}\", \"draw\": {}, \"rounds\": {}, \"scoreboard\": {} }}",
             self.winner,
             self.draw,
+            self.rounds,
             self.scoreboard
                 .iter()
                 .map(|s| format!(
-                    "{{ \"placement\":{}, \"name\": \"{}\", \"kills\": {}, \"steps\":[{}], \"survived\": {}, \"death\": \"{}\" }}",
-                    s.place,
+                    "\"{}\": {{ \"placement\":{}, \"kills\": {}, \"steps\":[{}], \"survived\": {}, \"death\": \"{}\" }}",
                     s.name,
+                    s.place,
                     s.kills,
                     s.steps
                         .iter()
@@ -168,9 +170,10 @@ pub fn run_multiplayer(
     }
 
     Ok(GameResult {
-        scoreboard: game.scoreboard,
-        winner: game.winner,
         draw: game.draw,
+        rounds: game.round,
+        winner: game.winner,
+        scoreboard: game.scoreboard,
     }
     .to_json())
 }

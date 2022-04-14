@@ -108,14 +108,16 @@ const getAllSteps = (
 
 // function responsible for the playback
 const useKaresz = ({
-    data,
+    players,
+    rounds,
     speed,
-    setIndex,
     objects,
+    setIndex,
 }: {
-    objects: { [key: string]: number };
-    data: { players: Player[]; rounds: number };
+    players: Player[];
+    rounds: number;
     speed: number;
+    objects: { [key: string]: number }; // objects at start state
     setIndex: Dispatch<SetStateAction<number>>;
 }): [
     // animation state
@@ -148,10 +150,10 @@ const useKaresz = ({
         objects: { [key: string]: number };
         isPlaying: boolean;
     }>({
-        players: data.players.map((x) => {
+        players: players.map((x) => {
             return { name: x.name, state: { c: -1, ...x.start } };
         }),
-        objects, // TODO: load the original map of the game
+        objects,
         isPlaying: false,
     });
 
@@ -165,16 +167,13 @@ const useKaresz = ({
         });
 
     useEffect(() => {
+        if (!players.length || rounds == 0) return;
         // calculate the steps
-        const [players, _objects] = getAllSteps(
-            data.players,
-            data.rounds,
-            objects
-        );
-        console.log(players, _objects);
-        setPlayerStates(players);
+        const [_players, _objects] = getAllSteps(players, rounds, objects);
+        console.log(_players, _objects);
+        setPlayerStates(_players);
         setObjectStates(_objects);
-    }, [objects]);
+    }, []);
 
     const stop = () => {
         clearInterval(timer);
@@ -186,7 +185,7 @@ const useKaresz = ({
     // increment the index, stop if reached the end othervise update the state
     const round = () => {
         setIndex((i) => {
-            if (i + 1 > data.rounds) return 0;
+            if (i + 1 > rounds) return 0;
 
             setState((s) => {
                 return {
@@ -220,7 +219,7 @@ const useKaresz = ({
 
     // go to a step
     const stepTo = (step: number) => {
-        step = clamp(step, 0, data.rounds - 1);
+        step = clamp(step, 0, rounds - 1);
         if (state.isPlaying) stop();
         setIndex(step);
         setState((s) => {

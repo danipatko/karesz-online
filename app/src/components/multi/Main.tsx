@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Game, ScoreBoard } from '../../lib/hooks/game';
+import { Game, Scoreboard as SB } from '../../lib/hooks/game';
 import useMap from '../../lib/hooks/map';
+import { GameMap } from '../../lib/shared/types';
 import Playback from '../playback/Playback';
 import MapEditor from './MapEditor';
 import Players from './Players';
@@ -15,11 +16,8 @@ const Main = ({
 }: {
     game: Game;
     current: string;
-    updateMap: (config: {
-        map: { [key: string]: number };
-        size: number;
-    }) => void;
-    scoreboard: ScoreBoard | null;
+    updateMap: (map: GameMap) => void;
+    scoreboard: SB | null;
 }) => {
     const [submitShown, showSubmit] = useState<boolean>(false);
     const [selected, setSelected] = useState<number>(0);
@@ -48,15 +46,16 @@ const Main = ({
                                 ? _map.size
                                 : (game.map.size as 10 | 20 | 30 | 40) // ouch
                         }
+                        scoreboard={scoreboard}
                         view={_map.view}
                         onClick={(x, y) => setBlock(x, y, selected)}
                         showGrid={true}
-                        playbackObjects={game.map.map}
+                        playbackObjects={game.map.objects}
                         editorObjects={_map.objects}
                     />
                 </div>
                 <div className='flex-1 flex flex-col gap-4'>
-                    <Scoreboard sb={scoreboard} />
+                    <Scoreboard scoreboard={scoreboard} />
                     <MapEditor
                         view={_map.view}
                         setView={setView}

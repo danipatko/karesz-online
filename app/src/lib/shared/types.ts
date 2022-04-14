@@ -32,3 +32,10 @@ export interface IPlayer {
     ready: boolean; // submitted code and ready
     wins: number; // win count
 }
+
+export interface GameMap {
+    type: 'load' | 'parse';
+    size: number;
+    objects: { [key: string]: number };
+    load: string;
+}

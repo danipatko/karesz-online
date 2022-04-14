@@ -1,5 +1,5 @@
-import { Game, ScoreBoard } from '../../lib/hooks/game';
-import { GameState } from '../../lib/shared/types';
+import { Game, Scoreboard } from '../../lib/hooks/game';
+import { GameMap, GameState } from '../../lib/shared/types';
 import PreJoin from '../multi/PreJoin';
 import Join from '../multi/Join';
 import Main from '../multi/Main';
@@ -16,7 +16,7 @@ const Multiplayer = ({
     meta: { create: boolean; inLobby: number };
     onError: (error: string) => void;
     current: string;
-    scoreboard: ScoreBoard | null;
+    scoreboard: Scoreboard | null;
     functions: {
         exit: () => void;
         join: (name: string) => void;
@@ -25,10 +25,7 @@ const Multiplayer = ({
         preJoin: (code: number) => void;
         startGame: () => void;
         preCreate: () => void;
-        uploadMap: (config: {
-            map: { [key: string]: number };
-            size: number;
-        }) => void;
+        updateMap: (map: GameMap) => void;
     };
 }) => {
     return (
@@ -51,7 +48,7 @@ const Multiplayer = ({
                 <Main
                     game={game}
                     current={current}
-                    updateMap={functions.uploadMap}
+                    updateMap={functions.updateMap}
                     scoreboard={scoreboard}
                 />
             )}

@@ -1,17 +1,17 @@
-import { ScoreBoard } from '../../lib/hooks/game';
+import { Scoreboard } from '../../lib/hooks/game';
 
-const Scoreboard = ({ sb }: { sb: ScoreBoard | null }) => {
+const Scoreboard = ({ scoreboard }: { scoreboard: Scoreboard | null }) => {
     return (
         <div className='p-2 flex-1 bg-main rounded-md text-white'>
-            {sb ? (
+            {scoreboard ? (
                 <>
                     <div className='flex gap-4 justify-between font-bold text-lg'>
                         <div>Results of last round</div>
-                        {sb.draw ? (
+                        {scoreboard.draw ? (
                             <div className='text-karesz'>DRAW</div>
                         ) : (
                             <div className='text-karesz'>
-                                Winner: {sb.winner}
+                                Winner: {scoreboard.winner}
                             </div>
                         )}
                     </div>
@@ -27,7 +27,7 @@ const Scoreboard = ({ sb }: { sb: ScoreBoard | null }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {sb.players
+                                {Object.values(scoreboard.players)
                                     .sort((a, b) =>
                                         a.place > b.place ? 1 : -1
                                     )
@@ -35,9 +35,9 @@ const Scoreboard = ({ sb }: { sb: ScoreBoard | null }) => {
                                         <tr key={i}>
                                             <td>{x.place}</td>
                                             <td>{x.name}</td>
-                                            <td>{x.rounds_survived}</td>
+                                            <td>{x.survived}</td>
                                             <td>{x.kills}</td>
-                                            <td>{x.reason_of_death}</td>
+                                            <td>{x.death}</td>
                                         </tr>
                                     ))}
                             </tbody>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GameMap } from '../shared/types';
 
 interface MapProps {
     size: 10 | 20 | 30 | 40;
@@ -10,7 +11,7 @@ interface MapProps {
 const useMap = (): [
     MapProps,
     {
-        getMap: () => { map: { [key: string]: number }; size: number };
+        getMap: () => GameMap;
         setSize: (size: 10 | 20 | 30 | 40) => void;
         setView: (view: 'edit' | 'play') => void;
         setBlock: (x: number, y: number, type: number) => void;
@@ -56,8 +57,13 @@ const useMap = (): [
         });
 
     // returns the current contents of the editor
-    const getMap = (): { map: { [key: string]: number }; size: number } => {
-        return { map: state.objects, size: state.size };
+    const getMap = (): GameMap => {
+        return {
+            load: '',
+            type: 'parse',
+            size: state.size,
+            objects: state.objects,
+        };
     };
 
     return [state, { clearAll, setBlock, setSize, setView, getMap }];
