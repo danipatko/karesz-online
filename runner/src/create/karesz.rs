@@ -63,7 +63,9 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
         size_x = 0;
         for c in line.chars() {
             let c = c.to_digit(10).unwrap();
-            res.insert((size_x, size_y), c as u8);
+            if c > 0 {
+                res.insert((size_x, size_y), c as u8);
+            }
             size_x += 1;
         }
         size_y -= 1;
@@ -183,12 +185,12 @@ pub trait Moves {
 impl Moves for Karesz {
     // get the point one step forward | NOTE: if unable to step (negative value), the value will remain the same
     fn forward(&self, mut position: (u32, u32), rotation: u8) -> (u32, u32) {
-        if rotation == 0 {
-            position.1 += 1
+        if rotation == 0 && position.1 > 0 {
+            position.1 -= 1
         } else if rotation == 1 {
             position.0 += 1
-        } else if rotation == 2 && position.1 > 0 {
-            position.1 -= 1
+        } else if rotation == 2 {
+            position.1 += 1
         } else if rotation == 3 && position.0 > 0 {
             position.0 -= 1
         }

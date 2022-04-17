@@ -54,7 +54,7 @@ const Home: NextPage = (props: any) => {
             ) : view === View.Docs ? (
                 <Docs />
             ) : null}
-            {/* NOTE: the switch can't be applied for monaco, because the contents get reset every time it is rendered */}
+            {/* NOTE: the switch can't be applied for monaco, because the contents get reset every time it is re-rendered */}
             <Edit
                 shown={view === View.Edit}
                 content={content}

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { aliases } from '../../lib/front/aliases';
 import { Scoreboard } from '../../lib/hooks/game';
 import useKaresz, { State } from '../../lib/hooks/karesz';
+import { GameMap } from '../../lib/shared/types';
 
-// TODO: textures
 const Obj = ({
     size,
     type,
@@ -46,40 +46,51 @@ const Karesz = ({
     state: { x: number; y: number; rotation: number };
 }) => {
     return (
-        <div
-            className='absolute z-30'
-            style={{
-                backgroundImage: 'url(/karesz/karesz0.png)',
-                backgroundSize: 'contain',
-                width: size,
-                height: size,
-                transform: `translate(${100 * state.x}%,${
-                    100 * state.y
-                }%) rotate(${(state.rotation % 4) * 90}deg)`,
-            }}
-        >
-            {' '}
-            <span className='-translate-y-5 text-white'>{name}</span>{' '}
-        </div>
+        <>
+            <div
+                style={{
+                    width: size,
+                    height: size,
+                    transform: `translate(${100 * state.x}%,${
+                        100 * state.y - 50
+                    }%)`,
+                }}
+                className='absolute z-30 font-semibold'
+            >
+                {name}
+            </div>
+            <div
+                className='absolute z-30'
+                style={{
+                    backgroundImage: 'url(/karesz/karesz0.png)',
+                    backgroundSize: 'contain',
+                    width: size,
+                    height: size,
+                    transform: `translate(${100 * state.x}%,${
+                        100 * state.y
+                    }%) rotate(${(state.rotation % 4) * 90}deg)`,
+                }}
+            ></div>
+        </>
     );
 };
 
 const Playback = ({
-    size,
     view,
+    setView,
     onClick,
     showGrid,
+    replayMap,
+    editorMap,
     scoreboard,
-    editorObjects,
-    playbackObjects,
 }: {
-    size: 10 | 20 | 30 | 40;
     view: 'edit' | 'play';
+    setView: () => void;
     onClick: (x: number, y: number) => void;
     showGrid: boolean;
+    replayMap: GameMap;
+    editorMap: GameMap;
     scoreboard: Scoreboard | null;
-    editorObjects: { [key: string]: number };
-    playbackObjects: { [key: string]: number };
 }) => {
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
@@ -87,23 +98,28 @@ const Playback = ({
     const [index, setIndex] = useState<number>(0);
     // playback tick speed
     const [speed, setSpeed] = useState<number>(50);
+    // hook to set the animator map when scoreboard changes
     // the animator object
     const [karesz, { play, pause, reset, stepTo }] = useKaresz({
-        objects: playbackObjects,
-        scoreboard,
+        size: replayMap?.size ?? 20,
         speed,
         setIndex,
+        scoreboard,
+        objects: replayMap?.objects ?? {},
     });
+
+    const size = (): number =>
+        view === 'edit' ? editorMap?.size ?? 20 : karesz.size;
+
     // scale the container
     const adjust = () => {
-        if (container.current) setSize(container.current.clientWidth / size);
+        if (container.current) setSize(container.current.clientWidth / size());
     };
 
     useEffect(() => {
         adjust();
-        console.log(playbackObjects);
         window.onresize = adjust;
-    }, [size]);
+    }, [view, editorMap?.size, karesz.size]);
 
     // get x and y coordinates of the event
     const onClickHandler = (e: any) => {
@@ -119,15 +135,24 @@ const Playback = ({
             <div className='flex gap-5 p-2 items-center'>
                 <button
                     className='text-xl px-2 fa fa-play hover:text-[#0f0]'
-                    onClick={play}
+                    onClick={() => {
+                        setView();
+                        play();
+                    }}
                 ></button>
                 <button
                     className='text-xl px-2 fa fa-pause hover:text-karesz'
-                    onClick={pause}
+                    onClick={() => {
+                        setView();
+                        pause();
+                    }}
                 ></button>
                 <button
                     className='text-xl px-2 fa fa-square hover:text-[#f00]'
-                    onClick={reset}
+                    onClick={() => {
+                        setView();
+                        reset();
+                    }}
                 ></button>
                 <div
                     style={{ color: karesz.isPlaying ? '#0f0' : '#f00' }}
@@ -154,31 +179,33 @@ const Playback = ({
                 ref={container}
                 style={{
                     backgroundImage: showGrid
-                        ? `url('/grids/grid-${size}.svg')`
+                        ? `url('/grids/grid-${size()}.svg')`
                         : 'none',
                     backgroundSize: showGrid ? 'cover' : 'none',
                 }}
                 onClick={onClickHandler}
                 className='bg-slate-800 h-full w-full relative overflow-hidden'
             >
-                <PlayerInfo players={karesz.players} />
+                {view === 'play' && <PlayerInfo players={karesz.players} />}
 
-                {view == 'edit' ? (
+                {view === 'edit' ? (
+                    // editor
                     <>
-                        {Object.keys(editorObjects).map((pos, i) => {
+                        {Object.keys(editorMap.objects).map((pos, i) => {
                             return (
                                 <Obj
                                     key={i}
-                                    type={editorObjects[pos]}
+                                    type={editorMap.objects[pos]}
                                     size={tileSize}
                                     position={pos}
                                 />
                             );
                         })}
                     </>
-                ) : karesz.isPlaying ? (
+                ) : (
+                    // playback
                     <>
-                        {Object.keys(karesz.objects ?? {}).map((pos, i) => (
+                        {Object.keys(karesz?.objects ?? {}).map((pos, i) => (
                             <Obj
                                 key={i}
                                 size={tileSize}
@@ -195,27 +222,19 @@ const Playback = ({
                             />
                         ))}
                     </>
-                ) : (
-                    <>
-                        {Object.keys(playbackObjects ?? {}).map((pos, i) => (
-                            <Obj
-                                key={i}
-                                size={tileSize}
-                                type={playbackObjects[pos]}
-                                position={pos}
-                            />
-                        ))}
-                    </>
                 )}
             </div>
 
             <div className='p-2'>
                 <input
                     min={0}
-                    max={scoreboard?.rounds ?? 0}
+                    max={scoreboard ? scoreboard.rounds - 1 : 0}
                     type='range'
                     value={index}
-                    onChange={(e) => stepTo(parseInt(e.target.value))}
+                    onChange={(e) => {
+                        setView();
+                        stepTo(parseInt(e.target.value));
+                    }}
                     className='slider'
                 />
             </div>

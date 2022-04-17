@@ -5,6 +5,7 @@ import { GameMap } from '../../lib/shared/types';
 const MapEditor = ({
     map,
     host,
+    editor,
     onSave,
     setType,
     setView,
@@ -13,11 +14,10 @@ const MapEditor = ({
     onCancel,
     selected,
     clearAll,
-    editor,
     setSelected,
 }: {
-    host: boolean;
     map: GameMap;
+    host: boolean;
     onSave: () => void;
     loadMap: (name: string) => void;
     setType: (type: 'load' | 'parse') => void;
@@ -29,34 +29,39 @@ const MapEditor = ({
     editor: MapProps;
     setSelected: Dispatch<SetStateAction<number>>;
 }) => {
-    return !host ? (
-        <div className='p-2 bg-main rounded-md'>
-            <div className='flex gap-4 justify-between'>
-                <div>Map configuration</div>
-                <div>
-                    Size:{' '}
-                    <span className='font-semibold text-karesz'>
-                        {map.size}x{map.size}
-                    </span>
-                </div>
-                <div>
-                    Type:{' '}
-                    <span className='font-semibold text-karesz'>
-                        {map.type === 'parse' ? 'Custom' : map.load ?? 'Load'}
-                    </span>
-                </div>
-            </div>
-        </div>
-    ) : (
-        <div className='p-2 bg-main rounded-md relative'>
-            {editor.view === 'play' ? (
+    return (
+        <div className='p-4 bg-main rounded-md relative w-[40vw]'>
+            {editor.view === 'play' || !host ? (
                 <div className='z-10 absolute top-0 left-0 w-full h-full rounded-md bg-[rgba(51,60,74,80%)] flex justify-center items-center'>
-                    <button
-                        onClick={() => setView('edit')}
-                        className='p-2 select-none rounded-md font-bold text-white bg-karesz hover:bg-karesz-light'
-                    >
-                        Edit map
-                    </button>
+                    {host ? (
+                        <button
+                            onClick={() => setView('edit')}
+                            className='p-2 select-none rounded-md font-bold text-white bg-karesz hover:bg-karesz-light'
+                        >
+                            Edit map
+                        </button>
+                    ) : (
+                        <div className='text-center'>
+                            <div className='text-center text-white mb-5'>
+                                <i className='fa fa-lock text-yellow-500'></i>{' '}
+                                Only host can change map
+                            </div>
+                            <button
+                                onClick={() =>
+                                    setView(
+                                        editor.view === 'edit' ? 'play' : 'edit'
+                                    )
+                                }
+                                className={`p-2 border-2 border-karesz hover:border-karesz-light ${
+                                    editor.view === 'edit'
+                                        ? 'bg-karesz hover:bg-karesz-light'
+                                        : ''
+                                } rounded-md font-bold `}
+                            >
+                                Toggle preview
+                            </button>
+                        </div>
+                    )}
                 </div>
             ) : null}
 

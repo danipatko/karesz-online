@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import maps from '../front/maps';
 import { GameMap } from '../shared/types';
 
@@ -8,7 +8,13 @@ export interface MapProps {
 }
 
 // map config editor
-const useMap = (): [
+const useMap = ({
+    map,
+    isHost,
+}: {
+    map: GameMap;
+    isHost: boolean;
+}): [
     MapProps,
     {
         getMap: () => GameMap;
@@ -30,6 +36,17 @@ const useMap = (): [
             objects: {},
         },
     });
+
+    // change others' editor view
+    useEffect(() => {
+        if (isHost) return;
+        setState((s) => {
+            return {
+                ...s,
+                map,
+            };
+        });
+    }, [map]);
 
     // clear the entire map
     const clearAll = (): void => {

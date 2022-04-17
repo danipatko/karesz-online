@@ -135,8 +135,11 @@ export const useGame = (
     };
 
     // emitted on game end
-    const scoreboardUpdate = (sb: Scoreboard) => {
-        console.log(sb);
+    const onGameEnd = (sb: Scoreboard) => {
+        setState((s) => {
+            for (const id in s.players) s.players[id].ready = false;
+            return { ...s };
+        });
         setScoreboard(sb);
     };
 
@@ -189,7 +192,7 @@ export const useGame = (
         socket.on('error', ({ error }: { error: string }) => warn(error));
         socket.on('fetch', fetch);
         socket.on('joined', onJoin);
-        socket.on('game_end', scoreboardUpdate);
+        socket.on('game_end', onGameEnd);
         socket.on('map_update', onMapUpdate);
         socket.on('host_change', onHostChange);
         socket.on('state_update', stateUpdate);

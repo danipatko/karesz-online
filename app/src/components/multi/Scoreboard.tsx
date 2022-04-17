@@ -2,16 +2,22 @@ import { Scoreboard } from '../../lib/hooks/game';
 
 const Scoreboard = ({ scoreboard }: { scoreboard: Scoreboard | null }) => {
     return (
-        <div className='p-2 flex-1 bg-main rounded-md text-white'>
+        <div className='p-4 bg-main rounded-md text-white w-[40vw]'>
             {scoreboard ? (
                 <>
                     <div className='flex gap-4 justify-between font-bold text-lg'>
                         <div>Results of last round</div>
                         {scoreboard.draw ? (
-                            <div className='text-karesz'>DRAW</div>
+                            <div>
+                                Round{' '}
+                                <span className='text-karesz-light'>DRAW</span>
+                            </div>
                         ) : (
-                            <div className='text-karesz'>
-                                Winner: {scoreboard.winner}
+                            <div>
+                                Winner:{' '}
+                                <span className='text-karesz-light'>
+                                    {scoreboard.winner}
+                                </span>
                             </div>
                         )}
                     </div>

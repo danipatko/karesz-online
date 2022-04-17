@@ -266,9 +266,9 @@ export default class Session {
 
     private getMap(): string {
         let result = '';
-        for (let y = 0; y < this.map.size; y++) {
+        for (let y = 0; y < this.map.size - 1; y++) {
             for (let x = 0; x < this.map.size; x++)
-                result += this.map.objects[`${x}-${y}`] || '0';
+                result += this.map.objects[`${x}-${y}`] ?? '0';
             result += '%0A'; // use url encoded newline
         }
         return result;
@@ -278,8 +278,6 @@ export default class Session {
      * Start the game
      */
     public async startGame(): Promise<void> {
-        console.log('startGame called');
-
         this.state = GameState.running;
         this.announce('state_update', { state: this.state });
 
@@ -289,7 +287,7 @@ export default class Session {
         const response = await fetch(`${'http://127.0.0.1:8000'}/mp/custom`, {
             method: 'POST',
             body: JSON.stringify({
-                map: '',
+                map: this.getMap(),
                 size_x: this.map.size,
                 size_y: this.map.size,
                 players: Object.values(startState),
@@ -300,7 +298,6 @@ export default class Session {
         this.announce('state_update', { state: this.state });
 
         if (!response.ok) {
-            console.log(`ERRROR ${response.status} ${response.statusText}`);
             this.announce('error', {
                 error: `Failed to start game ([${response.status}] ${response.statusText})`,
             });
@@ -311,6 +308,7 @@ export default class Session {
 
         // runtime or compile error -> show logs to players to find the error
         if (result.error) {
+            console.log(result.error);
             this.announce('compile_error', { error: result.error });
             return;
         }
@@ -329,7 +327,10 @@ export default class Session {
         }
 
         result.winner = this.players.get(result.winner)?.name ?? '';
-        console.log(result);
+
+        this.players.forEach((x) => {
+            x.ready = false;
+        });
 
         this.announce('game_end', {
             draw: result.draw,

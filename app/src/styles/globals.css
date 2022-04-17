@@ -72,6 +72,25 @@
         }
     }
 
+    .loading {
+        animation: loading 3s ease-in-out infinite;
+    }
+
+    @keyframes loading {
+        0% {
+            transform: translateX(-200px);
+        }
+        40% {
+            transform: translateX(-200px);
+        }
+        60% {
+            transform: translateX(100vw);
+        }
+        100% {
+            transform: translateX(100vw);
+        }
+    }
+
     .dark {
         @apply bg-zinc-800;
     }
@@ -100,7 +119,7 @@
     }
 
     .sb > thead > tr > th {
-        @apply font-semibold text-left text-sm;
+        @apply font-semibold text-left text-sm border-b-[2px] border-karesz;
     }
 
     .sb td {

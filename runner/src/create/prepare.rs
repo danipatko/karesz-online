@@ -159,7 +159,11 @@ pub fn replace_all(
     main_fn: String,
     multiplayer: bool,
 ) -> Option<String> {
-    let mut re: regex::Regex = Regex::new(r"void\s+FELADAT\s*\((\s*)\)").unwrap();
+    // replace url encoded newlines
+    let mut re: regex::Regex = Regex::new(r"%0A").unwrap();
+    input = String::from(re.replace_all(&input, "\n"));
+
+    re = regex::Regex::new(r"void\s+FELADAT\s*\((\s*)\)").unwrap();
     // unable to find entry
     if !re.is_match(&input) {
         return None;
@@ -185,9 +189,7 @@ pub fn replace_all(
             }
         }
     }
-    // replace url encoded newlines
-    re = regex::Regex::new(r"%0A").unwrap();
-    input = String::from(re.replace_all(&input, "\n"));
+
     Some(input)
 }
 

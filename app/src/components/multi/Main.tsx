@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Game, Scoreboard as SB } from '../../lib/hooks/game';
 import useMap from '../../lib/hooks/map';
-import { GameMap } from '../../lib/shared/types';
+import { GameMap, GameState } from '../../lib/shared/types';
 import Playback from '../playback/Playback';
 import MapEditor from './MapEditor';
 import Players from './Players';
@@ -27,12 +27,25 @@ const Main = ({
 }) => {
     const [submitShown, showSubmit] = useState<boolean>(false);
     const [block, setBlock] = useState<number>(0);
-    const [editor, functions] = useMap();
+    const [editor, functions] = useMap({ isHost, map: game.map });
 
     return (
         <div>
-            <div>
-                Ready: {isReady ? 'yes' : 'no'} State: {game.state}
+            <div
+                style={{
+                    backgroundColor:
+                        game.state === GameState.idle
+                            ? 'rgb(34, 127, 255)'
+                            : 'orange',
+                }}
+                className='bg-karesz-light overflow-hidden font-semibold text-center relative'
+            >
+                <div className='absolute loading w-[200px] h-[20vh] bg-gradient-to-r from-karesz-light via-blue-400 to-karesz-light'></div>
+                {game.state === GameState.idle ? (
+                    <>Waiting for players...</>
+                ) : (
+                    <>Running</>
+                )}
             </div>
             <Submit
                 hide={() => showSubmit(false)}
@@ -50,23 +63,19 @@ const Main = ({
                     players={Object.values(game.players)}
                 />
             </div>
-            <div className='flex m-5 gap-4'>
+            <div className='flex mx-5 gap-4'>
                 <div className='flex-1'>
                     <Playback
-                        size={
-                            editor.view == 'edit'
-                                ? (editor.map.size as 10 | 20 | 30 | 40)
-                                : (game.map.size as 10 | 20 | 30 | 40)
-                        }
                         view={editor.view}
                         onClick={(x, y) => functions.setBlock(x, y, block)}
+                        setView={() => functions.setView('play')}
                         showGrid={true}
+                        replayMap={game.map}
+                        editorMap={editor.map}
                         scoreboard={scoreboard}
-                        editorObjects={editor.map.objects}
-                        playbackObjects={game.map.objects}
                     />
                 </div>
-                <div className='flex-1 flex flex-col gap-4'>
+                <div className='flex-1 flex flex-col justify-evenly items-center gap-4'>
                     <Scoreboard scoreboard={scoreboard} />
                     <MapEditor
                         map={game.map}
@@ -82,13 +91,13 @@ const Main = ({
                         selected={block}
                         setSelected={setBlock}
                     />
-                    <div className='flex-1 bg-main rounded-md'>
+                    <div>
                         <button
+                            className='bg-karesz hover:bg-karesz-light rounded-md p-2 font-bold '
                             onClick={() => {
                                 if (isReady) onSubmit('');
                                 else showSubmit(true);
                             }}
-                            className=''
                         >
                             {isReady ? 'UNREADY' : 'READY'}
                         </button>

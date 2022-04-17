@@ -94,7 +94,7 @@ const getAllSteps = (
                 getPlayerState(x.steps[i], playerStates[k].steps[i])
             );
             objectStates[i + 1] = {
-                ...(i > 0 && objectStates[i]), // add state from previous round
+                ...objectStates[i], // add state from previous round
                 ...objectStates[i + 1], // add state from previous player
                 // add state from current player
                 ...getObjectState(x.steps[i], {
@@ -109,18 +109,21 @@ const getAllSteps = (
 
 // function responsible for the playback
 const useKaresz = ({
+    size,
     speed,
-    scoreboard,
     objects,
     setIndex,
+    scoreboard,
 }: {
-    scoreboard: Scoreboard | null;
+    size: number;
     speed: number;
     objects: { [key: string]: number }; // objects at start state
     setIndex: Dispatch<SetStateAction<number>>;
+    scoreboard: Scoreboard | null;
 }): [
     // animation state
     {
+        size: number;
         players: { name: string; state: State }[];
         objects: { [key: string]: number };
         isPlaying: boolean;
@@ -148,13 +151,15 @@ const useKaresz = ({
         }[];
         objects: { [key: string]: number };
         isPlaying: boolean;
+        size: number;
     }>({
+        size,
+        objects: objects,
         players: scoreboard
             ? Object.values(scoreboard.players).map((x) => {
                   return { name: x.name, state: { c: -1, ...x.start } };
               })
             : [],
-        objects,
         isPlaying: false,
     });
 
@@ -174,7 +179,7 @@ const useKaresz = ({
         const [_players, _objects] = getAllSteps(
             Object.values(scoreboard.players).map((x) => {
                 return {
-                    name: XMLDocument.name,
+                    name: x.name,
                     steps: x.steps,
                     start: x.start,
                 };
@@ -182,6 +187,14 @@ const useKaresz = ({
             scoreboard.rounds,
             objects
         );
+
+        setState((s) => {
+            return {
+                ...s,
+                size,
+            };
+        });
+
         setPlayerStates(_players);
         setObjectStates(_objects);
     }, [scoreboard]);
