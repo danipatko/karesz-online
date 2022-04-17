@@ -3,6 +3,7 @@ extern crate rocket;
 use rocket::response::content;
 use rocket::serde::json::Json;
 use rocket::serde::Deserialize;
+use urlencoding::encode;
 mod create;
 
 #[get("/")]
@@ -88,8 +89,7 @@ fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> content::Json<
             // return rocket_contrib::json::Json(x);
         }
         Err(x) => {
-            println!("{}", x);
-            return content::Json(format!("{{\"error\": \"{}\"}}", x));
+            return content::Json(format!("{{\"error\": \"{}\"}}", encode(&x)));
             // return content::Json(format!("{{ \"error\": \"{}\" }}", x));
         }
     }

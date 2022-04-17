@@ -79,7 +79,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
     outdir: &str,
     filename: &String,
     mut callback: T,
-) {
+) -> i32 {
     let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
@@ -87,24 +87,28 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
         .arg(format!("./{}.dll", filename))
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
+        .stderr(Stdio::piped())
         .current_dir(Path::new(outdir))
         .spawn()
         .expect("Failed to start runner process");
 
     let mut stdout = BufReader::new(child.stdout.take().unwrap());
+    let mut stderr = BufReader::new(child.stderr.take().unwrap());
     let mut stdin = child.stdin.take().unwrap();
     let mut current_line = String::new();
+    let mut error_line = String::new();
     let mut i: usize = 0;
+    let mut exit_code = 0;
 
     loop {
         match child.try_wait() {
             // process end
             Ok(Some(status)) => {
                 println!("Process exited with code {}", status.code().unwrap());
+                exit_code = status.code().unwrap();
                 break;
             }
             Ok(_) => {
-                // TODO: callback kill process
                 match stdout.read_line(&mut current_line) {
                     Ok(_) => {
                         // get response from callback
@@ -120,7 +124,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                                             println!("kill failed");
                                         }
                                     }
-                                    return;
+                                    break;
                                 }
                                 match stdin.write_all(format!("{}\n", value).as_bytes()) {
                                     Ok(_) => {
@@ -134,6 +138,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                             }
                             None => {}
                         }
+                        // TODO: Make this configurable
                         i += 1;
                         if i > 100 {
                             match child.kill() {
@@ -152,6 +157,12 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                         break;
                     }
                 }
+                // read stderr into current line, in the next iteration, callback will read it
+                // match stderr.read_line(&mut error_line) {
+                //     Ok(_) => {
+                //      }
+                //     Err(_) => println!("Error reading stderr"),
+                // };
             }
             Err(e) => {
                 println!("An error occued when attempting to wait: {}", e);
@@ -161,4 +172,5 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
     }
 
     println!("END - {i}", i = i);
+    return exit_code;
 }

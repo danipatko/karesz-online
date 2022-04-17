@@ -1,21 +1,12 @@
-{
-    "winner": "HEJoQcURNO4oef1XAAAK",
-    "draw": false,
-    "rounds": 10,
-    "scoreboard": {
-        "g_08u42tVY729uzSAAAI": {
-            "placement": 2,
-            "kills": 0,
-            "steps": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            "survived": 10,
-            "death": "Player attempted to step out of bounds or into a wall"
-        },
-        "HEJoQcURNO4oef1XAAAK": {
-            "placement": 1,
-            "kills": 0,
-            "steps": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            "survived": 10,
-            "death": ""
-        }
-    }
-}
+{"error": "Failed to start game: 
+Compiler exited with error code 1:
+Microsoft (R) Visual C# Compiler version 3.11.0-4.21451.6 (0b1a27fd)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+l28gHnaqNo.cs(59,12): error CS1026: ) expected
+l28gHnaqNo.cs(61,18): error CS1002: ; expected
+l28gHnaqNo.cs(63,9): error CS1002: ; expected
+l28gHnaqNo.cs(65,13): error CS1002: ; expected
+l28gHnaqNo.cs(65,16): error CS1002: ; expected
+l28gHnaqNo.cs(65,16): error CS1513: } expected
+"}

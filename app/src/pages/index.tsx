@@ -11,6 +11,7 @@ import { View } from '../lib/shared/types';
 import Navbar from '../components/head/Navbar';
 import { useGame } from '../lib/hooks/game';
 import Errors from '../components/head/Error';
+import CompileError from '../components/multi/CompileError';
 
 const code = `// Start your code here...
 void FELADAT() {
@@ -60,6 +61,7 @@ const Home: NextPage = (props: any) => {
                 content={content}
                 setContent={setContent}
             />
+            <CompileError logs={game.error} />
             <Errors
                 errors={errors.map((x) => x.error)}
                 onRemove={(i) =>

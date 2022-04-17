@@ -38,7 +38,7 @@ const Main = ({
                             ? 'rgb(34, 127, 255)'
                             : 'orange',
                 }}
-                className='bg-karesz-light overflow-hidden font-semibold text-center relative'
+                className='bg-karesz-light p-[2px] overflow-hidden font-semibold text-center relative'
             >
                 <div className='absolute loading w-[200px] h-[20vh] bg-gradient-to-r from-karesz-light via-blue-400 to-karesz-light'></div>
                 {game.state === GameState.idle ? (

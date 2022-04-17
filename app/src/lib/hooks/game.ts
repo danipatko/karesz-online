@@ -28,6 +28,7 @@ export interface Game {
     state: GameState; // current state
     code: number; // game code
     host: string; // the id of the host
+    error: string;
     isHost: boolean; // is the player the host
     players: { [id: string]: Player }; // all players in lobby
     // info about the map
@@ -43,6 +44,7 @@ const defaults: Game = {
     state: GameState.disconnected,
     code: 0,
     host: '',
+    error: '',
     players: {},
     isHost: false,
     map: {
@@ -175,9 +177,14 @@ export const useGame = (
     };
 
     const onMapUpdate = ({ map }: { map: GameMap }) => {
-        console.log(map);
         setState((s) => {
             return { ...s, map };
+        });
+    };
+
+    const onCompileError = ({ error }: { error: string }) => {
+        setState((s) => {
+            return { ...s, error };
         });
     };
 
@@ -197,11 +204,7 @@ export const useGame = (
         socket.on('host_change', onHostChange);
         socket.on('state_update', stateUpdate);
         socket.on('player_update', playerUpdate);
-        // TODO: show the compiler logs to the user to find the error
-        socket.on('compile_error', (data) =>
-            console.log(`Faield to start game\n`, data)
-        );
-
+        socket.on('compile_error', onCompileError);
         socket.on('disconnect', reset);
 
         setSocket(socket);
@@ -278,9 +281,7 @@ export const useGame = (
     const exit = () => {
         if (state.state !== GameState.disconnected && socket !== null)
             socket.emit('exit');
-        setState((s) => {
-            return { ...s, state: GameState.disconnected };
-        });
+        reset();
     };
 
     const isHost = (): boolean => state.host === socket?.id;

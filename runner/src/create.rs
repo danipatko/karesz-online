@@ -128,7 +128,8 @@ pub fn run_multiplayer(
     }
 
     // run
-    run::run(TESTING_DIRECTORY, &key, |s| {
+    let mut logs: String = String::new();
+    let exit_code = run::run(TESTING_DIRECTORY, &key, |s| {
         // 0: key, 1: player index, 2: command, 3: value
         let s = s.trim();
         println!(">> '{}'", s);
@@ -158,6 +159,14 @@ pub fn run_multiplayer(
             return game.parse(id, &s);
         }
     });
+
+    if exit_code != 0 {
+        return Err(format!(
+            "Failed to start game: exit code {}\nLogs:\n{}",
+            exit_code, logs
+        ));
+    }
+
     // remove leftover files
     // FIXME: windows won't let you remove dll files
     match fs::remove_file(format!("{}/{}.dll", TESTING_DIRECTORY, &key)) {
