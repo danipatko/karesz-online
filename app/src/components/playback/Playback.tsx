@@ -38,9 +38,11 @@ const Obj = ({
 
 const Karesz = ({
     size,
+    name,
     state,
 }: {
     size: number;
+    name: string;
     state: { x: number; y: number; rotation: number };
 }) => {
     return (
@@ -55,7 +57,10 @@ const Karesz = ({
                     100 * state.y
                 }%) rotate(${(state.rotation % 4) * 90}deg)`,
             }}
-        ></div>
+        >
+            {' '}
+            <span className='-translate-y-5 text-white'>{name}</span>{' '}
+        </div>
     );
 };
 
@@ -84,13 +89,8 @@ const Playback = ({
     const [speed, setSpeed] = useState<number>(50);
     // the animator object
     const [karesz, { play, pause, reset, stepTo }] = useKaresz({
-        players: scoreboard
-            ? Object.values(scoreboard.players).map((x) => {
-                  return { name: x.name, start: x.start, steps: x.steps };
-              })
-            : [],
-        rounds: scoreboard ? scoreboard.rounds : 0,
         objects: playbackObjects,
+        scoreboard,
         speed,
         setIndex,
     });
@@ -100,12 +100,9 @@ const Playback = ({
     };
 
     useEffect(() => {
-        console.log(playbackObjects);
         adjust();
-        window.onload = () => {
-            window.addEventListener('load', adjust);
-            window.addEventListener('resize', adjust);
-        };
+        console.log(playbackObjects);
+        window.onresize = adjust;
     }, [size]);
 
     // get x and y coordinates of the event
@@ -118,7 +115,7 @@ const Playback = ({
     };
 
     return (
-        <div className='text-white'>
+        <div className='text-white h-[50vw] lg:h-[60vh] xl:h-[75vh] w-[50vw]  lg:w-[60vh] xl:w-[75vh]'>
             <div className='flex gap-5 p-2 items-center'>
                 <button
                     className='text-xl px-2 fa fa-play hover:text-[#0f0]'
@@ -162,7 +159,7 @@ const Playback = ({
                     backgroundSize: showGrid ? 'cover' : 'none',
                 }}
                 onClick={onClickHandler}
-                className='bg-slate-800 h-[75vh] w-[75vh] relative overflow-hidden'
+                className='bg-slate-800 h-full w-full relative overflow-hidden'
             >
                 <PlayerInfo players={karesz.players} />
 
@@ -194,6 +191,7 @@ const Playback = ({
                                 key={i}
                                 size={tileSize}
                                 state={karesz.state}
+                                name={karesz.name}
                             />
                         ))}
                     </>
@@ -214,7 +212,7 @@ const Playback = ({
             <div className='p-2'>
                 <input
                     min={0}
-                    max={20 - 1}
+                    max={scoreboard?.rounds ?? 0}
                     type='range'
                     value={index}
                     onChange={(e) => stepTo(parseInt(e.target.value))}

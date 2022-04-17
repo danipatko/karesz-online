@@ -185,6 +185,9 @@ pub fn replace_all(
             }
         }
     }
+    // replace url encoded newlines
+    re = regex::Regex::new(r"%0A").unwrap();
+    input = String::from(re.replace_all(&input, "\n"));
     Some(input)
 }
 

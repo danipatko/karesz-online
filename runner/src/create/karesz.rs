@@ -16,7 +16,7 @@ pub struct Karesz {
 #[derive(Deserialize, Debug)]
 pub struct Player<'r> {
     pub name: &'r str,
-    pub code: &'r str,
+    pub code: String,
     pub start_x: u32,
     pub start_y: u32,
     pub start_rotation: u8,
@@ -52,7 +52,7 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
     if map.len() == 0 {
         return Some(HashMap::<(u32, u32), u8>::new());
     }
-    let lines = map.split("\n").collect::<Vec<&str>>();
+    let lines = map.split("%0A").collect::<Vec<&str>>();
     // check if map is valid
     if lines.len() != size_y as usize || lines[0].len() != size_x as usize {
         return None;

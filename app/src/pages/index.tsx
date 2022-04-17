@@ -14,7 +14,7 @@ import Errors from '../components/head/Error';
 
 const code = `// Start your code here...
 void FELADAT() {
-    Lépj();
+    while(true) Lépj();
 }
 `;
 

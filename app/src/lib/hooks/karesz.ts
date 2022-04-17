@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Player } from '../shared/types';
+import { Scoreboard } from './game';
 /*
  * STEPS
  * 0 - forward
@@ -108,14 +109,12 @@ const getAllSteps = (
 
 // function responsible for the playback
 const useKaresz = ({
-    players,
-    rounds,
     speed,
+    scoreboard,
     objects,
     setIndex,
 }: {
-    players: Player[];
-    rounds: number;
+    scoreboard: Scoreboard | null;
     speed: number;
     objects: { [key: string]: number }; // objects at start state
     setIndex: Dispatch<SetStateAction<number>>;
@@ -150,9 +149,11 @@ const useKaresz = ({
         objects: { [key: string]: number };
         isPlaying: boolean;
     }>({
-        players: players.map((x) => {
-            return { name: x.name, state: { c: -1, ...x.start } };
-        }),
+        players: scoreboard
+            ? Object.values(scoreboard.players).map((x) => {
+                  return { name: x.name, state: { c: -1, ...x.start } };
+              })
+            : [],
         objects,
         isPlaying: false,
     });
@@ -167,13 +168,23 @@ const useKaresz = ({
         });
 
     useEffect(() => {
-        if (!players.length || rounds == 0) return;
+        if (!scoreboard) return;
         // calculate the steps
-        const [_players, _objects] = getAllSteps(players, rounds, objects);
-        console.log(_players, _objects);
+        console.log('calculating steps ...');
+        const [_players, _objects] = getAllSteps(
+            Object.values(scoreboard.players).map((x) => {
+                return {
+                    name: XMLDocument.name,
+                    steps: x.steps,
+                    start: x.start,
+                };
+            }),
+            scoreboard.rounds,
+            objects
+        );
         setPlayerStates(_players);
         setObjectStates(_objects);
-    }, []);
+    }, [scoreboard]);
 
     const stop = () => {
         clearInterval(timer);
@@ -185,7 +196,7 @@ const useKaresz = ({
     // increment the index, stop if reached the end othervise update the state
     const round = () => {
         setIndex((i) => {
-            if (i + 1 > rounds) return 0;
+            if (scoreboard && i + 1 > scoreboard.rounds) return 0;
 
             setState((s) => {
                 return {
@@ -219,7 +230,7 @@ const useKaresz = ({
 
     // go to a step
     const stepTo = (step: number) => {
-        step = clamp(step, 0, rounds - 1);
+        step = clamp(step, 0, scoreboard ? scoreboard.rounds - 1 : 0);
         if (state.isPlaying) stop();
         setIndex(step);
         setState((s) => {

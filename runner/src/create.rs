@@ -20,7 +20,7 @@ pub struct GameResult {
 impl GameResult {
     pub fn to_json(&self) -> String {
         return format!(
-            "{{ \"winner\": \"{}\", \"draw\": {}, \"rounds\": {}, \"scoreboard\": {} }}",
+            "{{ \"winner\": \"{}\", \"draw\": {}, \"rounds\": {}, \"scoreboard\": {{ {} }} }}",
             self.winner,
             self.draw,
             self.rounds,
@@ -107,7 +107,7 @@ pub fn run_multiplayer(
         .map(|s| {
             i += 1;
             prepare::MPCode {
-                code: String::from(s.code),
+                code: s.code.clone(),
                 caller: format!("thread_{}", i),
             }
         })

@@ -1,0 +1,21 @@
+{
+    "winner": "HEJoQcURNO4oef1XAAAK",
+    "draw": false,
+    "rounds": 10,
+    "scoreboard": {
+        "g_08u42tVY729uzSAAAI": {
+            "placement": 2,
+            "kills": 0,
+            "steps": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "survived": 10,
+            "death": "Player attempted to step out of bounds or into a wall"
+        },
+        "HEJoQcURNO4oef1XAAAK": {
+            "placement": 1,
+            "kills": 0,
+            "steps": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "survived": 10,
+            "death": ""
+        }
+    }
+}

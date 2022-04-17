@@ -11,8 +11,7 @@ export enum View {
 export enum GameState {
     disconnected = 0, // not initted
     prejoin = 1, // code is correct, promt name
-    joined = 2, // idle
-    wating = 3, // host started the game, but not everyone is ready
+    idle = 2, // idle
     running = 3, // everyone is ready, start game
 }
 

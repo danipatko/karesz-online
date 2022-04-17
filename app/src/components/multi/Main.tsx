@@ -11,13 +11,17 @@ import Submit from './Submit';
 const Main = ({
     game,
     isHost,
+    isReady,
     current,
+    onSubmit,
     updateMap,
     scoreboard,
 }: {
     game: Game;
     isHost: boolean;
+    isReady: boolean;
     current: string;
+    onSubmit: (s: string) => void;
     updateMap: (map: GameMap) => void;
     scoreboard: SB | null;
 }) => {
@@ -27,11 +31,17 @@ const Main = ({
 
     return (
         <div>
+            <div>
+                Ready: {isReady ? 'yes' : 'no'} State: {game.state}
+            </div>
             <Submit
                 hide={() => showSubmit(false)}
                 shown={submitShown}
                 current={current}
-                onSubmit={() => {}}
+                onSubmit={() => {
+                    showSubmit(false);
+                    onSubmit(current);
+                }}
             />
             <div className='flex items-center mx-3'>
                 <div className='text-3xl font-bold p-5'>#{game.code}</div>
@@ -48,12 +58,12 @@ const Main = ({
                                 ? (editor.map.size as 10 | 20 | 30 | 40)
                                 : (game.map.size as 10 | 20 | 30 | 40)
                         }
-                        scoreboard={scoreboard}
                         view={editor.view}
                         onClick={(x, y) => functions.setBlock(x, y, block)}
                         showGrid={true}
-                        playbackObjects={game.map.objects}
+                        scoreboard={scoreboard}
                         editorObjects={editor.map.objects}
+                        playbackObjects={game.map.objects}
                     />
                 </div>
                 <div className='flex-1 flex flex-col gap-4'>
@@ -73,8 +83,14 @@ const Main = ({
                         setSelected={setBlock}
                     />
                     <div className='flex-1 bg-main rounded-md'>
-                        <button onClick={() => showSubmit(true)} className=''>
-                            SUBMIT
+                        <button
+                            onClick={() => {
+                                if (isReady) onSubmit('');
+                                else showSubmit(true);
+                            }}
+                            className=''
+                        >
+                            {isReady ? 'UNREADY' : 'READY'}
                         </button>
                     </div>
                 </div>

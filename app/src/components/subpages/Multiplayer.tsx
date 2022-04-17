@@ -21,6 +21,7 @@ const Multiplayer = ({
         exit: () => void;
         join: (name: string) => void;
         isHost: () => boolean;
+        isReady: () => boolean;
         submit: (s: string) => void;
         create: (name: string) => void;
         preJoin: (code: number) => void;
@@ -47,8 +48,10 @@ const Multiplayer = ({
                 />
             ) : (
                 <Main
-                    isHost={functions.isHost()}
                     game={game}
+                    isHost={functions.isHost()}
+                    isReady={functions.isReady()}
+                    onSubmit={functions.submit}
                     current={current}
                     updateMap={functions.updateMap}
                     scoreboard={scoreboard}

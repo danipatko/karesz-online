@@ -29,11 +29,11 @@ const Scoreboard = ({ scoreboard }: { scoreboard: Scoreboard | null }) => {
                             <tbody>
                                 {Object.values(scoreboard.players)
                                     .sort((a, b) =>
-                                        a.place > b.place ? 1 : -1
+                                        a.placement > b.placement ? 1 : -1
                                     )
                                     .map((x, i) => (
                                         <tr key={i}>
-                                            <td>{x.place}</td>
+                                            <td>{x.placement}</td>
                                             <td>{x.name}</td>
                                             <td>{x.survived}</td>
                                             <td>{x.kills}</td>

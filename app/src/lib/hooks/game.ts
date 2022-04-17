@@ -9,17 +9,17 @@ export interface Scoreboard {
     rounds: number;
     players: {
         [id: string]: {
-            place: number;
             name: string;
             kills: number;
             steps: number[];
-            survived: number;
             death: string;
             start: {
                 x: number;
                 y: number;
                 rotation: number;
             };
+            survived: number;
+            placement: number;
         };
     };
 }
@@ -28,8 +28,8 @@ export interface Game {
     state: GameState; // current state
     code: number; // game code
     host: string; // the id of the host
-    players: { [id: string]: Player }; // all players in lobby
     isHost: boolean; // is the player the host
+    players: { [id: string]: Player }; // all players in lobby
     // info about the map
     map: {
         size: number;
@@ -38,6 +38,20 @@ export interface Game {
         objects: { [key: string]: number };
     };
 }
+
+const defaults: Game = {
+    state: GameState.disconnected,
+    code: 0,
+    host: '',
+    players: {},
+    isHost: false,
+    map: {
+        load: '',
+        type: 'parse',
+        size: 20,
+        objects: {},
+    },
+};
 
 export const useGame = (
     code: number,
@@ -50,6 +64,7 @@ export const useGame = (
         exit: () => void;
         join: (name: string) => void;
         isHost: () => boolean;
+        isReady: () => boolean;
         submit: (s: string) => void;
         create: (name: string) => void;
         preJoin: (code: number) => void;
@@ -65,19 +80,7 @@ export const useGame = (
         inLobby: 0,
     });
     // the game state
-    const [state, setState] = useState<Game>({
-        state: GameState.disconnected,
-        code,
-        host: '',
-        players: {},
-        isHost: false,
-        map: {
-            load: '',
-            type: 'parse',
-            size: 20,
-            objects: {},
-        },
-    });
+    const [state, setState] = useState<Game>({ ...defaults, code });
     const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
 
     /* HANDLER FUNCTIONS */
@@ -93,17 +96,18 @@ export const useGame = (
             return {
                 ...s,
                 ...data,
-                state: GameState.joined,
+                state: GameState.idle,
                 isHost: data.host === socket?.id,
             };
         });
 
     // emitted when the game starts or ends
-    const stateUpdate = ({ state }: { state: number }) =>
+    const stateUpdate = ({ state: st }: { state: number }) => {
+        console.log(st);
         setState((s) => {
-            return { ...s, state };
+            return { ...s, state: st };
         });
-
+    };
     // emitted when a player joins
     const onJoin = (p: { name: string; id: string; ready: boolean }) =>
         setState((s) => {
@@ -131,8 +135,10 @@ export const useGame = (
     };
 
     // emitted on game end
-    const scoreboardUpdate = (scoreboard: Scoreboard) =>
-        setScoreboard(scoreboard);
+    const scoreboardUpdate = (sb: Scoreboard) => {
+        console.log(sb);
+        setScoreboard(sb);
+    };
 
     // emitted on a host change
     const onHostChange = ({ host }: { host: string }) => {
@@ -140,15 +146,16 @@ export const useGame = (
             return { ...s, host, isHost: s.host === host };
         });
     };
+
     // emitted when a player fetches info about a game (either not found or provided with the code and number of players)
     const onInfo = ({
-        playerCount,
-        found,
         code,
+        found,
+        playerCount,
     }: {
-        playerCount: number;
-        found: boolean;
         code: number;
+        found: boolean;
+        playerCount: number;
     }) => {
         setState((s) => {
             if (!found) {
@@ -192,8 +199,20 @@ export const useGame = (
             console.log(`Faield to start game\n`, data)
         );
 
+        socket.on('disconnect', reset);
+
         setSocket(socket);
     }, [setSocket]);
+
+    // reset game parameters to defaults
+    const reset = () => {
+        setState(defaults);
+        setScoreboard(null);
+        setMeta({
+            create: false,
+            inLobby: 0,
+        });
+    };
 
     // start game (as host)
     const startGame = () => {
@@ -225,7 +244,10 @@ export const useGame = (
     // upload code to server
     const submit = (code: string) => {
         console.log(`EM: submit ${code}`);
-        if (socket !== null) socket.emit('submit', { code });
+        if (socket !== null) {
+            if (isReady()) socket.emit('unsubmit');
+            else socket.emit('submit', { code });
+        }
     };
 
     // enter code for game
@@ -260,6 +282,8 @@ export const useGame = (
 
     const isHost = (): boolean => state.host === socket?.id;
 
+    const isReady = (): boolean => state.players[socket?.id]?.ready;
+
     return [
         state,
         meta,
@@ -270,6 +294,7 @@ export const useGame = (
             create,
             isHost,
             submit,
+            isReady,
             preJoin,
             preCreate,
             startGame,

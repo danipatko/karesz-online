@@ -60,51 +60,56 @@ const Submit = ({
             style={{ display: shown ? 'flex' : 'none' }}
             className='fadein fixed top-0 left-0 w-[100vw] h-[100vh] bg-[rgba(0,0,0,60%)] flex justify-center items-center z-50'
         >
-            <div className='slidein flex rounded-md text-white max-h-[70vh] max-w-[70vw] overflow-hidden'>
-                <div className='p-6 bg-main rounded-l-md flex flex-col gap-4 justify-between'>
-                    <div>
-                        <div className='text-lg font-semibold'>
-                            Check if your code...
+            <div>
+                <div className='slidein flex rounded-md text-white max-h-[70vh] max-w-[70vw] overflow-hidden'>
+                    <div className='p-6 bg-main rounded-l-md flex flex-col gap-4 justify-between'>
+                        <div>
+                            <div className='text-lg font-semibold'>
+                                Check if your code...
+                            </div>
+                            <div className='my-5'>
+                                <ul>
+                                    {Object.keys(checks).map((x, i) =>
+                                        x == 'ok' ? null : (
+                                            <li key={i}>
+                                                {checks[x] ? (
+                                                    <i className='fa fa-check text-[#0f0]'></i>
+                                                ) : (
+                                                    <i className='fa fa-x text-[#f00]'></i>
+                                                )}{' '}
+                                                {x}
+                                            </li>
+                                        )
+                                    )}
+                                </ul>
+                            </div>
                         </div>
-                        <div className='my-5'>
-                            <ul>
-                                {Object.keys(checks).map((x, i) =>
-                                    x == 'ok' ? null : (
-                                        <li key={i}>
-                                            {checks[x] ? (
-                                                <i className='fa fa-check text-[#0f0]'></i>
-                                            ) : (
-                                                <i className='fa fa-x text-[#f00]'></i>
-                                            )}{' '}
-                                            {x}
-                                        </li>
-                                    )
-                                )}
-                                <li className='text-xs my-2 text-zinc-300'>
-                                    <i className='text-[#ff0] fa fa-lightbulb'></i>{' '}
-                                    Tip: wrap your code in an infinite loop
-                                </li>
-                            </ul>
+                        <div className='flex justify-between gap-6'>
+                            <button
+                                onClick={hide}
+                                className='font-bold p-2 text-karesz hover:underline'
+                            >
+                                <i className='fa fa-arrow-left'></i>
+                            </button>
+                            <button
+                                onClick={checks.ok ? onSubmit : () => {}}
+                                style={{ opacity: checks.ok ? 1 : 0.5 }}
+                                className='font-semibold p-2 rounded-md text-white bg-karesz hover:bg-karesz-light'
+                            >
+                                Submit
+                            </button>
                         </div>
                     </div>
-                    <div className='flex justify-between gap-6'>
-                        <button
-                            onClick={hide}
-                            className='font-bold p-2 text-karesz hover:underline'
-                        >
-                            <i className='fa fa-arrow-left'></i>
-                        </button>
-                        <button
-                            onClick={checks.ok ? onSubmit : () => {}}
-                            style={{ opacity: checks.ok ? 1 : 0.5 }}
-                            className='font-semibold p-2 rounded-md text-white bg-karesz hover:bg-karesz-light'
-                        >
-                            Submit
-                        </button>
+                    <div className='bg-back-vs rounded-r-md p-6 flex-1'>
+                        <code className='text-xs whitespace-pre'>
+                            {current}
+                        </code>
                     </div>
                 </div>
-                <div className='bg-back-vs rounded-r-md p-6 flex-1'>
-                    <code className='text-xs whitespace-pre'>{current}</code>
+                {/* EXTRA: make tip cycle */}
+                <div className='text-xs my-2 text-zinc-300 text-center'>
+                    <i className='text-[#ff0] fa fa-lightbulb'></i> Tip: wrap
+                    your code in an infinite loop
                 </div>
             </div>
         </div>
