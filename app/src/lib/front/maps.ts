@@ -1,3 +1,4 @@
+// TODO: import maps from original karesz
 const maps: {
     [key: string]: {
         objects: { [key: string]: number };

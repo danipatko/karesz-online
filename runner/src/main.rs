@@ -82,7 +82,7 @@ fn singleplayer_custom(req: Json<SinglePlayerRequestCustom<'_>>) -> content::Jso
             return content::Json(result);
         }
         Err(e) => {
-            return content::Json(format!("{{ \"error\":\"{}\" }}", e));
+            return content::Json(format!("{{ \"error\":\"{}\" }}", encode(&e)));
         }
     }
 }

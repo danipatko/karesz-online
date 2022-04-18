@@ -80,7 +80,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
     outdir: &str,
     filename: &String,
     mut callback: T,
-) -> i32 {
+) -> (i32, bool) {
     let mut child = Command::new("dotnet")
         .arg("exec")
         .arg("--runtimeconfig")
@@ -98,6 +98,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
     let mut current_line = String::new();
     let mut i: usize = 0;
     let mut exit_code = 0;
+    let mut killed = false;
 
     loop {
         match child.try_wait() {
@@ -142,6 +143,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                         if i > MAX_ROUNDS {
                             match child.kill() {
                                 Ok(_) => {
+                                    killed = true;
                                     println!("killed");
                                 }
                                 Err(_) => {
@@ -171,5 +173,5 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
     }
 
     // println!("END - {i}", i = i);
-    return exit_code;
+    return (exit_code, killed);
 }

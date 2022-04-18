@@ -126,7 +126,7 @@ pub fn run_multiplayer(
     }
 
     // run
-    let exit_code = run::run(TESTING_DIRECTORY, &key, |s| {
+    let (exit_code, killed) = run::run(TESTING_DIRECTORY, &key, |s| {
         // 0: key, 1: player index, 2: command, 3: value
         let s = s.trim();
         // println!(">> '{}'", s);
@@ -157,7 +157,7 @@ pub fn run_multiplayer(
         }
     });
 
-    if exit_code != 0 {
+    if !killed && exit_code != 0 {
         return Err(format!("Failed to start game: exit code {}", exit_code));
     }
 

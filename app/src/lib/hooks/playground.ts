@@ -10,6 +10,7 @@ export interface PlaygroundState {
         rotation: number;
     };
     steps: number[];
+    logs: string;
 }
 
 const defaults: PlaygroundState = {
@@ -25,6 +26,7 @@ const defaults: PlaygroundState = {
         rotation: 2,
     },
     steps: [],
+    logs: '',
 };
 
 const usePlayground = (): [
@@ -59,11 +61,24 @@ const usePlayground = (): [
         });
 
         if (!res.ok) {
-            alert(`[${res.status}] ${res.statusText}`);
+            setState((s) => {
+                return {
+                    ...s,
+                    logs: `Bruh request died - [${res.status}] ${res.statusText}`,
+                };
+            });
             return;
         }
 
-        const { steps } = await res.json();
+        const { steps, error } = await res.json();
+
+        if (error !== undefined) {
+            setState((s) => {
+                return { ...s, logs: error };
+            });
+            return;
+        }
+
         console.log(steps);
 
         setState((s) => {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import useMap from '../../lib/hooks/map';
 import usePlayground from '../../lib/hooks/playground';
+import CompileError from '../multi/CompileError';
 import MapEditor from '../multi/MapEditor';
 import Submit from '../multi/Submit';
 import Playback from '../playback/Playback';
@@ -22,6 +23,7 @@ const Playground = ({
 
     return (
         <div className={shown ? 'block' : 'hidden'}>
+            <CompileError logs={playground.logs} />
             <Submit
                 hide={() => showSubmit(false)}
                 shown={submitShown}

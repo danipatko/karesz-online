@@ -11,6 +11,8 @@ export interface State {
 const clamp = (val: number, min: number, max: number) =>
     val > max ? max : val < min ? min : val;
 
+const modulo = (a: number, b: number) => ((a % b) + b) % b;
+
 const forward = (
     x: number,
     y: number,
@@ -31,18 +33,18 @@ const getPlayerState = (
         case 0:
             // forward
             return {
-                c,
-                rotation: state.rotation,
                 ...forward(state.x, state.y, state.rotation),
+                rotation: state.rotation,
+                c,
             };
         case 1:
             // turn left
-            return { c, ...state, rotation: (state.rotation - 1) % 4 };
+            return { ...state, c, rotation: modulo(state.rotation - 1, 4) };
         case 2:
             // turn right
-            return { c, ...state, rotation: (state.rotation + 1) % 4 };
+            return { ...state, c, rotation: modulo(state.rotation + 1, 4) };
         default:
-            return { c, ...state };
+            return { ...state, c };
     }
 };
 
@@ -77,13 +79,18 @@ const getAllSteps = (
     const objectStates: { [key: string]: number }[] = [objects];
 
     for (let i = 0; i < state.steps.length; i++) {
-        playerStates.push(getPlayerState(state.steps[i], playerStates[i]));
-        objectStates[i + 1] = {
+        playerStates.push(
+            getPlayerState(
+                state.steps[i] /* command */,
+                playerStates[i] /* previous */
+            )
+        );
+        objectStates.push({
             ...objectStates[i],
             ...getObjectState(state.steps[i], playerStates[i]),
-        };
+        });
     }
-
+    console.log(objectStates);
     return [playerStates, objectStates];
 };
 

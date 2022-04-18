@@ -40,28 +40,29 @@ const forward = (
     else return { x: x - 1, y };
 };
 
+const modulo = (a: number, b: number) => ((a % b) + b) % b;
+
 // calculate the next step of the player
 const getPlayerState = (
     c: number,
-    state: { x: number; y: number; rotation: number } | undefined
-): State | undefined => {
-    if (c === undefined || state === undefined) return undefined;
+    state: { x: number; y: number; rotation: number }
+): State => {
     switch (c) {
         case 0:
             // forward
             return {
-                c,
-                rotation: state.rotation,
                 ...forward(state.x, state.y, state.rotation),
+                rotation: state.rotation,
+                c,
             };
         case 1:
             // turn left
-            return { c, ...state, rotation: (state.rotation - 1) % 4 };
+            return { ...state, c, rotation: modulo(state.rotation - 1, 4) };
         case 2:
             // turn right
-            return { c, ...state, rotation: (state.rotation + 1) % 4 };
+            return { ...state, c, rotation: modulo(state.rotation + 1, 4) };
         default:
-            return { c, ...state };
+            return { ...state, c };
     }
 };
 
@@ -95,7 +96,8 @@ const getAllSteps = (
 
     for (let i = 0; i < rounds; i++) {
         players.map((x, k) => {
-            // remove dead players
+            // push only if not dead
+            console.log(x.steps[i]);
             const state = getPlayerState(x.steps[i], playerStates[k].steps[i]);
             if (state) playerStates[k].steps.push(state);
 

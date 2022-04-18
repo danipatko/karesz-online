@@ -22,8 +22,13 @@ FIELD VALUES
 5: yellow
 */
 
-const _RULES: [Rule; 21] = [
+const _RULES: [Rule; 23] = [
     // replace with field values
+    Rule {
+        std: Std::None,
+        replace: r"(?P<first>([a-zA-Z]+\s[a-zÁ-Űá-űA-Z_\d]+\s*\(.*\)[\n\s]*\{))",
+        with: "static ${first}",
+    },
     Rule {
         std: Std::None,
         replace: r"fekete",
@@ -48,77 +53,82 @@ const _RULES: [Rule; 21] = [
     Rule {
         std: Std::Out,
         replace: r"Lépj\s*\(\s*\)",
-        with: "0",
+        with: "\"0\"",
     },
     Rule {
         std: Std::Out,
         replace: r"Fordulj_balra\s*\(\s*\)",
-        with: "1",
+        with: "\"1\"",
     },
     Rule {
         std: Std::Out,
         replace: r"Fordulj_jobbra\s*\(\s*\)",
-        with: "2",
+        with: "\"2\"",
     },
     Rule {
         std: Std::Out,
         replace: r"Fordulj\s*\((?P<first>.*)\)",
-        with: "3 ${first}",
+        with: "$\"3 {${first}}\"",
     },
     Rule {
         std: Std::Out,
         replace: r"Vegyél_fel_egy_kavicsot\s*\(\s*\)",
-        with: "4",
+        with: "\"4\"",
+    },
+    Rule {
+        std: Std::Out,
+        replace: r"Tegyél_le_egy_kavicsot\s*\(\s*\)",
+        with: "\"5\"",
     },
     Rule {
         std: Std::Out,
         replace: r"Tegyél_le_egy_kavicsot\s*\((?P<first>.*)\)",
-        with: "5 ${first}",
+        with: "$\"5 {${first}}\"",
     },
     Rule {
         std: Std::Out,
         replace: r"Északra_néz\s*\(\s*\)",
-        with: "6\",\"0",
+        with: "\"6\",\"0\"",
     },
     Rule {
         std: Std::In,
         replace: r"Délre_néz\s*\(\s*\)",
-        with: "6\",\"2",
+        with: "\"6\",\"2\"",
     },
     Rule {
         std: Std::In,
         replace: r"Keletre_néz\s*\(\s*\)",
-        with: "6\",\"1",
+        with: "\"6\",\"1\"",
     },
     Rule {
         std: Std::In,
         replace: r"Nyugatra_néz\s*\(\s*\)",
-        with: "6\",\"3",
+        with: "\"6\",\"3\"",
     },
     Rule {
         std: Std::In,
         replace: r"Merre_néz\s*\(\s*\)",
-        with: "6",
+        with: "\"6\"",
     },
     Rule {
         std: Std::In,
         replace: r"Van_e_itt_kavics\s*\(\s*\)",
-        with: "7\",\"1",
+        with: "\"7\",\"1\"",
     },
     Rule {
         std: Std::In,
         replace: r"Mi_van_alattam\s*\(\s*\)",
-        with: "8",
+        with: "\"8\"",
     },
     Rule {
         std: Std::In,
         replace: r"Van_e_előttem_fal\s*\(\s*\)",
-        with: "9\",\"1",
+        with: "\"9\",\"1\"",
     },
     Rule {
         std: Std::In,
         replace: r"Kilépek_e_a_pályáról\s*\(\s*\)",
-        with: "a\",\"1",
+        with: "\"a\",\"1\"",
     },
     // replace with turn values
     Rule {
@@ -136,7 +146,7 @@ const _RULES: [Rule; 21] = [
 fn format_fn(multiplayer: bool, io: &str, random: &str, id: u8, with: &str) -> String {
     if multiplayer {
         format!(
-            "std{std}_{random}({id}, \"{with}\")",
+            "std{std}_{random}({id}, {with})",
             std = io,
             random = random,
             id = id,
@@ -144,7 +154,7 @@ fn format_fn(multiplayer: bool, io: &str, random: &str, id: u8, with: &str) -> S
         )
     } else {
         format!(
-            "std{std}_{random}(\"{with}\")",
+            "std{std}_{random}({with})",
             std = io,
             random = random,
             with = with
@@ -204,7 +214,7 @@ pub fn create_single_player_template<'r>(
         code,
         0,
         rand,
-        String::from("static void Main(string[] args)"),
+        String::from("void Main(string[] args)"),
         false,
     ) {
         Some(code) => {

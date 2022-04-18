@@ -265,7 +265,7 @@ impl Moves for Karesz {
     }
     // check if player objects contain a rock at player position
     fn is_rock_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8 {
-        if objects.get(&self.position).unwrap() == &0 {
+        if objects.get(&self.position).unwrap_or(&0) != &0 {
             1
         } else {
             0
@@ -462,8 +462,8 @@ impl Moves for Karesz {
                     None
                 }
                 "5" => {
-                    self.steps.push(0x5);
                     if s.len() < 4 {
+                        self.steps.push(0x12);
                         self.place_rock(objects, 2);
                         return None;
                     }
@@ -476,6 +476,7 @@ impl Moves for Karesz {
                     } else {
                         value
                     };
+                    self.steps.push(10 + value);
                     self.place_rock(objects, value);
                     None
                 }
@@ -496,7 +497,7 @@ impl Moves for Karesz {
                     Some(self.is_wall_in_front(objects))
                 }
                 "a" => {
-                    self.steps.push(0xa);
+                    self.steps.push(0x3);
                     Some(self.is_on_edge(size_x, size_y))
                 }
                 _ => None,

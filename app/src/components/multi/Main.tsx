@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Game, Scoreboard as SB } from '../../lib/hooks/game';
-import useMap from '../../lib/hooks/map';
-import { GameMap, GameState } from '../../lib/shared/types';
-import Playback from '../playback/Playback';
-import MapEditor from './MapEditor';
-import Players from './Players';
-import Scoreboard from './Scoreboard';
 import Submit from './Submit';
+import Players from './Players';
+import { useState } from 'react';
+import MapEditor from './MapEditor';
+import Scoreboard from './Scoreboard';
+import useMap from '../../lib/hooks/map';
+import Playback from '../playback/Playback';
+import { GameMap, GameState } from '../../lib/shared/types';
+import { Game, Scoreboard as SB } from '../../lib/hooks/game';
 
 const Main = ({
     game,
