@@ -84,7 +84,6 @@ struct MultiplayerRequestCustom<'a> {
 fn multiplayer_custom(req: Json<MultiplayerRequestCustom<'_>>) -> content::Json<String> {
     match create::run_multiplayer(&req.players, req.size_x, req.size_y, &req.map) {
         Ok(x) => {
-            println!("Sending back: {:?}", x);
             return content::Json(x);
             // return rocket_contrib::json::Json(x);
         }

@@ -188,6 +188,13 @@ export const useGame = (
         });
     };
 
+    const onUnready = () => {
+        setState((s) => {
+            for (const id in s.players) s.players[id].ready = false;
+            return { ...s };
+        });
+    };
+
     // init function
     useEffect(() => {
         const socket = io();
@@ -199,6 +206,7 @@ export const useGame = (
         socket.on('error', ({ error }: { error: string }) => warn(error));
         socket.on('fetch', fetch);
         socket.on('joined', onJoin);
+        socket.on('unready', onUnready);
         socket.on('game_end', onGameEnd);
         socket.on('map_update', onMapUpdate);
         socket.on('host_change', onHostChange);

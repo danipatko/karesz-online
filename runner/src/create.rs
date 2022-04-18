@@ -94,8 +94,6 @@ pub fn run_multiplayer(
             return Err(String::from("Failed to start game: invalid map"));
         }
     }
-    println!("{:?}", game);
-
     // generate random strings
     let round_key = rand_str(10);
     let key = rand_str(10);
@@ -128,14 +126,13 @@ pub fn run_multiplayer(
     }
 
     // run
-    let mut logs: String = String::new();
     let exit_code = run::run(TESTING_DIRECTORY, &key, |s| {
         // 0: key, 1: player index, 2: command, 3: value
         let s = s.trim();
-        println!(">> '{}'", s);
+        // println!(">> '{}'", s);
         // end of round, evaluate steps
         if s == round_key {
-            println!("--------"); // debug
+            // println!("--------"); // debug
             return game.round();
         } else {
             // ignore debug logs
@@ -152,7 +149,7 @@ pub fn run_multiplayer(
             let id: u8 = s[1].parse::<u8>().unwrap();
             // player not in game (or dead)
             if !game.players.contains_key(&id) {
-                println!("player {} does not exist.", id);
+                // println!("player {} does not exist.", id);
                 return None;
             }
 
@@ -161,10 +158,7 @@ pub fn run_multiplayer(
     });
 
     if exit_code != 0 {
-        return Err(format!(
-            "Failed to start game: exit code {}\nLogs:\n{}",
-            exit_code, logs
-        ));
+        return Err(format!("Failed to start game: exit code {}", exit_code));
     }
 
     // remove leftover files

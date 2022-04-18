@@ -40,7 +40,15 @@ const Main = ({
                 }}
                 className='bg-karesz-light p-[2px] overflow-hidden font-semibold text-center relative'
             >
-                <div className='absolute loading w-[200px] h-[20vh] bg-gradient-to-r from-karesz-light via-blue-400 to-karesz-light'></div>
+                <div
+                    style={{
+                        background:
+                            game.state === GameState.idle
+                                ? 'linear-gradient(90deg, rgb(34,127,255) 0%, rgb(0,212,255) 50%, rgb(34,127,255) 100%)'
+                                : 'linear-gradient(90deg, rgb(255,178,34) 0%, rgb(255,231,142) 50%, rgb(255,178,34) 100%)',
+                    }}
+                    className='absolute loading w-[200px] h-[20vh]'
+                ></div>
                 {game.state === GameState.idle ? (
                     <>Waiting for players...</>
                 ) : (

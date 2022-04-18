@@ -43,17 +43,15 @@ const Karesz = ({
 }: {
     size: number;
     name: string;
-    state: { x: number; y: number; rotation: number };
+    state: { x: number; y: number; rotation: number } | undefined;
 }) => {
-    return (
+    return !state ? null : (
         <>
             <div
                 style={{
-                    width: size,
-                    height: size,
-                    transform: `translate(${100 * state.x}%,${
-                        100 * state.y - 50
-                    }%)`,
+                    top: size * state.y,
+                    left: size * state.x,
+                    transform: `translateY(-100%)`,
                 }}
                 className='absolute z-30 font-semibold'
             >
@@ -62,10 +60,10 @@ const Karesz = ({
             <div
                 className='absolute z-30'
                 style={{
-                    backgroundImage: 'url(/karesz/karesz0.png)',
-                    backgroundSize: 'contain',
                     width: size,
                     height: size,
+                    backgroundSize: 'contain',
+                    backgroundImage: 'url(/karesz/karesz0.png)',
                     transform: `translate(${100 * state.x}%,${
                         100 * state.y
                     }%) rotate(${(state.rotation % 4) * 90}deg)`,
@@ -256,14 +254,14 @@ const PlayerInfo = ({
                 e.stopPropagation();
                 show(true);
             }}
-            className='absolute m-2 px-1.5 rounded-full inline-block bg-[rgba(0,0,0,50%)] text-white text-lg cursor-pointer z-30'
+            className='absolute m-2 px-1.5 rounded-full inline-block bg-[rgba(0,0,0,50%)] text-white text-lg cursor-pointer z-40'
         >
             <i className='fa fa-gear'></i>
         </div>
     ) : (
         <div
             onClick={(e) => e.stopPropagation()}
-            className='absolute flex m-2 text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-30 rounded-md'
+            className='absolute flex m-2 text-white p-2 bg-[rgba(0,0,0,50%)] text-base w-[220px] z-40 rounded-md'
         >
             <div className='flex-1'>
                 <div>

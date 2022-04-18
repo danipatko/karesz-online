@@ -74,7 +74,6 @@ pub fn compile(code: &String, outdir: &str, filename: &String) -> Result<String,
 }
 
 // runner function
-// TODO: make result return
 pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
     outdir: &str,
     filename: &String,
@@ -93,10 +92,8 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
         .expect("Failed to start runner process");
 
     let mut stdout = BufReader::new(child.stdout.take().unwrap());
-    let mut stderr = BufReader::new(child.stderr.take().unwrap());
     let mut stdin = child.stdin.take().unwrap();
     let mut current_line = String::new();
-    let mut error_line = String::new();
     let mut i: usize = 0;
     let mut exit_code = 0;
 
@@ -118,7 +115,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                                 if value == 8 {
                                     match child.kill() {
                                         Ok(_) => {
-                                            println!("killed");
+                                            //  println!("killed");
                                         }
                                         Err(_) => {
                                             println!("kill failed");
@@ -128,7 +125,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                                 }
                                 match stdin.write_all(format!("{}\n", value).as_bytes()) {
                                     Ok(_) => {
-                                        println!("      wrote: '{}'", value);
+                                        // println!("      wrote: '{}'", value);
                                     }
                                     Err(e) => {
                                         println!("uh oh: {}", e);
@@ -171,6 +168,6 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
         }
     }
 
-    println!("END - {i}", i = i);
+    // println!("END - {i}", i = i);
     return exit_code;
 }

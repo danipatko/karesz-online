@@ -59,6 +59,7 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
     }
     // parse map from string
     let mut res = HashMap::new();
+    size_y = 0;
     for line in lines {
         size_x = 0;
         for c in line.chars() {
@@ -68,7 +69,7 @@ pub fn parse_map(map: &str, mut size_x: u32, mut size_y: u32) -> Option<HashMap<
             }
             size_x += 1;
         }
-        size_y -= 1;
+        size_y += 1;
     }
     Some(res)
 }
@@ -198,7 +199,7 @@ impl Moves for Karesz {
     }
     // check if field is a wall
     fn is_wall(&self, objects: &HashMap<(u32, u32), u8>, position: (u32, u32)) -> bool {
-        objects.get(&position).unwrap_or(&1) == &0
+        *objects.get(&position).unwrap_or(&0) == 1
     }
     // check if field is out of bounds
     fn out_of_bounds(&self, size_x: u32, size_y: u32, position: (u32, u32)) -> bool {
@@ -229,7 +230,6 @@ impl Moves for Karesz {
         self.is_moving = true;
         // attempt to step out of map
         if fwd == self.position || !self.can_step(size_x, size_y, objects, fwd) {
-            println!("Player {} attempted to step out of bounds", self.id);
             death_row.push((
                 self.id,
                 "Player attempted to step out of bounds or into a wall",
@@ -249,7 +249,6 @@ impl Moves for Karesz {
         let fwd = self.forward(self.position, self.rotation);
         // attempt to step out of map
         if fwd == self.position || !self.can_step(size_x, size_y, objects, fwd) {
-            println!("Player {} attempted to step out of bounds", self.id);
             return true;
         }
         self.position = fwd;
@@ -318,10 +317,10 @@ impl Moves for Karesz {
         size_y: u32,
         objects: &mut HashMap<(u32, u32), u8>,
     ) -> Option<u8> {
-        print!(
-            "    [{}] pos: {:?}, rot: {} => ",
-            self.id, self.position, self.rotation
-        );
+        // print!(
+        //     "    [{}] pos: {:?}, rot: {} => ",
+        //     self.id, self.position, self.rotation
+        // );
 
         let res: Option<u8> = {
             match s[2] {
@@ -402,10 +401,10 @@ impl Moves for Karesz {
                 _ => None,
             }
         };
-        println!(
-            "res: {:?} pos: {:?}, rot: {}, steps: {:?} \n",
-            res, self.position, self.rotation, self.steps
-        );
+        // println!(
+        //     "res: {:?} pos: {:?}, rot: {}, steps: {:?} \n",
+        //     res, self.position, self.rotation, self.steps
+        // );
         res
     }
 
@@ -417,10 +416,10 @@ impl Moves for Karesz {
         size_y: u32,
         objects: &mut HashMap<(u32, u32), u8>,
     ) -> Option<u8> {
-        print!(
-            "    [{}] pos: {:?}, rot: {} => ",
-            self.id, self.position, self.rotation
-        );
+        // print!(
+        //     "    [{}] pos: {:?}, rot: {} => ",
+        //     self.id, self.position, self.rotation
+        // );
 
         let res: Option<u8> = {
             match s[2] {
@@ -503,10 +502,10 @@ impl Moves for Karesz {
                 _ => None,
             }
         };
-        println!(
-            "res: {:?} pos: {:?}, rot: {}, steps: {:?} \n",
-            res, self.position, self.rotation, self.steps
-        );
+        // println!(
+        //     "res: {:?} pos: {:?}, rot: {}, steps: {:?} \n",
+        //     res, self.position, self.rotation, self.steps
+        // );
         res
     }
 }
@@ -553,24 +552,29 @@ impl GameActions for Game {
             // two (or more) players stepping on the same field
             if players_here.len() > 1 {
                 for elem in players_here {
-                    println!("Player {} stepped on the same field as others", elem);
+                    // println!("Player {} stepped on the same field as others", elem);
                     self.death_row
                         .push((*elem, "Player stepped on the same field as others"));
                 }
                 return;
             }
 
-            // one player stepping on another
+            // one player stepping on another -> death row
             let mut did_kill: bool = false;
             for (id, player) in &mut self.players {
                 if player.position == *position && !player.is_moving {
-                    println!("Player {} was stepped on by Player {}", id, players_here[0]);
+                    // println!("Player {} was stepped on by Player {}", id, players_here[0]);
                     self.death_row
                         .push((*id, "Player was stepped on by another player"));
                     did_kill = true;
                 }
+            }
+
+            for (_, player) in &mut self.players {
                 player.is_moving = false;
             }
+
+            // increment kills
             if did_kill {
                 self.players.get_mut(&players_here[0]).unwrap().kills += 1;
             }
@@ -588,10 +592,12 @@ impl GameActions for Game {
             self.draw = true;
             for (id, reason) in &self.death_row {
                 let player = self.players.get(id).unwrap();
+                let mut steps = player.steps.clone();
+                steps.pop();
                 self.scoreboard.push(PlayerScore {
                     name: player.name.clone(),
                     kills: player.kills,
-                    steps: player.steps.clone(),
+                    steps,
                     place: 1u8,
                     reason_of_death: reason,
                     rounds_survived: self.round,

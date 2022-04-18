@@ -266,12 +266,12 @@ export default class Session {
 
     private getMap(): string {
         let result = '';
-        for (let y = 0; y < this.map.size - 1; y++) {
+        for (let y = 0; y < this.map.size; y++) {
             for (let x = 0; x < this.map.size; x++)
                 result += this.map.objects[`${x}-${y}`] ?? '0';
             result += '%0A'; // use url encoded newline
         }
-        return result;
+        return result.substring(0, result.length - 3); // remove last newline
     }
 
     /**
@@ -296,6 +296,11 @@ export default class Session {
 
         this.state = GameState.idle;
         this.announce('state_update', { state: this.state });
+
+        this.players.forEach((x) => {
+            x.ready = false;
+        });
+        this.announce('unready');
 
         if (!response.ok) {
             this.announce('error', {
@@ -327,10 +332,6 @@ export default class Session {
         }
 
         result.winner = this.players.get(result.winner)?.name ?? '';
-
-        this.players.forEach((x) => {
-            x.ready = false;
-        });
 
         this.announce('game_end', {
             draw: result.draw,
