@@ -41,8 +41,6 @@ const Home: NextPage = (props: any) => {
             <Navbar selected={view} select={setView} />
             {view === View.Home ? (
                 <_Home />
-            ) : view === View.Playground ? (
-                <Playground />
             ) : view === View.Multiplayer ? (
                 <Multiplayer
                     game={game}
@@ -61,6 +59,7 @@ const Home: NextPage = (props: any) => {
                 content={content}
                 setContent={setContent}
             />
+            <Playground current={content} shown={view === View.Playground} />
             <CompileError logs={game.error} />
             <Errors
                 errors={errors.map((x) => x.error)}

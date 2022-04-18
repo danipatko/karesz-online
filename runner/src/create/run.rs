@@ -3,6 +3,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+const MAX_ROUNDS: usize = 5000;
+
 // these import will be loaded
 const ALLOWED_IMPORTS: [&str; 11] = [
     "System.Private.CoreLib.dll",
@@ -137,7 +139,7 @@ pub fn run<'r, T: 'r + Send + FnMut(&str) -> Option<u8>>(
                         }
                         // TODO: Make this configurable
                         i += 1;
-                        if i > 100 {
+                        if i > MAX_ROUNDS {
                             match child.kill() {
                                 Ok(_) => {
                                     println!("killed");

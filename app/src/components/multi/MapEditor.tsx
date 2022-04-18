@@ -189,11 +189,17 @@ const MapEditor = ({
                 )}
 
                 <div className='flex justify-between p-2 items-center'>
-                    <button
+                    {/* <button
                         onClick={() => setView('play')}
                         className='font-semibold text-red-500 hover:underline outline-none'
                     >
                         Cancel
+                    </button> */}
+                    <button
+                        onClick={clearAll}
+                        className='font-semibold text-red-500 hover:underline outline-none'
+                    >
+                        Clear all
                     </button>
                     <button
                         onClick={() => {

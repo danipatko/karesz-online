@@ -55,7 +55,7 @@ const useMap = ({
 
     // set a block at a specific position
     const setBlock = (x: number, y: number, type: number): void => {
-        console.log(x, y, type);
+        if (state.view === 'play') return;
         setState((s) => {
             // delete field
             if (type === 0) {

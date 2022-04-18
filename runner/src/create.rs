@@ -214,7 +214,7 @@ pub fn run_single(
     match prepare::create_single_player_template(code.to_string(), &rand_str(10), &key) {
         // if ok, write to file and compile
         Ok(x) => match run::compile(&x, TESTING_DIRECTORY, &key) {
-            Ok(_) => println!("Compile OK\n {}", x),
+            Ok(_) => println!("Compile OK"),
             Err(e) => {
                 return Err(format!("Failed to start game: \n{}", e));
             }
@@ -228,7 +228,6 @@ pub fn run_single(
     run::run(TESTING_DIRECTORY, &key, |s| {
         let s = s.trim();
         let s: Vec<&str> = s.split(" ").collect();
-        println!(">> {:?}", s);
 
         // ignore debug logs
         if s.len() < 3 || s[0] != key {

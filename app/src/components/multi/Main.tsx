@@ -74,6 +74,7 @@ const Main = ({
             <div className='flex mx-5 gap-4'>
                 <div className='flex-1'>
                     <Playback
+                        type='mp'
                         view={editor.view}
                         onClick={(x, y) => functions.setBlock(x, y, block)}
                         setView={() => functions.setView('play')}
@@ -81,6 +82,7 @@ const Main = ({
                         replayMap={game.map}
                         editorMap={editor.map}
                         scoreboard={scoreboard}
+                        roundResult={null}
                     />
                 </div>
                 <div className='flex-1 flex flex-col justify-evenly items-center gap-4'>
@@ -95,7 +97,7 @@ const Main = ({
                         setSize={functions.setSize}
                         setView={functions.setView}
                         onCancel={() => functions.reset(game.map)}
-                        clearAll={() => {}}
+                        clearAll={functions.clearAll}
                         selected={block}
                         setSelected={setBlock}
                     />

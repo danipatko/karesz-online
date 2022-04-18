@@ -331,8 +331,6 @@ export default class Session {
             };
         }
 
-        result.winner = this.players.get(result.winner)?.name ?? '';
-
         this.announce('game_end', {
             draw: result.draw,
             rounds: result.rounds,

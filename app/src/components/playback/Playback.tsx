@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { aliases } from '../../lib/front/aliases';
 import { Scoreboard } from '../../lib/hooks/game';
 import useKaresz, { State } from '../../lib/hooks/karesz';
+import useSKaresz from '../../lib/hooks/skaresz';
 import { GameMap } from '../../lib/shared/types';
 
 const Obj = ({
@@ -75,13 +76,16 @@ const Karesz = ({
 
 const Playback = ({
     view,
+    type,
     setView,
     onClick,
     showGrid,
     replayMap,
     editorMap,
     scoreboard,
+    roundResult,
 }: {
+    type: 'mp' | 'sp';
     view: 'edit' | 'play';
     setView: () => void;
     onClick: (x: number, y: number) => void;
@@ -89,6 +93,10 @@ const Playback = ({
     replayMap: GameMap;
     editorMap: GameMap;
     scoreboard: Scoreboard | null;
+    roundResult: {
+        steps: number[];
+        start: { x: number; y: number; rotation: number };
+    } | null;
 }) => {
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
@@ -98,13 +106,22 @@ const Playback = ({
     const [speed, setSpeed] = useState<number>(50);
     // hook to set the animator map when scoreboard changes
     // the animator object
-    const [karesz, { play, pause, reset, stepTo }] = useKaresz({
-        size: replayMap?.size ?? 20,
-        speed,
-        setIndex,
-        scoreboard,
-        objects: replayMap?.objects ?? {},
-    });
+    const [karesz, { play, pause, reset, stepTo }] =
+        type === 'mp'
+            ? useKaresz({
+                  size: replayMap?.size ?? 20,
+                  speed,
+                  setIndex,
+                  scoreboard,
+                  objects: replayMap?.objects ?? {},
+              })
+            : useSKaresz({
+                  size: replayMap?.size ?? 20,
+                  speed,
+                  setIndex,
+                  roundResult,
+                  objects: replayMap?.objects ?? {},
+              });
 
     const size = (): number =>
         view === 'edit' ? editorMap?.size ?? 20 : karesz.size;
@@ -226,7 +243,13 @@ const Playback = ({
             <div className='p-2'>
                 <input
                     min={0}
-                    max={scoreboard ? scoreboard.rounds - 1 : 0}
+                    max={
+                        scoreboard
+                            ? scoreboard.rounds - 1
+                            : roundResult
+                            ? roundResult.steps.length - 1
+                            : 0
+                    }
                     type='range'
                     value={index}
                     onChange={(e) => {

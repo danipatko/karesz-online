@@ -140,6 +140,10 @@ export const useGame = (
     const onGameEnd = (sb: Scoreboard) => {
         setState((s) => {
             for (const id in s.players) s.players[id].ready = false;
+            if (s.players.hasOwnProperty(sb.winner)) {
+                s.players[sb.winner].wins++;
+                sb.winner = s.players[sb.winner].name;
+            }
             return { ...s };
         });
         setScoreboard(sb);
