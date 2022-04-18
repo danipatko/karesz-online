@@ -91,6 +91,22 @@
         }
     }
 
+    .karesz-spin {
+        animation: karesz-spin 2s ease-in-out infinite;
+    }
+
+    @keyframes karesz-spin {
+        0% {
+            transform: rotate3d(1, 1, 0.5, 0deg);
+        }
+        50% {
+            transform: rotate3d(1, 1, 0.5, 360deg);
+        }
+        100% {
+            transform: rotate3d(1, 1, 0.5, 0deg);
+        }
+    }
+
     .dark {
         @apply bg-zinc-800;
     }

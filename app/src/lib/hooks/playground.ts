@@ -29,9 +29,16 @@ const defaults: PlaygroundState = {
     logs: '',
 };
 
-const usePlayground = (): [
+const usePlayground = (
+    onError: (error: string) => void
+): [
     PlaygroundState,
-    { run: (code: string) => void; saveMap: (map: GameMap) => void }
+    {
+        run: (code: string) => void;
+        saveMap: (map: GameMap) => void;
+        setStartingPoint: (x: number, y: number) => void;
+        cycleStartingRotation: () => void;
+    }
 ] => {
     const [state, setState] = useState<PlaygroundState>(defaults);
 
@@ -79,7 +86,7 @@ const usePlayground = (): [
             return;
         }
 
-        console.log(steps);
+        onError('Ready for replay');
 
         setState((s) => {
             return { ...s, steps };
@@ -92,7 +99,22 @@ const usePlayground = (): [
         });
     };
 
-    return [state, { run, saveMap }];
+    const setStartingPoint = (x: number, y: number) => {
+        setState((s) => {
+            return { ...s, start: { ...s.start, x, y } };
+        });
+    };
+
+    const cycleStartingRotation = () => {
+        setState((s) => {
+            return {
+                ...s,
+                start: { ...s.start, rotation: (s.start.rotation + 1) % 4 },
+            };
+        });
+    };
+
+    return [state, { run, saveMap, cycleStartingRotation, setStartingPoint }];
 };
 
 export default usePlayground;

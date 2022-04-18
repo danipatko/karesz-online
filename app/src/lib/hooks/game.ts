@@ -122,7 +122,7 @@ export const useGame = (
     // emitted when a player leaves
     const onLeave = ({ id }: { id: string }) =>
         setState((s) => {
-            warn(`${s.players[id]} has left the game.`);
+            warn(`${s.players[id]?.name ?? 'A player'} has left the game.`);
             delete s.players[id];
             return { ...s };
         });
@@ -154,6 +154,9 @@ export const useGame = (
         setState((s) => {
             return { ...s, host, isHost: s.host === host };
         });
+        setTimeout(() => {
+            if (isHost()) warn('You are now the host of this game.');
+        }, 200);
     };
 
     // emitted when a player fetches info about a game (either not found or provided with the code and number of players)

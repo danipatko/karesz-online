@@ -146,13 +146,13 @@ export default class Session {
     // remove a player from the game
     public removePlayer(socket: Socket): void {
         console.log(`${socket.id} disconnected`);
+        this.announce('left', { id: socket.id });
         this.players.delete(socket.id);
         // end of session
         if (this.players.size < 1) {
             this.destroy();
             return;
         }
-        this.announce('left', { id: socket.id });
         // choose new host
         if (socket.id === this.host)
             this.setHost(this.players.values().next().value.socket);

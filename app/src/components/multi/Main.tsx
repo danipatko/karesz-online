@@ -11,6 +11,7 @@ import { Game, Scoreboard as SB } from '../../lib/hooks/game';
 const Main = ({
     game,
     isHost,
+    onExit,
     isReady,
     current,
     onSubmit,
@@ -18,6 +19,7 @@ const Main = ({
     scoreboard,
 }: {
     game: Game;
+    onExit: () => void;
     isHost: boolean;
     isReady: boolean;
     current: string;
@@ -70,6 +72,14 @@ const Main = ({
                     host={game.host}
                     players={Object.values(game.players)}
                 />
+                <div>
+                    <button
+                        onClick={onExit}
+                        className='font-bold text-red-600 text:bg-red-500 p-2'
+                    >
+                        LEAVE GAME
+                    </button>
+                </div>
             </div>
             <div className='flex mx-5 gap-4'>
                 <div className='flex-1'>

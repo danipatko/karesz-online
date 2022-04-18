@@ -50,6 +50,7 @@ const Multiplayer = ({
                 <Main
                     game={game}
                     isHost={functions.isHost()}
+                    onExit={functions.exit}
                     isReady={functions.isReady()}
                     onSubmit={functions.submit}
                     current={current}

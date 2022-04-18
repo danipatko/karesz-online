@@ -67,18 +67,25 @@ const getPlayerState = (
 };
 
 // check if player has placed a rock
+// check if player has placed a rock
 const getObjectState = (
     c: number,
-    {
-        x,
-        y,
-    }: {
+    previous: { [key: string]: number },
+    position: {
         x: number;
         y: number;
     }
 ): { [key: string]: number } | undefined => {
-    if (c > 11) return { [`${x}-${y}`]: c - 10 };
-    return undefined;
+    // pick up a rock
+    if (c === 4) {
+        delete previous[`${position.x}-${position.y}`];
+        return previous;
+    }
+    // place a rock
+    else if (c > 11)
+        return { ...previous, [`${position.x}-${position.y}`]: c - 10 };
+    // no change
+    else return previous;
 };
 
 // get all the steps of the players and objects
@@ -102,12 +109,14 @@ const getAllSteps = (
             if (state) playerStates[k].steps.push(state);
 
             objectStates[i + 1] = {
-                ...objectStates[i], // add state from previous round
-                ...objectStates[i + 1], // add state from previous player
-                // add state from current player
-                ...getObjectState(x.steps[i], {
-                    ...playerStates[k].steps[i],
-                }),
+                ...getObjectState(
+                    x.steps[i],
+                    {
+                        ...objectStates[i], // state from previous round
+                        ...objectStates[i + 1], // state from previous player
+                    },
+                    playerStates[k].steps[i]
+                ),
             };
         });
     }

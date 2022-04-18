@@ -59,7 +59,11 @@ const Home: NextPage = (props: any) => {
                 content={content}
                 setContent={setContent}
             />
-            <Playground current={content} shown={view === View.Playground} />
+            <Playground
+                current={content}
+                shown={view === View.Playground}
+                onError={err}
+            />
             <CompileError logs={game.error} />
             <Errors
                 errors={errors.map((x) => x.error)}

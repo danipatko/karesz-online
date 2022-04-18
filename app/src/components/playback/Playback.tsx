@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { Children, useEffect, useRef, useState } from 'react';
 import { aliases } from '../../lib/front/aliases';
 import { Scoreboard } from '../../lib/hooks/game';
 import useKaresz, { State } from '../../lib/hooks/karesz';
@@ -80,6 +80,7 @@ const Playback = ({
     setView,
     onClick,
     showGrid,
+    children,
     replayMap,
     editorMap,
     scoreboard,
@@ -97,6 +98,7 @@ const Playback = ({
         steps: number[];
         start: { x: number; y: number; rotation: number };
     } | null;
+    children?: React.ReactNode;
 }) => {
     const container = useRef<HTMLDivElement>(null as any);
     const [tileSize, setSize] = useState<number>(10);
@@ -147,6 +149,12 @@ const Playback = ({
 
     return (
         <div className='text-white h-[50vw] lg:h-[60vh] xl:h-[75vh] w-[50vw]  lg:w-[60vh] xl:w-[75vh]'>
+            <style jsx>{`
+                div > :global(.tilesize) {
+                    width: ${tileSize}px !important;
+                    height: ${tileSize}px !important;
+                }
+            `}</style>
             <div className='flex gap-5 p-2 items-center'>
                 <button
                     className='text-xl px-2 fa fa-play hover:text-[#0f0]'
@@ -191,6 +199,7 @@ const Playback = ({
                 </div>
             </div>
             <div
+                id='map'
                 ref={container}
                 style={{
                     backgroundImage: showGrid
@@ -238,6 +247,8 @@ const Playback = ({
                         ))}
                     </>
                 )}
+
+                {Children ? children : null}
             </div>
 
             <div className='p-2'>
