@@ -275,9 +275,9 @@ impl Moves for Karesz {
     fn place_rock(&self, objects: &mut HashMap<(u32, u32), u8>, color: u8) {
         objects.insert(self.position, color);
     }
-    // set field value to 0
+    // remove object key
     fn pick_up_rock(&self, objects: &mut HashMap<(u32, u32), u8>) {
-        objects.insert(self.position, 0);
+        objects.remove(&self.position);
     }
     // check the field's value under player's position
     fn what_is_under(&self, objects: &HashMap<(u32, u32), u8>) -> u8 {

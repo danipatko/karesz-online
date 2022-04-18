@@ -86,7 +86,7 @@ const _RULES: [Rule; 23] = [
         with: "$\"5 {${first}}\"",
     },
     Rule {
-        std: Std::Out,
+        std: Std::In,
         replace: r"Északra_néz\s*\(\s*\)",
         with: "\"6\",\"0\"",
     },
