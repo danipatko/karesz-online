@@ -99,17 +99,17 @@ export const getCompletionItems = (monaco: Monaco): any[] => {
         },
         {
             label: 'Lépj x-et',
-            kind: monaco.languages.CompletionItemKind.Function,
+            kind: monaco.languages.CompletionItemKind.Snippet,
             documentation: 'Karesz x darab lépést tesz.',
             insertText: 'for(int i = 0; i < ${1:10}; i++) {\n\tLépj();\n}',
             insertTextRules:
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         },
         {
-            label: 'Lépj amíg',
-            kind: monaco.languages.CompletionItemKind.Function,
-            documentation: 'Karesz addig lép, amíg a feltétel igaz.',
-            insertText: 'while(${1:true}) {\n\tLépj();\n}',
+            label: 'while',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'while loop.',
+            insertText: 'while(${1:true}) {\n\t${2}\n}',
             insertTextRules:
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         },
@@ -120,30 +120,63 @@ export const getCompletionItems = (monaco: Monaco): any[] => {
             insertText: 'Fordulj(jobbra);\nFordulj(jobbra);',
         },
         {
-            label: 'Cikcakk jobb',
-            kind: monaco.languages.CompletionItemKind.Function,
+            label: 'jobb bal',
+            kind: monaco.languages.CompletionItemKind.Snippet,
             documentation: 'Karesz lép, jobbra fordul, lép és balra fordul.',
             insertText: 'Lépj();\nFordulj(jobbra);\nLépj();\nFordulj(balra);',
         },
         {
-            label: 'Cikcakk bal',
-            kind: monaco.languages.CompletionItemKind.Function,
+            label: 'bal jobb',
+            kind: monaco.languages.CompletionItemKind.Snippet,
             documentation: 'Karesz lép, balra fordul, lép és jobbra fordul.',
             insertText: 'Lépj();\nFordulj(balra);\nLépj();\nFordulj(jobbra);',
         },
         {
-            label: 'cw',
-            kind: monaco.languages.CompletionItemKind.Function,
-            documentation: 'log',
-            insertText: 'Console.WriteLine("${1: }");',
+            label: 'for',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'Karesz x darab lépést tesz.',
+            insertText: 'for(int i = 0; i < ${1:10}; i++) {\n\tLépj();\n}',
             insertTextRules:
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         },
         {
-            label: 'Console.WriteLine',
-            kind: monaco.languages.CompletionItemKind.Function,
-            documentation: 'log',
-            insertText: 'Console.WriteLine("${1: }");',
+            label: 'if',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'ha elágazás',
+            insertText: 'if(${1:condition}) {\n\t\n}',
+            insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        },
+        {
+            label: 'else if',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'ha elágazás',
+            insertText: 'else if(${1:condition}) {\n\t\n}',
+            insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        },
+        {
+            label: 'else',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'ha elágazás',
+            insertText: 'else {\n\t${1}\n}',
+            insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        },
+        {
+            label: 'switch',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'switch case elágazás',
+            insertText:
+                'switch(${1:value}) {\n\tcase ${2}:\n\t\tbreak;\n\tdefault:\n\t\tbreak;\n}',
+            insertTextRules:
+                monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        },
+        {
+            label: 'void',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            documentation: 'függvény deklaráció',
+            insertText: 'void ${1:FunctionName}() {\n\t${2}\n}',
             insertTextRules:
                 monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
         },

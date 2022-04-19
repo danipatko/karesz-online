@@ -284,7 +284,7 @@ export default class Session {
 
         const startState = this.getPlayerStartingPostions();
 
-        console.log(`Fetching '${host}/mp/custom'`);
+        // console.log(`Fetching '${host}/mp/custom'`);
 
         // TODO: make this a configurable option
         const response = await fetch(`${host}/mp/custom`, {
