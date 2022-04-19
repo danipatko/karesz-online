@@ -7,3 +7,4 @@ app/.next
 runner/target
 testing/*
 cp.js
+svgen.js

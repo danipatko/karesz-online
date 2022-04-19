@@ -255,7 +255,7 @@ pub fn create_multi_player_template(
             elem.code.clone(),
             i,
             rand,
-            String::from(format!("static void {}()", elem.caller)),
+            String::from(format!("void {}()", elem.caller)),
             true,
         ) {
             Some(code) => elem.code = code,

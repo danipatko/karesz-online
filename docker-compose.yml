@@ -1,0 +1,23 @@
+services:
+    app:
+        build:
+            context: ./app
+        ports:
+            - 3000:3000
+    runner:
+        build:
+            context: ./runner
+        ports:
+            - '8000:8000'
+        expose:
+            - 8000
+    nginx:
+        build:
+            context: ./nginx
+        ports:
+            - '80:80'
+        depends_on:
+            - 'app'
+            - 'runner'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'

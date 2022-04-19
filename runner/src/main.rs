@@ -33,7 +33,7 @@ impl Fairing for CORS {
 
 #[get("/")]
 fn index() -> &'static str {
-    "Hello, world!"
+    "Probably not the thing you're looking for"
 }
 
 // single player params

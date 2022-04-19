@@ -2,12 +2,11 @@ use std::fs;
 pub mod karesz;
 mod prepare;
 mod run;
+use crate::create::karesz::Moves;
 use karesz::{Game, GameActions, PlayerScore};
 use rand::Rng;
 use rocket::serde::Serialize;
 use std::collections::HashMap;
-
-use crate::create::karesz::Moves;
 
 #[derive(Serialize, Debug)]
 pub struct GameResult {
@@ -68,7 +67,7 @@ impl PlaygroundResult {
 const TESTING_DIRECTORY: &str = if cfg!(windows) {
     "C:/Users/Dani/home/Projects/karesz-online/testing"
 } else {
-    "/home/dapa/Projects/karesz-online/testing"
+    "/home/testing"
 };
 
 pub fn rand_str(len: u32) -> String {

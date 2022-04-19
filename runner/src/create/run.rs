@@ -24,7 +24,7 @@ const ALLOWED_IMPORTS: [&str; 11] = [
 const ASSEMBLY_LOCATION: &str = if cfg!(windows) {
     "C:/Program Files/dotnet/shared/Microsoft.NETCore.App/6.0.3/"
 } else {
-    "/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.2/"
+    "/usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.3/"
 };
 
 // the location of the csc compiler

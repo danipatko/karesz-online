@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import host from '../host';
 import { GameMap } from '../shared/types';
 
 export interface PlaygroundState {
@@ -54,7 +55,7 @@ const usePlayground = (
 
     const run = async (code: string) => {
         // TODO: configurable url
-        const res = await fetch(`http://127.0.0.1:8000/sp/custom`, {
+        const res = await fetch(`${window.origin}/api/sp/custom`, {
             method: 'POST',
             body: JSON.stringify({
                 map: getMap(),
