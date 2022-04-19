@@ -65,7 +65,7 @@ const Playground = ({
                             className='absolute tilesize opacity-40'
                             style={{
                                 backgroundSize: 'contain',
-                                backgroundImage: 'url(/karesz/karesz0.png)',
+                                backgroundImage: 'url(/karesz/karesz.png)',
                                 transform: `translate(${
                                     100 * playground.start.x
                                 }%,${100 * playground.start.y}%) rotate(${

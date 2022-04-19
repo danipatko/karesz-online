@@ -8,7 +8,7 @@ const Home = () => {
                         className='mx-2 w-8 h-8 absolute karesz-spin'
                         style={{
                             backgroundSize: 'contain',
-                            backgroundImage: 'url(/karesz/karesz0.png)',
+                            backgroundImage: 'url(/karesz/karesz.png)',
                         }}
                     ></span>
                 </div>

@@ -64,7 +64,7 @@ const Karesz = ({
                     width: size,
                     height: size,
                     backgroundSize: 'contain',
-                    backgroundImage: 'url(/karesz/karesz0.png)',
+                    backgroundImage: 'url(/karesz/karesz.png)',
                     transform: `translate(${100 * state.x}%,${
                         100 * state.y
                     }%) rotate(${(state.rotation % 4) * 90}deg)`,
