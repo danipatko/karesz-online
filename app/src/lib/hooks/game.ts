@@ -105,7 +105,6 @@ export const useGame = (
 
     // emitted when the game starts or ends
     const stateUpdate = ({ state: st }: { state: number }) => {
-        console.log(st);
         setState((s) => {
             return { ...s, state: st };
         });
@@ -129,7 +128,7 @@ export const useGame = (
 
     // emitted when a player signals ready (or unready)
     const playerUpdate = ({ id, ready }: { id: string; ready: boolean }) => {
-        console.log(`EV: player_update ${id} ${ready}`);
+        // console.log(`EV: player_update ${id} ${ready}`);
         setState((s) => {
             s.players[id].ready = ready;
             return { ...s };
@@ -238,20 +237,20 @@ export const useGame = (
     // start game (as host)
     const startGame = () => {
         if (socket === null || socket.id !== state.host) return;
-        console.log(`EM: startGame`);
+        // console.log(`EM: startGame`);
         socket.emit('start_game');
     };
 
     // update the starting map state
     const updateMap = (map: GameMap) => {
-        console.log(`EM: uploadMap`);
+        // console.log(`EM: uploadMap`);
         socket.emit('update_map', map);
     };
 
     // enter the display name for a pending game join
     const join = (name: string) => {
         if (socket === null) return;
-        console.log(`EM: join as ${name}`);
+        // console.log(`EM: join as ${name}`);
         if (!name.replace(/[^a-zA-Z\d\-\.\_]/gm, '').length) {
             warn('Please enter a valid name.');
             return;
@@ -264,7 +263,7 @@ export const useGame = (
 
     // upload code to server
     const submit = (code: string) => {
-        console.log(`EM: submit ${code}`);
+        // console.log(`EM: submit ${code}`);
         if (socket !== null) {
             if (isReady()) socket.emit('unsubmit');
             else socket.emit('submit', { code });
@@ -274,13 +273,13 @@ export const useGame = (
     // enter code for game
     const preJoin = (code: number) => {
         if (socket === null) return;
-        console.log(`EM: preJoin ${code}`);
+        // console.log(`EM: preJoin ${code}`);
         socket.emit('info', { code });
     };
 
     // create new game
     const preCreate = () => {
-        console.log(`EM: preCreate`);
+        // console.log(`EM: preCreate`);
         setMeta((m) => Object({ ...m, create: true }));
         setState((s) => Object({ ...s, state: GameState.prejoin }));
     };
@@ -288,7 +287,7 @@ export const useGame = (
     // create new game
     const create = (name: string) => {
         if (socket === null) return;
-        console.log(`EM: create as ${name}`);
+        // console.log(`EM: create as ${name}`);
         socket.emit('create', { name });
     };
 

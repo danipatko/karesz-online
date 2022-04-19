@@ -104,7 +104,6 @@ const getAllSteps = (
     for (let i = 0; i < rounds; i++) {
         players.map((x, k) => {
             // push only if not dead
-            console.log(x.steps[i]);
             const state = getPlayerState(x.steps[i], playerStates[k].steps[i]);
             if (state) playerStates[k].steps.push(state);
 
@@ -192,7 +191,7 @@ const useKaresz = ({
     useEffect(() => {
         if (!scoreboard) return;
         // calculate the steps
-        console.log('calculating steps ...');
+        // console.log('calculating steps ...');
         const [_players, _objects] = getAllSteps(
             Object.values(scoreboard.players).map((x) => {
                 return {

@@ -5,8 +5,8 @@ const nextConfig = {
     typescript: { tsconfigPath: './tsconfig.next.json' },
     webpackDevMiddleware: (config) => {
         config.watchOptions = {
-            poll: 5000,
-            aggregateTimeout: 300,
+            poll: 100,
+            aggregateTimeout: 20,
         };
         return config;
     },

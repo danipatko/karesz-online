@@ -160,7 +160,7 @@ const useSKaresz = ({
     useEffect(() => {
         if (!roundResult) return;
         // calculate the steps
-        console.log('calculating steps ...');
+        // console.log('calculating steps ...');
         const [_players, _objects] = getAllSteps(roundResult, objects);
 
         setState((s) => {

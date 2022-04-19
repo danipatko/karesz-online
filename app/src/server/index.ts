@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
 
     // fetch minimal game data / check if exists
     socket.on('info', ({ code }: { code: number }) => {
-        console.log(`prejoining to ${code}`);
+        // console.log(`prejoining to ${code}`);
 
         const game = gameManager.get(code);
         if (game === undefined) socket.emit('info', { found: false });
@@ -45,11 +45,11 @@ io.on('connection', (socket) => {
         const game = gameManager.get(code);
         // game not found
         if (game === undefined) {
-            console.log(`Game ${code} could not be found`);
+            // console.log(`Game ${code} could not be found`);
             socket.emit('error', { error: `Game ${code} could not be found` });
             return;
         }
-        console.log(`Adding ${name} to existing game ${code} ...'`); // debug
+        // console.log(`Adding ${name} to existing game ${code} ...'`); // debug
         game.addPlayer(socket, name);
     });
 

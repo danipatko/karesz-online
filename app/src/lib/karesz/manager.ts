@@ -285,18 +285,15 @@ export default class Session {
         const startState = this.getPlayerStartingPostions();
 
         // TODO: make this a configurable option
-        const response = await fetch(
-            `http://host.docker.internal:8000/mp/custom`,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    map: this.getMap(),
-                    size_x: this.map.size,
-                    size_y: this.map.size,
-                    players: Object.values(startState),
-                }),
-            }
-        );
+        const response = await fetch(`${host}/mp/custom`, {
+            method: 'POST',
+            body: JSON.stringify({
+                map: this.getMap(),
+                size_x: this.map.size,
+                size_y: this.map.size,
+                players: Object.values(startState),
+            }),
+        });
 
         this.state = GameState.idle;
         this.announce('state_update', { state: this.state });
