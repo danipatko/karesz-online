@@ -6,28 +6,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
-/*
-STEPS 
--1: nothing
-0: step
-1: turn left
-2: turn right
-3: is wall
-4: stepping out
-5: get position
-6: get direction
-7: pick up rock
-8: what is under
-9: anything under
-10: radar
-11: scan
-20+ place rock of color
- */
-
 class Program
 {
     // the number of steps each player can do
     static readonly int MAX_ITERATIONS = 5000;
+    // termination timeout in ms
+    static readonly int TIMEOUT = 5000;
     // the number of players to stop the game (the game finishes if this many players are alive)
     static readonly int MIN_PLAYER_COUNT = 1;
     // add map dimensions from template here
@@ -39,6 +23,7 @@ class Program
         // Assign map points from template here
         [(0, 0)] = 1,
         [(0, 1)] = 1,
+        [(4, 3)] = 4,
     };
 
     static readonly int RadarRange = 10;
@@ -67,9 +52,6 @@ class Program
     // check if position is inside the map
     static bool IsOutOfBounds((int x, int y) Position) => !(Position.x >= 0 && Position.x < MAP_WIDTH && Position.y >= 0 && Position.y < MAP_HEIGHT);
 
-    // check if a position is valid
-    static bool IsPositionValid((int x, int y) Position) => !IsOutOfBounds(Position) && !IsWall(Position);
-
     // check if players are at a position
     static bool AreTherePlayersHere((int x, int y) Position) {
         foreach (IPlayer Player in Players.Values)
@@ -78,7 +60,7 @@ class Program
     }
 
     // check if the position is a map
-    static bool IsWall((int x, int y) Position) => Map.ContainsKey(Position);
+    static bool IsWall((int x, int y) Position) => Map.TryGetValue(Position, out uint Value) && Value == 1;
     // check if a point is inside a rectangular area
     static bool IsPointInside((int x, int y) Center, (int x, int y) Point, int Range)
     {
@@ -97,7 +79,6 @@ class Program
     // add player data to scoreboard
     static void KillPlayer(int Place, int Round, bool Survived, IPlayer Player, string Reason)
     {
-        Console.WriteLine($"afaafsafsafsafsaf");
         ScoreBoard.TryAdd(Player.Index, new Score()
         {
             ID = Player.ID,
@@ -282,7 +263,7 @@ class Program
             while (!AreTherePlayersHere(P) || !IsWall(P))
             {
                 // if position is outside of the map, return the default range
-                if (IsOutOfBounds(P)) return RadarRange;
+                if (IsOutOfBounds(P)) return -1;
                 // else move forward
                 P = GetForward(P, Rotation);
                 Steps++;
@@ -358,8 +339,8 @@ class Program
         }
 
         ProposedSteps.Clear();
-        ROUND++;
         if (ROUND > MAX_ITERATIONS) FinishGame();
+        ROUND++;
     });
 
     static bool SIGNAL()
@@ -387,13 +368,15 @@ class Program
 
     static int WhereAmILooking(int P) => SIGNAL() && Players.TryGetValue(P, out IPlayer Player) ? Player.WhereAmILooking() : -1;
 
+    static void IsThereAWall(int P) => SIGNAL() && Players.TryGetValue(P, out IPlayer Player) && Player.IsWallAhead();
+
     static void PickUpRock(int P)
     {
         if (SIGNAL() && Players.TryGetValue(P, out IPlayer Player)) Player.PickUpRock();
     }
     static void PlaceRock(int P, int Color)
     {
-        if (SIGNAL() && Players.TryGetValue(P, out IPlayer Player)) Player.PlaceRock((uint)Color);
+        if (SIGNAL() && Players.TryGetValue(P, out IPlayer Player)) Player.PlaceRock((uint)Math.Clamp(Color, 2, 100));
     }
 
     static int WhatIsUnder(int P) => SIGNAL() && Players.TryGetValue(P, out IPlayer Player) ? Player.WhatIsUnder() : -1;
@@ -404,28 +387,27 @@ class Program
 
     static int Scan(int P) => SIGNAL() && Players.TryGetValue(P, out IPlayer Player) ? Player.Scan() : -1;
 
+    static void Omit(int P) 
+    { 
+        if(SIGNAL() && Players.TryGetValue(P, out IPlayer Player)) Player.OmitStep();
+    }
+
     // -----------------------------------------------------------------
     
-    static void Kill()
-    {
-        Thread.Sleep(5000);
-        Environment.Exit(0);
-    }
     static void Main()
     {
-        // new Thread(Kill).Start();
+        new Thread(() => { Thread.Sleep(TIMEOUT); Environment.Exit(0); }).Start();
         Parallel.Invoke(Thread1, Thread2);
-        // Bar.Dispose();
     }
 
     /* USER CODE */
     static void Thread1()
     {
-        while (true) Turn(0, -1);
+        while (true) Step(0);
     }
 
     static void Thread2()
     {
-        while (true) Step(1);
+        while (true) Turn(1, 1);
     }
 }

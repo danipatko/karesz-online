@@ -2,16 +2,7 @@ import { Socket } from 'socket.io';
 import host from '../host';
 import { GameMap } from '../shared/types';
 import { GameState } from '../shared/types';
-
-interface Player {
-    id: string;
-    code: string;
-    name: string; // *
-    wins: number; // *
-    ready: boolean; // *
-    socket: Socket;
-    // * visible for all
-}
+import { Player } from './types';
 
 interface StartState {
     start_x: number;
@@ -23,23 +14,6 @@ interface PlayerStartState extends StartState {
     code: string;
     name: string;
 }
-
-type MultiPlayerResponse = {
-    error?: string;
-    draw: boolean;
-    winner: string;
-    rounds: number;
-    scoreboard: {
-        [name: string]: {
-            [key: string]: number | string | number[] | {};
-            kills: number;
-            place: number;
-            death: string;
-            steps: number[];
-            survived: number;
-        };
-    };
-};
 
 /* 
 SOCKET EVENTS
