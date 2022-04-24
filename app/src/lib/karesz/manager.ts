@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 import host from '../host';
 import { GameMap } from '../shared/types';
 import { GameState } from '../shared/types';
-import { Player } from './types';
+import { GamePlayer } from './types';
 
 interface StartState {
     start_x: number;
@@ -37,7 +37,7 @@ host:
 */
 
 export default class Session {
-    protected players: Map<string, Player> = new Map<string, Player>();
+    protected players: Map<string, GamePlayer> = new Map<string, GamePlayer>();
     protected state: GameState = GameState.idle;
     protected host: string = ''; // the id of the host player
     protected code: number; // randomly generated code

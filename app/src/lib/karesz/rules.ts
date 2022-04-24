@@ -16,9 +16,8 @@ export const REPLACE: Replacement[] = [
     // replace with field values
     {
         usefn: false,
-        replace:
-            /(?P<first>([a-zA-Z]+\s[a-zÁ-Űá-űA-Z_\d]+\s*\(.*\)[\n\s]*\{))/g,
-        name: 'static ${first}',
+        replace: /(?<value>([a-zA-Z]+\s[a-zÁ-Űá-űA-Z_\d]+\s*\(.*\)[\n\s]*\{))/g,
+        name: 'static $1',
     },
     {
         usefn: false,
@@ -60,9 +59,9 @@ export const REPLACE: Replacement[] = [
     },
     {
         usefn: true,
-        replace: /Fordulj\s*\((?P<first>.*)\)/g,
+        replace: /Fordulj\s*\((?<value>.*)\)/g,
         name: 'Turn',
-        args: '${first}',
+        args: '$1',
     },
     {
         usefn: true,
@@ -76,32 +75,32 @@ export const REPLACE: Replacement[] = [
     },
     {
         usefn: true,
-        replace: /Tegyél_le_egy_kavicsot\s*\((?P<first>.*)\)/g,
+        replace: /Tegyél_le_egy_kavicsot\s*\((?<value>.*)\)/g,
         name: 'PlaceRock',
-        args: '${first}',
+        args: '$1',
     },
     {
         usefn: true,
         replace: /Északra_néz\s*\(\s*\)/g,
-        name: 'WhereAmILooking',
+        name: 'AmILookingAt',
         args: '0',
     },
     {
         usefn: true,
         replace: /Délre_néz\s*\(\s*\)/g,
-        name: 'WhereAmILooking',
+        name: 'AmILookingAt',
         args: '2',
     },
     {
         usefn: true,
         replace: /Keletre_néz\s*\(\s*\)/g,
-        name: 'WhereAmILooking',
+        name: 'AmILookingAt',
         args: '1',
     },
     {
         usefn: true,
         replace: /Nyugatra_néz\s*\(\s*\)/g,
-        name: 'WhereAmILooking',
+        name: 'AmILookingAt',
         args: '3',
     },
     {
@@ -165,7 +164,7 @@ export const REPLACE: Replacement[] = [
 // TODO: impose more rules
 export const RULES: Rule[] = [
     {
-        find: /using|global|Imports|namespace|System\./g,
+        find: /Main|Environment|Exit|FailFast|throw|new\s+Exception|using|global|Imports|namespace|System\./g,
         severity: 'error',
         description: 'disallowed keyword',
         replace: null,

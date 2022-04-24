@@ -11,7 +11,7 @@ export const LIBRARY_LOCATIONS: string =
 // the location of the csc compiler
 export const COMPILER_LOCATION: string =
     process.platform === 'win32'
-        ? `C:/Program Files/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll`
+        ? `"C:/Program Files/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll"`
         : `/usr/share/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll`;
 
 export const RUNNER_DIRECTORY: string = process.platform === 'win32' ? '' : '';
