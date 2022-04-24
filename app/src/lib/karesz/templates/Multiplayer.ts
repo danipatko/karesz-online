@@ -1,9 +1,9 @@
-import { PlayerCode, TemplateSettings } from '../types';
+import { PlayerStartState, TemplateSettings } from '../types';
 
 const getMultiPlayerTemplate = (
     rand: string,
     settings: TemplateSettings,
-    codes: PlayerCode[]
+    players: PlayerStartState[]
 ) => `// allowed imports
 using System;
 using System.Linq;
@@ -43,7 +43,7 @@ class Program
 
     static void FinishGame${rand}()
     {
-        Console.WriteLine($"KEYHERE {{ \"rounds\":{ROUND${rand}}, \"players\": {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()))} }}");
+        Console.WriteLine($"${rand} {{ \"rounds\":{ROUND${rand}}, \"players\": {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()))} }}");
         Environment.Exit(0);
     }
 
@@ -86,8 +86,12 @@ class Program
     static readonly ConcurrentDictionary<int, IPlayer${rand}> Players${rand} = new ConcurrentDictionary<int, IPlayer${rand}>()
     {
         // add players here
-        [0] = new IPlayer${rand}("0", 0, "sany", 4, 4, 0),
-        [1] = new IPlayer${rand}("1", 1, "karex", 6, 6, 0)
+        ${players
+            .map(
+                (p, i) =>
+                    `[${i}] = new IPlayer${rand}("${p.id}", ${i}, "${p.name}", ${p.x}, ${p.y}, ${p.rotation})`
+            )
+            .join(',')}
     };
     static readonly ConcurrentDictionary<int, Score${rand}> ScoreBoard${rand} = new ConcurrentDictionary<int, Score${rand}>();
     // add player data to scoreboard
@@ -414,13 +418,13 @@ class Program
     static void Main()
     {
         new Thread(() => { Thread.Sleep(TIMEOUT); Environment.Exit(0); }).Start();
-        Parallel.Invoke(${Object.keys(codes).map(
+        Parallel.Invoke(${Object.keys(players).map(
             (_, i) => `Thread${i}${rand}`
         )});
     }
 
     /* USER CODE */
-    ${Object.entries(codes)
+    ${Object.entries(players)
         .map(([author, code]) => `/* --- ${author}'s code --- */\n${code}`)
         .join('\n')}
     

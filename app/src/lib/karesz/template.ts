@@ -1,6 +1,12 @@
 import { REPLACE, RULES } from './rules';
 import getMultiPlayerTemplate from './templates/Multiplayer';
-import { PlayerCode, Player, TemplateSettings, random } from './types';
+import {
+    PlayerStartState,
+    Player,
+    TemplateSettings,
+    random,
+    PlayerStart,
+} from './types';
 
 export class Template {
     // used in the template so that players cannot interfere with built in functions
@@ -16,18 +22,20 @@ export class Template {
         MIN_PLAYERS: 1,
         MAX_ITERATIONS: 5000,
     };
-    private players: PlayerCode[] = [];
+    private players: PlayerStartState[] = [];
 
     private constructor(type: 'singleplayer' | 'multiplayer') {
         this.type = type;
         return this;
     }
 
+    // choose the type of template
     public static of(type: 'singleplayer' | 'multiplayer'): Template {
         return new Template(type);
     }
 
-    public setMap(
+    // choose the map size and layout
+    public onMap(
         width: number,
         height: number,
         objects?: { [key: string]: number }
@@ -38,13 +46,14 @@ export class Template {
         return this;
     }
 
+    // add an array of players
     public addPlayers(
         onFail: (
             id: string,
             severity: 'warning' | 'error',
             reason: string
         ) => void,
-        ...players: Player[]
+        ...players: PlayerStart[]
     ): Template {
         let start: number = this.type === 'singleplayer' ? 0 : 400;
         for (const [index, player] of players.entries()) {
@@ -69,19 +78,28 @@ export class Template {
         return this;
     }
 
-    public create(): string {
-        return this.type === 'singleplayer'
-            ? 'not yet bruh'
-            : getMultiPlayerTemplate(this.rand, this.settings, this.players);
+    // finally get the code and the random string used to retrieve the last line of the output
+    public create(): { code: string; rand: string } {
+        return {
+            rand: this.rand,
+            code:
+                this.type === 'singleplayer'
+                    ? 'not yet bruh'
+                    : getMultiPlayerTemplate(
+                          this.rand,
+                          this.settings,
+                          this.players
+                      ),
+        };
     }
 
-    // this function should be responsible for detecting disallowed code
+    // detect disallowed code
     private safetyCheck(code: string): {
         error: string;
         severity: 'warning' | 'error';
     } | null {
         for (const rule of RULES)
-            if (code.match(rule.find))
+            if (rule.reverse ? !code.match(rule.find) : code.match(rule.find))
                 return {
                     error: rule.description,
                     severity: rule.severity,

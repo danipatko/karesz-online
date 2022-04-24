@@ -2,18 +2,9 @@ import { Socket } from 'socket.io';
 import host from '../host';
 import { GameMap } from '../shared/types';
 import { GameState } from '../shared/types';
-import { GamePlayer } from './types';
-
-interface StartState {
-    start_x: number;
-    start_y: number;
-    start_rotation: number;
-}
-
-interface PlayerStartState extends StartState {
-    code: string;
-    name: string;
-}
+import { Runner } from './runner';
+import { Template } from './template';
+import { GamePlayer, PlayerStart, PlayerStartState } from './types';
 
 /* 
 SOCKET EVENTS
@@ -213,40 +204,30 @@ export default class Session {
     }
 
     // get player positions
-    private getPlayerStartingPostions(): { [key: string]: PlayerStartState } {
-        const res: { [key: string]: PlayerStartState } = {};
+    private getPlayerStartingPostions(): PlayerStart[] {
+        const res: PlayerStart[] = [];
 
-        const isOccupied = (x: number, y: number): boolean => {
-            for (const { start_x, start_y } of Object.values(res)) {
-                if (start_x === x && start_y === y) return true;
-            }
-            return this.map.objects[`${x}-${y}`] !== undefined;
+        const isOccupied = (_x: number, _y: number): boolean => {
+            for (const { x, y } of Object.values(res))
+                if (x === _x && y === _y) return true;
+            return this.map.objects[`${_x}-${_y}`] !== undefined;
         };
 
         this.players.forEach((player) => {
             let point = this.randCoord();
             while (isOccupied(point[0], point[1])) point = this.randCoord();
 
-            res[player.id] = {
-                code: player.code.replaceAll(/\n/g, '%0A'),
-                name: player.id, // id is assigned as name
-                start_x: point[0],
-                start_y: point[1],
-                start_rotation: Math.floor(Math.random() * 4),
-            };
+            res.push({
+                x: point[0],
+                y: point[1],
+                id: player.id,
+                name: player.name,
+                code: player.code,
+                rotation: Math.floor(Math.random() * 4),
+            });
         });
 
         return res;
-    }
-
-    private getMap(): string {
-        let result = '';
-        for (let y = 0; y < this.map.size; y++) {
-            for (let x = 0; x < this.map.size; x++)
-                result += this.map.objects[`${x}-${y}`] ?? '0';
-            result += '%0A'; // use url encoded newline
-        }
-        return result.substring(0, result.length - 3); // remove last newline
     }
 
     /**
@@ -258,61 +239,29 @@ export default class Session {
 
         const startState = this.getPlayerStartingPostions();
 
-        // console.log(`Fetching '${host}/mp/custom'`);
-
-        // TODO: make this a configurable option
-        const response = await fetch(`${host}/mp/custom`, {
-            method: 'POST',
-            body: JSON.stringify({
-                map: this.getMap(),
-                size_x: this.map.size,
-                size_y: this.map.size,
-                players: Object.values(startState),
-            }),
-        });
-
         this.state = GameState.idle;
         this.announce('state_update', { state: this.state });
 
         this.players.forEach((x) => {
             x.ready = false;
         });
-        this.announce('unready');
 
-        if (!response.ok) {
-            this.announce('error', {
-                error: `Failed to start game ([${response.status}] ${response.statusText})`,
-            });
-            return;
-        }
+        const { code, rand } = Template.of('multiplayer')
+            .onMap(this.map.size, this.map.size, this.map.objects)
+            .addPlayers((id, severity, reason) => {
+                console.log(`${id} ${severity} ${reason}`);
+            }, ...startState)
+            .create();
 
-        const result = await response.json();
+        const res = await Runner.run(code, rand);
 
-        // runtime or compile error -> show logs to players to find the error
-        if (result.error) {
-            console.log(result.error);
-            this.announce('compile_error', { error: result.error });
-            return;
-        }
+        console.log(res);
 
-        // update scoreboard with start state
-        for (const id in result.scoreboard) {
-            result.scoreboard[id] = {
-                ...result.scoreboard[id],
-                name: this.players.get(id)?.name ?? '',
-                start: {
-                    x: startState[id].start_x,
-                    y: startState[id].start_y,
-                    rotation: startState[id].start_rotation,
-                },
-            };
-        }
-
-        this.announce('game_end', {
-            draw: result.draw,
-            rounds: result.rounds,
-            winner: result.winner,
-            players: result.scoreboard,
-        });
+        // this.announce('game_end', {
+        //     draw: result.draw,
+        //     rounds: result.rounds,
+        //     winner: result.winner,
+        //     players: result.scoreboard,
+        // });
     }
 }

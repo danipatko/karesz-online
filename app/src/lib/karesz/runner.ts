@@ -10,14 +10,13 @@ import path from 'path/posix';
 import cp from 'child_process';
 import util from 'util';
 
-const exec = util.promisify(cp.exec);
-
 const run = async (
     cmd: string,
     cwd: string
 ): Promise<{ code: number; stderr: string; stdout: string }> => {
     return new Promise<{ code: number; stderr: string; stdout: string }>(
         (res, rej) => {
+            console.log(`Running: '${cmd}'`);
             const child = cp.exec(cmd, { cwd });
             // failed to spawn
             if (!(child.stdout && child.stderr)) {
@@ -105,7 +104,7 @@ export class Runner {
     private compile = async () =>
         await run(
             `dotnet ${COMPILER_LOCATION} ${MULITPLAYER_IMPORTS.map(
-                (lib) => `-r ${path.join(LIBRARY_LOCATIONS, lib)}`
+                (lib) => `-r:"${path.join(LIBRARY_LOCATIONS, lib)}"`
             ).join(' ')} ${this.rand}.cs -out:${this.rand}.dll`,
             RUNNER_DIRECTORY
         );

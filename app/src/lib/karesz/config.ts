@@ -1,6 +1,6 @@
 // <...>/dotnet/shared/Microsoft.NETCore.App/VERSION
 export const FRAMEWORK_VERSION = '6.0.3';
-export const SDK_VERSION = process.platform === 'win32' ? '5.0.402' : '6.0.201';
+export const SDK_VERSION = process.platform === 'win32' ? '5.0.407' : '6.0.201';
 
 // location of dll libraries loaded as commandline arguments
 export const LIBRARY_LOCATIONS: string =
@@ -14,7 +14,10 @@ export const COMPILER_LOCATION: string =
         ? `"C:/Program Files/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll"`
         : `/usr/share/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll`;
 
-export const RUNNER_DIRECTORY: string = process.platform === 'win32' ? '' : '';
+export const RUNNER_DIRECTORY: string =
+    process.platform === 'win32'
+        ? 'C:/Users/Dani/home/Projects/karesz-online/testing'
+        : '';
 
 // necessary for the template to work
 export const CRUCIAL_IMPORTS: string[] = [

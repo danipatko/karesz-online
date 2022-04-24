@@ -10,6 +10,7 @@ export interface Rule {
     replace: string | null;
     severity: 'error' | 'warning';
     description: string;
+    reverse?: boolean;
 }
 
 export const REPLACE: Replacement[] = [
@@ -170,10 +171,11 @@ export const RULES: Rule[] = [
         replace: null,
     },
     {
-        find: /(?!=(void\s+FELADAT\s*\(\s*\)))/g,
+        find: /void\s+FELADAT\s*\(\s*\)/g,
         severity: 'error',
         description: 'missing entry',
         replace: null,
+        reverse: true,
     },
     {
         find: /Thread|Threading|AbandonedMutexException|ApartmentState|AsyncFlowControl|AsyncLocal|AsyncLocalValueChangedArgs|AutoResetEvent|Barrier|BarrierPostPhaseException|CancellationToken|CancellationTokenRegistration|CancellationTokenSource|CompressedStack|ContextCallback|CountdownEvent|EventResetMode|EventWaitHandle|ExecutionContext|HostExecutionContext|HostExecutionContextManager|Interlocked|IOCompletionCallback|IThreadPoolWorkItem|LazyInitializer|LazyThreadSafetyMode|LockCookie|LockRecursionException|LockRecursionPolicy|ManualResetEvent|ManualResetEventSlim|Monitor|Mutex|NativeOverlapped|Overlapped|ParameterizedThreadStart|PeriodicTimer|PreAllocatedOverlapped|ReaderWriterLock|ReaderWriterLockSlim|RegisteredWaitHandle|Semaphore|SemaphoreFullException|SemaphoreSlim|SendOrPostCallback|SpinLock|SpinWait|SynchronizationContext|SynchronizationLockException|Thread|Thread|Constructors|Properties|Methods|ThreadAbortException|ThreadExceptionEventArgs|ThreadExceptionEventHandler|ThreadInterruptedException|ThreadLocal|ThreadPool|ThreadPoolBoundHandle|ThreadPriority|ThreadStart|ThreadStartException|ThreadState|ThreadStateException|Timeout|Timer|TimerCallback|Volatile|WaitCallback|WaitHandle|WaitHandleCannotBeOpenedException|WaitHandleExtensions|WaitOrTimerCallback/g,

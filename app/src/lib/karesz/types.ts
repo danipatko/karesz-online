@@ -6,15 +6,21 @@ export interface Player {
     code: string;
 }
 
+export interface PlayerStart extends Player {
+    x: number;
+    y: number;
+    rotation: number;
+}
+
 export interface GamePlayer extends Player {
     wins: number;
     ready: boolean;
     socket: Socket;
 }
 
-export interface PlayerCode extends Player {
-    startln: number;
+export interface PlayerStartState extends PlayerStart {
     endln: number;
+    startln: number;
 }
 
 export interface TemplateSettings {
