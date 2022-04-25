@@ -44,8 +44,7 @@ class Program
     static void FinishGame${rand}()
     {
         foreach (IPlayer${rand} Player in Players${rand}.Values) KillPlayer${rand}(1, ROUND${rand}, true, Player, "");
-        Console.WriteLine(ScoreBoard${rand}.Count);
-        Console.WriteLine($"${rand} {{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }}");
+        Console.WriteLine($"{{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {{ {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }} }}");
         Environment.Exit(0);
     }
 
@@ -283,7 +282,7 @@ class Program
             Save();
             (int x, int y) P = GetForward${rand}(Position, Rotation);
             int Steps = 0;
-            while (!AreTherePlayersHere${rand}(P) || !IsWall${rand}(P))
+            while (!AreTherePlayersHere${rand}(P) || !IsWall${rand}(P) || Steps <= RadarRange)
             {
                 // if position is outside of the map, return the default range
                 if (IsOutOfBounds${rand}(P)) return -1;
@@ -303,6 +302,14 @@ class Program
             foreach (IPlayer${rand} Player in Players${rand}.Values)
                 if (IsPointInside${rand}(Player.Position, Position, ScanRange)) Found++;
             return Found;
+        }
+
+        // check the number of players nearby
+        public (int x, int y) WhereAmI()
+        {
+            Steps.Add(12);
+            Save();
+            return Position;
         }
 
         // Do nothing
@@ -382,7 +389,7 @@ class Program
 
     static bool AmISteppingOut${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) && Player.SteppingOut();
 
-    static (int x, int y) WhereAmI${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.Position : (-1, -1);
+    static (int x, int y) WhereAmI${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.WhereAmI() : (-1, -1);
 
     static int WhereAmILooking${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.WhereAmILooking() : -1;
 
@@ -403,7 +410,7 @@ class Program
 
     static bool IsAnyThingUnder${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) && Player.IsThereAnyThingUnder();
 
-    static int Radar${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.Radar() : RadarRange;
+    static int Radar${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.Radar() : -1;
 
     static int Scan${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.Scan() : -1;
 

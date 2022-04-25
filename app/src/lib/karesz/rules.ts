@@ -195,4 +195,10 @@ export const RULES: Rule[] = [
         description: 'function may interfere with template',
         replace: null,
     },
+    {
+        find: /MethodInfo|GetMethod|GetType|Invoke|EvaluateFunction|Expression|FunctionArgs/g,
+        severity: 'error',
+        description: 'disallowed keyword',
+        replace: null,
+    },
 ];

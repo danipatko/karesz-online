@@ -1,10 +1,9 @@
 import { Socket } from 'socket.io';
-import host from '../host';
-import { GameMap } from '../shared/types';
-import { GameState } from '../shared/types';
 import { Runner } from './runner';
+import { GameMap } from '../shared/types';
 import { Template } from './template';
-import { GamePlayer, PlayerStart, PlayerStartState } from './types';
+import { GameState } from '../shared/types';
+import { GamePlayer, PlayerStart } from './types';
 
 /* 
 SOCKET EVENTS
@@ -246,14 +245,27 @@ export default class Session {
             x.ready = false;
         });
 
-        const { code, rand } = Template.of('multiplayer')
-            .onMap(this.map.size, this.map.size, this.map.objects)
-            .addPlayers((id, severity, reason) => {
-                console.log(`${id} ${severity} ${reason}`);
-            }, ...startState)
-            .create();
+        const template = Template.create()
+            .setMap({ x: this.map.size, y: this.map.size })
+            .addObjects(this.map.objects)
+            .multiPlayer()
+            .addPlayers(startState, (id, severity, reason) => {
+                // emit an event about a player receiving a warning or an error
+                this.announce(severity, { id, error: reason });
+            })
+            .generate();
 
-        const res = await Runner.run(code, rand);
+        // single
+        // const template2 = Template.create()
+        //     .singlePlayer()
+        //     .generate(
+        //         { code: '', id: '', name: '', rotation: 0, x: 0, y: 0 },
+        //         () => {
+        //             console.log('bruh');
+        //         }
+        //     );
+
+        const res = await Runner.run(template.code, template.rand);
 
         console.log(res);
 

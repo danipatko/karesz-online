@@ -1,5 +1,6 @@
 import { REPLACE, RULES } from './rules';
 import getMultiPlayerTemplate from './templates/Multiplayer';
+import getSinglePlayerTemplate from './templates/Singleplayer';
 import {
     random,
     PlayerStart,
@@ -8,11 +9,7 @@ import {
 } from './types';
 
 export class Template {
-    // used in the template so that players cannot interfere with built in functions
-    protected rand: string = random();
-    // final shit
-    public code: string = '';
-    private type: 'singleplayer' | 'multiplayer' = 'multiplayer';
+    // settings
     private settings: TemplateSettings = {
         TIMEOUT: 5000,
         MAP_WIDTH: 20,
@@ -21,81 +18,49 @@ export class Template {
         MIN_PLAYERS: 1,
         MAX_ITERATIONS: 5000,
     };
-    private players: PlayerStartState[] = [];
 
-    private constructor(type: 'singleplayer' | 'multiplayer') {
-        this.type = type;
+    public static create(): Template {
+        return new Template();
+    }
+
+    public setTimeout(ms: number) {
+        this.settings.TIMEOUT = ms;
         return this;
     }
 
-    // choose the type of template
-    public static of(type: 'singleplayer' | 'multiplayer'): Template {
-        return new Template(type);
-    }
-
-    // choose the map size and layout
-    public onMap(
-        width: number,
-        height: number,
-        objects?: { [key: string]: number }
-    ): Template {
-        this.settings.MAP_WIDTH = width;
-        this.settings.MAP_HEIGHT = height;
-        if (objects) this.settings.MAP_OBJECTS = objects;
+    public setIterations(iterations: number) {
+        this.settings.MAX_ITERATIONS = iterations;
         return this;
     }
 
-    // add an array of players
-    public addPlayers(
-        onFail: (
-            id: string,
-            severity: 'warning' | 'error',
-            reason: string
-        ) => void,
-        ...players: PlayerStart[]
-    ): Template {
-        let start: number = this.type === 'singleplayer' ? 0 : 400;
-        for (const [index, player] of players.entries()) {
-            const result = this.safetyCheck(player.code);
-            if (result && result.severity === 'error')
-                onFail(player.id, result.severity, result.error);
-            else {
-                const { code, length } = this.replace(
-                    player.code,
-                    index,
-                    player.name
-                );
-                console.log(`>>> ${code == player.code}`);
-                this.players.push({
-                    ...player,
-                    code,
-                    startln: start,
-                    endln: start + length + 1, // (additional newline)
-                });
-                start += length;
-            }
-        }
+    public setMap({ x, y }: { x: number; y: number }) {
+        this.settings.MAP_WIDTH = x;
+        this.settings.MAP_HEIGHT = y;
         return this;
     }
 
-    // finally get the code and the random string used to retrieve the last line of the output
-    public create(): { code: string; rand: string } {
-        console.log(this.players);
-        return {
-            rand: this.rand,
-            code:
-                this.type === 'singleplayer'
-                    ? 'not yet bruh'
-                    : getMultiPlayerTemplate(
-                          this.rand,
-                          this.settings,
-                          this.players
-                      ),
-        };
+    public addObjects(objects: { [key: string]: number }) {
+        this.settings.MAP_OBJECTS = objects;
+        return this;
     }
 
+    public setMinPlayers(min: number) {
+        this.settings.MIN_PLAYERS = min;
+        return this;
+    }
+
+    public multiPlayer(): MultiplayerTemplate {
+        return new MultiplayerTemplate(this.settings);
+    }
+
+    public singlePlayer(): SingleplayerTemplate {
+        return new SingleplayerTemplate(this.settings);
+    }
+}
+
+class ProcessCode {
     // detect disallowed code
-    private safetyCheck(code: string): {
+    protected safetyCheck(code: string): {
         error: string;
         severity: 'warning' | 'error';
     } | null {
@@ -105,37 +70,180 @@ export class Template {
                     error: rule.description,
                     severity: rule.severity,
                 };
+
         return null;
     }
 
     // replace all functions and variables with their values
-    private replace(
-        code: string,
+    protected replace(
         index: number,
-        name: string
+        code: string,
+        name: string,
+        rand: string,
+        type: 'single' | 'multi'
     ): { code: string; length: number } {
         // replace entry
         code = code.replaceAll(
             /void\s+FELADAT\s*\(\s*\)/gm,
-            this.type === 'singleplayer'
-                ? 'static void Main(string[] args)'
-                : `void Thread${index}${this.rand}()`
+            type == 'single'
+                ? 'static void Main(string args[])'
+                : `void Thread${index}${rand}()`
         );
+
         // replace writelines so that players can see their logs
         code = code.replaceAll(
             /Console\.(WriteLine|Write)\((?<value>.*)\)/g,
-            `Console.WriteLine($"[{ROUND${this.rand}}]: ${name} > "+$1)`
+            `Console.WriteLine($"[{ROUND${rand}}]: ${name} > "+$1)`
         );
+
         for (const replacement of REPLACE) {
-            code = code.replaceAll(
-                replacement.replace,
-                !replacement.usefn
-                    ? replacement.name
-                    : `${replacement.name}${this.rand}(${index}${
-                          replacement.args ? ',' + replacement.args : ''
-                      })`
-            );
+            // replace with a function alias
+            if (replacement.usefn)
+                code = code.replaceAll(
+                    replacement.replace,
+                    this.getFunction(
+                        type,
+                        replacement.name,
+                        rand,
+                        index,
+                        replacement.args
+                    )
+                );
+            // replace a variable with a value
+            else code = code.replaceAll(replacement.replace, replacement.name);
         }
+
         return { code, length: code.split('\n').length };
+    }
+
+    // get function alias
+    private getFunction(
+        type: string,
+        name: string,
+        rand: string,
+        index: number,
+        args?: string
+    ): string {
+        if (type == 'single') return `${name}${rand}(${args ?? ''})`;
+        return `${name}${rand}(${index}${args ? ',' + args : ''})`;
+    }
+}
+
+class MultiplayerTemplate extends ProcessCode {
+    // used in the template so that players cannot interfere with built in functions
+    public rand: string = random();
+    // the final template
+    public code: string = '';
+    // settings
+    private settings: TemplateSettings;
+
+    constructor(settings: TemplateSettings) {
+        super();
+        this.settings = settings;
+    }
+
+    // array containing player start states and their code
+    private players: PlayerStartState[] = [];
+
+    // add a bunch of players to the template
+    public addPlayers(
+        players: PlayerStart[], // starting positions, names and codes
+        onFail: (
+            // callback function if a player is disqualified
+            id: string,
+            severity: 'warning' | 'error',
+            reason: string
+        ) => void
+    ): MultiplayerTemplate {
+        let start: number = 404;
+
+        for (const [index, player] of players.entries()) {
+            const scResult = this.safetyCheck(player.code);
+
+            if (scResult && scResult.severity === 'error') {
+                onFail(player.id, scResult.severity, scResult.error);
+                continue;
+            }
+
+            const { code, length } = this.replace(
+                index,
+                player.code,
+                player.name,
+                this.rand,
+                'multi'
+            );
+
+            this.players.push({
+                ...player,
+                code,
+                startln: start,
+                endln: start + length + 1, // (additional newline)
+            });
+
+            start += length;
+        }
+
+        return this;
+    }
+
+    // set the correct template
+    public generate(): { code: string; rand: string } {
+        this.code = getMultiPlayerTemplate(
+            this.rand,
+            this.settings,
+            this.players
+        );
+        return this;
+    }
+
+    // get the person who wrote the code in the given line
+    public blame(line: number): string | null {
+        for (const player of this.players)
+            if (line >= player.startln && line <= player.endln)
+                return player.id;
+
+        return null;
+    }
+}
+
+class SingleplayerTemplate extends ProcessCode {
+    // used in the template so that players cannot interfere with built in functions
+    public rand: string = random();
+    // the final template
+    public code: string = '';
+    // settings
+    private settings: TemplateSettings;
+
+    constructor(settings: TemplateSettings) {
+        super();
+        this.settings = settings;
+    }
+
+    // create the template
+    public generate(
+        player: PlayerStart,
+        onFail: (a: { severity: string; error: string }) => void
+    ): SingleplayerTemplate | null {
+        const scResult = this.safetyCheck(player.code);
+
+        if (scResult && scResult.severity === 'error') {
+            onFail({ ...scResult });
+            return null;
+        }
+
+        const { code } = this.replace(
+            0,
+            player.code,
+            player.name,
+            this.rand,
+            'single'
+        );
+
+        this.code = getSinglePlayerTemplate(this.rand, this.settings, {
+            ...player,
+            code,
+        });
+
+        return this;
     }
 }
