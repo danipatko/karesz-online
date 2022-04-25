@@ -31,7 +31,7 @@ class Program
 
     static void FinishGame__()
     {
-        Console.WriteLine($"KEYHERE {{ \"rounds\":{ROUND__}, \"players\": {string.Join(',', ScoreBoard__.Values.Select(x => x.ToJson()))} }}");
+        Console.WriteLine($"KEYHERE {{ \"rounds\":{ROUND__}, \"players\": {{ {string.Join(',', ScoreBoard__.Values.Select(x => x.ToJson()))} }} }}");
         Environment.Exit(0);
     }
 
