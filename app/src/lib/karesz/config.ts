@@ -1,6 +1,7 @@
 // <...>/dotnet/shared/Microsoft.NETCore.App/VERSION
-export const FRAMEWORK_VERSION = '6.0.3';
-export const SDK_VERSION = process.platform === 'win32' ? '5.0.407' : '6.0.201';
+export const FRAMEWORK_VERSION =
+    process.platform === 'win32' ? '6.0.3' : '6.0.2';
+export const SDK_VERSION = process.platform === 'win32' ? '5.0.407' : '6.0.200';
 
 // location of dll libraries loaded as commandline arguments
 export const LIBRARY_LOCATIONS: string =
@@ -17,7 +18,7 @@ export const COMPILER_LOCATION: string =
 export const RUNNER_DIRECTORY: string =
     process.platform === 'win32'
         ? 'C:/Users/Dani/home/Projects/karesz-online/testing'
-        : '';
+        : '/home/dapa/Projects/karesz-online/app/test';
 
 // necessary for the template to work
 export const CRUCIAL_IMPORTS: string[] = [
@@ -31,6 +32,7 @@ export const CRUCIAL_IMPORTS: string[] = [
 
 export const MULITPLAYER_IMPORTS: string[] = [
     ...CRUCIAL_IMPORTS,
+    'System.Linq.dll',
     'System.Threading.dll',
     'System.Threading.Thread.dll',
     'System.Collections.Concurrent.dll',

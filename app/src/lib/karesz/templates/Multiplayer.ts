@@ -43,7 +43,9 @@ class Program
 
     static void FinishGame${rand}()
     {
-        Console.WriteLine($"${rand} {{ \"rounds\":{ROUND${rand}}, \"players\": {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()))} }}");
+        foreach (IPlayer${rand} Player in Players${rand}.Values) KillPlayer${rand}(1, ROUND${rand}, true, Player, "");
+        Console.WriteLine(ScoreBoard${rand}.Count);
+        Console.WriteLine($"${rand} {{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }}");
         Environment.Exit(0);
     }
 
@@ -139,7 +141,7 @@ class Program
         }
         public string ToJson()
         {
-            return $"\"{ID}\": {{ \"placement\":{Placement}, \"name\":\"{Name}\", \"started\": {{ \"x\":{StartState.x}, \"y\":{StartState.y}, \"rotation\":{StartState.rotation} }}, \"survived\":{(Survived ? "true" : "false")}, \"death\":\"{Death}\",  \"alive\":{RoundsAlive}, \"rocks\":{{ \"placed\":{RocksPlaced}, \"picked_up\":{RocksPickedUp} }}, \"steps\":[{string.Join(',', Steps)}] }}";
+            return $"\\"{ID}\\": {{ \\"placement\\":{Placement}, \\"name\\":\\"{Name}\\", \\"started\\": {{ \\"x\\":{StartState.x}, \\"y\\":{StartState.y}, \\"rotation\\":{StartState.rotation} }}, \\"survived\\":{(Survived ? "true" : "false")}, \\"death\\":\\"{Death}\\",  \\"alive\\":{RoundsAlive}, \\"rocks\\":{{ \\"placed\\":{RocksPlaced}, \\"picked_up\\":{RocksPickedUp} }}, \\"steps\\":[{string.Join(',', Steps)}] }}";
         }
     }
 
@@ -352,10 +354,7 @@ class Program
 
         // check remainder -> add everyone to scoreboard and finish game
         if (Players${rand}.Count <= MIN_PLAYER_COUNT)
-        {
-            foreach (IPlayer${rand} Player in Players${rand}.Values) KillPlayer${rand}(1, ROUND${rand}, true, Player, "");
             FinishGame${rand}();
-        }
 
         ProposedSteps${rand}.Clear();
         if (ROUND${rand} > MAX_ITERATIONS) FinishGame${rand}();
@@ -417,15 +416,15 @@ class Program
 
     static void Main()
     {
-        new Thread(() => { Thread.Sleep(TIMEOUT); Environment.Exit(0); }).Start();
+        new Thread(() => { Thread.Sleep(TIMEOUT); FinishGame${rand}(); }).Start();
         Parallel.Invoke(${Object.keys(players).map(
             (_, i) => `Thread${i}${rand}`
         )});
     }
 
     /* USER CODE */
-    ${Object.entries(players)
-        .map(([author, code]) => `/* --- ${author}'s code --- */\n${code}`)
+    ${players
+        .map((player) => `/* --- ${player.name}'s code --- */\n${player.code}`)
         .join('\n')}
     
 }`;

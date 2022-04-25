@@ -1,11 +1,10 @@
 import { REPLACE, RULES } from './rules';
 import getMultiPlayerTemplate from './templates/Multiplayer';
 import {
-    PlayerStartState,
-    Player,
-    TemplateSettings,
     random,
     PlayerStart,
+    PlayerStartState,
+    TemplateSettings,
 } from './types';
 
 export class Template {
@@ -66,6 +65,7 @@ export class Template {
                     index,
                     player.name
                 );
+                console.log(`>>> ${code == player.code}`);
                 this.players.push({
                     ...player,
                     code,
@@ -80,6 +80,7 @@ export class Template {
 
     // finally get the code and the random string used to retrieve the last line of the output
     public create(): { code: string; rand: string } {
+        console.log(this.players);
         return {
             rand: this.rand,
             code:
@@ -114,23 +115,23 @@ export class Template {
         name: string
     ): { code: string; length: number } {
         // replace entry
-        code.replaceAll(
+        code = code.replaceAll(
             /void\s+FELADAT\s*\(\s*\)/gm,
             this.type === 'singleplayer'
                 ? 'static void Main(string[] args)'
-                : `static void Thread${index}${this.rand}`
+                : `void Thread${index}${this.rand}()`
         );
         // replace writelines so that players can see their logs
-        code.replaceAll(
+        code = code.replaceAll(
             /Console\.(WriteLine|Write)\((?<value>.*)\)/g,
             `Console.WriteLine($"[{ROUND${this.rand}}]: ${name} > "+$1)`
         );
         for (const replacement of REPLACE) {
-            code.replaceAll(
+            code = code.replaceAll(
                 replacement.replace,
                 !replacement.usefn
                     ? replacement.name
-                    : `${replacement.name}_${this.rand}(${index}${
+                    : `${replacement.name}${this.rand}(${index}${
                           replacement.args ? ',' + replacement.args : ''
                       })`
             );

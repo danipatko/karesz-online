@@ -1,14 +1,13 @@
+import fs from 'fs';
 import {
+    RUNNER_DIRECTORY,
     COMPILER_LOCATION,
     LIBRARY_LOCATIONS,
     MULITPLAYER_IMPORTS,
-    RUNNER_DIRECTORY,
 } from './config';
-import { random } from './types';
-import fs from 'fs';
 import path from 'path/posix';
 import cp from 'child_process';
-import util from 'util';
+import { random } from './types';
 
 const run = async (
     cmd: string,
@@ -16,7 +15,7 @@ const run = async (
 ): Promise<{ code: number; stderr: string; stdout: string }> => {
     return new Promise<{ code: number; stderr: string; stdout: string }>(
         (res, rej) => {
-            console.log(`Running: '${cmd}'`);
+            // console.log(`Running: '${cmd}'`);
             const child = cp.exec(cmd, { cwd });
             // failed to spawn
             if (!(child.stdout && child.stderr)) {
@@ -29,6 +28,9 @@ const run = async (
 
             child.stdout.on('data', (chunk) => stdout.push(Buffer.from(chunk)));
             child.stderr.on('data', (chunk) => stderr.push(Buffer.from(chunk)));
+
+            console.log(Buffer.concat(stdout).toString('utf-8'));
+            console.log(Buffer.concat(stderr).toString('utf-8'));
 
             child.on('close', (code) => {
                 res({
@@ -71,6 +73,9 @@ export class Runner {
                     return;
                 }
                 runner.run().then(({ code, stderr, stdout }) => {
+                    runner.remove();
+                    console.log(stdout);
+                    console.log(stderr);
                     res({
                         success: code == 0 && stdout.includes(resultKey),
                         output: `${
@@ -83,6 +88,7 @@ export class Runner {
                                 .split('\n')
                                 .filter((line) => line.includes(resultKey))
                                 .join('')
+                                .replaceAll(resultKey, '')
                         ),
                     });
                 });
@@ -114,4 +120,9 @@ export class Runner {
             `dotnet exec --runtimeconfig ./test.runtimeconfig.json ${this.rand}.dll`,
             RUNNER_DIRECTORY
         );
+
+    private remove() {
+        // fs.unlinkSync(path.join(RUNNER_DIRECTORY, `${this.rand}.cs`));
+        // fs.unlinkSync(path.join(RUNNER_DIRECTORY, `${this.rand}.dll`));
+    }
 }

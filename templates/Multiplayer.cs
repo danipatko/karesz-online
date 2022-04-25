@@ -400,7 +400,7 @@ class Program
 
     static void Main()
     {
-        new Thread(() => { Thread.Sleep(TIMEOUT); Environment.Exit(0); }).Start();
+        new Thread(() => { Thread.Sleep(TIMEOUT); FinishGame__(); }).Start();
         Parallel.Invoke(Thread1, Thread2);
     }
 
