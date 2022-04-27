@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { GameMap, GameState, IPlayer as Player } from '../shared/types';
+import { GameMap, GamePhase, IPlayer as Player } from '../shared/types';
 
 // this is the struct returned by the runner
 export interface Scoreboard {
@@ -25,7 +25,7 @@ export interface Scoreboard {
 }
 
 export interface Game {
-    state: GameState; // current state
+    state: GamePhase; // current state
     code: number; // game code
     host: string; // the id of the host
     error: string;
@@ -41,7 +41,7 @@ export interface Game {
 }
 
 const defaults: Game = {
-    state: GameState.disconnected,
+    state: GamePhase.disconnected,
     code: 0,
     host: '',
     error: '',
@@ -98,7 +98,7 @@ export const useGame = (
             return {
                 ...s,
                 ...data,
-                state: GameState.idle,
+                state: GamePhase.idle,
                 isHost: data.host === socket?.id,
             };
         });
@@ -171,12 +171,12 @@ export const useGame = (
         setState((s) => {
             if (!found) {
                 warn(`Game could not be found.`);
-                return { ...s, state: GameState.disconnected };
+                return { ...s, state: GamePhase.disconnected };
             }
             setMeta((m) => Object({ ...m, inLobby: playerCount }));
             return {
                 ...s,
-                state: GameState.prejoin,
+                state: GamePhase.prejoin,
                 code,
             };
         });
@@ -212,7 +212,7 @@ export const useGame = (
         socket.on('error', ({ error }: { error: string }) => warn(error));
         socket.on('fetch', fetch);
         socket.on('joined', onJoin);
-        socket.on('unready', onUnready);
+        socket.on('player_unready', onUnready);
         socket.on('game_end', onGameEnd);
         socket.on('map_update', onMapUpdate);
         socket.on('host_change', onHostChange);
@@ -281,7 +281,7 @@ export const useGame = (
     const preCreate = () => {
         // console.log(`EM: preCreate`);
         setMeta((m) => Object({ ...m, create: true }));
-        setState((s) => Object({ ...s, state: GameState.prejoin }));
+        setState((s) => Object({ ...s, state: GamePhase.prejoin }));
     };
 
     // create new game
@@ -293,7 +293,7 @@ export const useGame = (
 
     // exit an existing session or just return to enter code
     const exit = () => {
-        if (state.state !== GameState.disconnected && socket !== null)
+        if (state.state !== GamePhase.disconnected && socket !== null)
             socket.emit('exit');
         reset();
     };

@@ -4,10 +4,10 @@ import {
     COMPILER_LOCATION,
     LIBRARY_LOCATIONS,
     MULITPLAYER_IMPORTS,
-} from './config';
+} from '../config';
 import path from 'path/posix';
 import cp from 'child_process';
-import { CommandResult, random } from './types';
+import { CommandResult, random } from '../types';
 
 // run a command in a specific directory
 // returns the exit code, stderr, and stdout

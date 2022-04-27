@@ -5,7 +5,7 @@ import MapEditor from './MapEditor';
 import Scoreboard from './Scoreboard';
 import useMap from '../../lib/hooks/map';
 import Playback from '../playback/Playback';
-import { GameMap, GameState } from '../../lib/shared/types';
+import { GameMap, GamePhase } from '../../lib/shared/types';
 import { Game, Scoreboard as SB } from '../../lib/hooks/game';
 
 const Main = ({
@@ -36,7 +36,7 @@ const Main = ({
             <div
                 style={{
                     backgroundColor:
-                        game.state === GameState.idle
+                        game.state === GamePhase.idle
                             ? 'rgb(34, 127, 255)'
                             : 'orange',
                 }}
@@ -45,13 +45,13 @@ const Main = ({
                 <div
                     style={{
                         background:
-                            game.state === GameState.idle
+                            game.state === GamePhase.idle
                                 ? 'linear-gradient(90deg, rgb(34,127,255) 0%, rgb(0,212,255) 50%, rgb(34,127,255) 100%)'
                                 : 'linear-gradient(90deg, rgb(255,178,34) 0%, rgb(255,231,142) 50%, rgb(255,178,34) 100%)',
                     }}
                     className='absolute loading w-[200px] h-[20vh]'
                 ></div>
-                {game.state === GameState.idle ? (
+                {game.state === GamePhase.idle ? (
                     <>Waiting for players...</>
                 ) : (
                     <>Running</>

@@ -1,5 +1,5 @@
 import { Game, Scoreboard } from '../../lib/hooks/game';
-import { GameMap, GameState } from '../../lib/shared/types';
+import { GameMap, GamePhase } from '../../lib/shared/types';
 import PreJoin from '../multi/PreJoin';
 import Join from '../multi/Join';
 import Main from '../multi/Main';
@@ -32,13 +32,13 @@ const Multiplayer = ({
 }) => {
     return (
         <div className='text-white'>
-            {game.state === GameState.disconnected ? (
+            {game.state === GamePhase.disconnected ? (
                 <Join
                     onJoin={functions.preJoin}
                     onError={onError}
                     onCreate={functions.preCreate}
                 />
-            ) : game.state === GameState.prejoin ? (
+            ) : game.state === GamePhase.prejoin ? (
                 <PreJoin
                     code={game.code}
                     cancel={functions.exit}

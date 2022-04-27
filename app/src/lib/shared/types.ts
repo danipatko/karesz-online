@@ -8,11 +8,12 @@ export enum View {
     Docs,
 }
 
-export enum GameState {
-    disconnected = 0, // not initted
+export enum GamePhase {
+    disconnected = 0, // not connected
     prejoin = 1, // code is correct, promt name
     idle = 2, // idle
-    running = 3, // everyone is ready, start game
+    waiting = 3, // waiting for players
+    running = 4, // everyone is ready, start game
 }
 
 export interface Player {
@@ -34,7 +35,8 @@ export interface IPlayer {
 
 export interface GameMap {
     type: 'load' | 'parse';
-    size: number;
-    objects: { [key: string]: number };
-    load: string;
+    width: number;
+    height: number;
+    mapName: string;
+    objects: Map<[number, number], number>;
 }
