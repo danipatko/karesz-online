@@ -35,8 +35,11 @@ export default class IPlayer implements Player {
         this.socket.on('player_ready', ({ code }: { code: string }) => {
             this.isReady = true;
             this.code = code;
-            this.announce &&
-                this.announce('player_update', { id: this.id, ready: true });
+            this.warning = false;
+            this.error = false;
+
+            this.announce && // TODO: automatically clear warnings and errors client-side
+                this.announce('player_ready', { id: this.id, ready: true });
             this.onReady();
         });
 
@@ -44,7 +47,7 @@ export default class IPlayer implements Player {
         this.socket.on('player_unready', () => {
             this.isReady = false;
             this.announce &&
-                this.announce('player_update', { id: this.id, ready: false });
+                this.announce('player_unready', { id: this.id, ready: false });
         });
 
         // when a player sends something to chat
@@ -117,6 +120,18 @@ export default class IPlayer implements Player {
             ),
         });
         return this;
+    }
+
+    // show a warning to the player and display an icon to the others
+    public warn(message: string): void {
+        this.socket.emit('warn', message);
+        this.announce && this.announce('player_warn', { id: this.id });
+    }
+
+    // show an error to the player and display an icon to the others
+    public err(message: string): void {
+        this.socket.emit('error', message);
+        this.announce && this.announce('player_error', { id: this.id });
     }
 
     public ready(handler: () => void): IPlayer {

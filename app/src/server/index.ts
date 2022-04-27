@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import next from 'next';
 import { Server } from 'socket.io';
-import Session from '../lib/karesz/manager';
+import Session from '../lib/karesz/session';
 
 const randCode = () => Math.floor(1000 + Math.random() * 9000);
 
@@ -9,7 +9,6 @@ const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = 3000;
 
-// when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
@@ -29,27 +28,25 @@ io.on('connection', (socket) => {
 
     // fetch minimal game data / check if exists
     socket.on('info', ({ code }: { code: number }) => {
-        // console.log(`prejoining to ${code}`);
-
         const game = gameManager.get(code);
-        if (game === undefined) socket.emit('info', { found: false });
-        else
-            socket.emit('info', {
-                found: true,
-                playerCount: game.playerCount,
-                code,
-            });
+        if (game === undefined)
+            return void socket.emit('info', { found: false });
+
+        socket.emit('info', {
+            found: true,
+            playerCount: game.playerCount,
+            code,
+        });
     });
 
     socket.on('join', ({ name, code }: { name: string; code: number }) => {
         const game = gameManager.get(code);
         // game not found
-        if (game === undefined) {
-            // console.log(`Game ${code} could not be found`);
-            socket.emit('error', { error: `Game ${code} could not be found` });
-            return;
-        }
-        // console.log(`Adding ${name} to existing game ${code} ...'`); // debug
+        if (game === undefined)
+            return void socket.emit('error', {
+                error: `Game ${code} could not be found`,
+            });
+
         game.addPlayer(socket, name);
     });
 

@@ -11,7 +11,7 @@ export default class Session {
     protected map: MapCreator;
     protected code: number;
     protected host: string = ''; // the id of the host player
-    protected state: GamePhase = GamePhase.idle;
+    protected phase: GamePhase = GamePhase.idle;
     protected players: Map<string, IPlayer> = new Map<string, IPlayer>();
 
     // this is a callback function to remove this instance from the map
@@ -41,11 +41,11 @@ export default class Session {
         this.destroy = destroy;
     }
 
-    // Emit an event for every player
+    // emit an event for every player
     private announce(ev: string, params?: object): void {
-        console.log(`Announce '${ev}' to ${this.players.size} player(s)`);
-        for (const player of this.players.values())
-            player.socket.emit(ev, { ...params });
+        console.log(`Announce '${ev}' to ${this.players.size} player(s)`); // DEBUG
+        for (const { socket } of this.players.values())
+            socket.emit(ev, { ...params });
     }
 
     // bind map events to the host's socket
@@ -82,6 +82,12 @@ export default class Session {
         this.announce('game_host_change', { host: socket.id });
     }
 
+    // set and announce the phase
+    private setPhase(phase: GamePhase): void {
+        this.phase = phase;
+        this.announce('game_phase_change', { phase });
+    }
+
     // check if everyone is ready
     private checkCanStart(): void {
         let readyPeople = 0;
@@ -92,8 +98,12 @@ export default class Session {
             waiting: this.players.size - readyPeople,
         });
 
+        // no one is ready -> idle
+        if (readyPeople === 0) this.setPhase(GamePhase.idle);
         // everyone is ready -> start the game
-        readyPeople === this.players.size && this.startGame();
+        else if (readyPeople === this.players.size) this.startGame();
+        // some is ready -> waiting
+        else this.setPhase(GamePhase.waiting);
     }
 
     // adds a new player to the game
@@ -111,7 +121,7 @@ export default class Session {
                 this.map.fetch(),
                 this.code,
                 this.host,
-                this.state,
+                this.phase,
                 this.players
             );
 
@@ -134,10 +144,7 @@ export default class Session {
             this.setHost(this.players.values().next().value.socket);
     }
 
-    public get playerCount(): number {
-        return this.players.size;
-    }
-
+    // get a random coordniate on the map
     private randCoord(): [number, number] {
         return [
             Math.floor(Math.random() * this.map.width),
@@ -145,12 +152,13 @@ export default class Session {
         ];
     }
 
-    // get player positions
+    // get randomized player positions
     private getPlayerStartingPostions(): PlayerStart[] {
-        const res: PlayerStart[] = [];
+        const result: PlayerStart[] = [];
 
+        // checks if a position is already taken
         const isOccupied = (_x: number, _y: number): boolean => {
-            for (const { x, y } of Object.values(res))
+            for (const { x, y } of Object.values(result))
                 if (x === _x && y === _y) return true;
             return this.map.objects.has([_x, _y]);
         };
@@ -159,7 +167,7 @@ export default class Session {
             let point = this.randCoord();
             while (isOccupied(point[0], point[1])) point = this.randCoord();
 
-            res.push({
+            result.push({
                 x: point[0],
                 y: point[1],
                 id: player.id,
@@ -169,32 +177,28 @@ export default class Session {
             });
         });
 
-        return res;
+        return result;
     }
 
-    /**
-     * Start the game
-     */
+    // start the game
     public async startGame(): Promise<void> {
-        this.state = GamePhase.running;
-        this.announce('state_update', { state: this.state });
-
+        this.setPhase(GamePhase.running);
         const startState = this.getPlayerStartingPostions();
 
-        this.state = GamePhase.idle;
-        this.announce('state_update', { state: this.state });
-
+        // unready all
         this.players.forEach((x) => {
             x.isReady = false;
         });
 
         const template = Template.create()
             .setMap({ x: this.map.width, y: this.map.height })
-            .addObjects({}) // TODO: append objects
+            .addObjects(this.map.objects)
             .multiPlayer()
             .addPlayers(startState, (id, severity, reason) => {
                 // emit an event about a player receiving a warning or an error
-                this.announce(severity, { id, error: reason });
+                severity === 'error'
+                    ? this.players.get(id)?.err(reason)
+                    : this.players.get(id)?.warn(reason);
             })
             .generate();
 
@@ -208,9 +212,23 @@ export default class Session {
         //         }
         //     );
 
-        const res = await Runner.run(template.code, template.rand);
+        const result = await Runner.run(template.code, template.rand);
 
-        console.log(res);
+        if (result.exitCode !== 0) {
+            // find user who caused the error
+            const trace = result.stderr
+                .split('\n')
+                .filter((x) => x.match(/^\s*at\s/))[0];
+
+            this.announce('game_error', {
+                stderr: result.stderr,
+                stdout: result.stdout,
+            });
+
+            return;
+        }
+
+        console.log(result);
 
         // this.announce('game_end', {
         //     draw: result.draw,
@@ -218,5 +236,13 @@ export default class Session {
         //     winner: result.winner,
         //     players: result.scoreboard,
         // });
+
+        this.announce('game_end', {
+            draw: false,
+        });
+    }
+
+    public get playerCount(): number {
+        return this.players.size;
     }
 }

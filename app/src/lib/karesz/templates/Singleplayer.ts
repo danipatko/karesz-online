@@ -28,14 +28,8 @@ class Program
     static readonly Dictionary<(int x, int y), uint> Map${rand} = new Dictionary<(int x, int y), uint>()
     {
         // Assign map points from template here
-        ${Object.entries(settings.MAP_OBJECTS)
-            .map(
-                ([key, value]) =>
-                    `[(${key
-                        .split('-')
-                        .map((x) => parseInt(x))
-                        .join(',')})]=${value}`
-            )
+        ${Array.from(settings.MAP_OBJECTS.entries())
+            .map(([key, value]) => `[(${key[0]},${key[1]})]=${value}`)
             .join(',')}
     };
 

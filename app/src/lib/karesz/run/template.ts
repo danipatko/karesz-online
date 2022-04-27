@@ -14,7 +14,7 @@ export class Template {
         TIMEOUT: 5000,
         MAP_WIDTH: 20,
         MAP_HEIGHT: 20,
-        MAP_OBJECTS: {},
+        MAP_OBJECTS: new Map<[number, number], number>(),
         MIN_PLAYERS: 1,
         MAX_ITERATIONS: 5000,
     };
@@ -39,7 +39,7 @@ export class Template {
         return this;
     }
 
-    public addObjects(objects: { [key: string]: number }) {
+    public addObjects(objects: Map<[number, number], number>) {
         this.settings.MAP_OBJECTS = objects;
         return this;
     }
