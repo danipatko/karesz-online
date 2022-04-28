@@ -40,3 +40,36 @@ export interface GameMap {
     mapName: string;
     objects: Map<[number, number], number>;
 }
+
+// "{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":0, \\"y\\":0, \\"rotation\\":0 }} }}");
+export interface SingleResult {
+    ended: string;
+    steps: number[];
+    rocks: {
+        placed: number;
+        picked_up: number;
+    };
+    start: {
+        x: number;
+        y: number;
+        rotation: number;
+    };
+}
+
+// game -> "{{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {{ {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }} }}");
+// player -> "\"{ID}\": {{ \"placement\":{Placement}, \"name\":\"{Name}\", \"started\": {{ \"x\":{StartState.x}, \"y\":{StartState.y}, \"rotation\":{StartState.rotation} }}, \"survived\":{(Survived ? "true" : "false")}, \"death\":\"{Death}\",  \"alive\":{RoundsAlive}, \"rocks\":{{ \"placed\":{RocksPlaced}, \"picked_up\":{RocksPickedUp} }}, \"steps\":[{string.Join(',', Steps)}] }}"
+export interface MultiResult {
+    rounds: number;
+    players: {
+        [key: string]: {
+            name: string;
+            death: string;
+            alive: number;
+            steps: number[];
+            rocks: { placed: number; picked_up: number };
+            started: { x: number; y: number; rotation: number };
+            survived: boolean;
+            placement: number;
+        };
+    };
+}

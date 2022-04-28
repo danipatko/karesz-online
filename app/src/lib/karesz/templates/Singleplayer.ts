@@ -160,12 +160,7 @@ class Program
     static void Omit${rand}() => Steps${rand}.Add(-1);         
 
     /* Player code here */
-
-    static void Main()
-    {
-        
-    }
-    
+    ${player.code}
 }`;
 
 export default getSinglePlayerTemplate;

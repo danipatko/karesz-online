@@ -9,20 +9,23 @@ const defaultMap: GameMap = {
     objects: new Map(),
 };
 
-const useMap = (): [
+export type MapState = [
     GameMap,
     boolean,
     {
         edit: () => void;
         save: () => void;
         cancel: () => void;
+        getWalls: () => [number, number][];
         setType: (type: 'parse' | 'load') => void;
         setSize: (width: number, height: number) => void;
         loadMap: (mapName: string) => void;
         clearAll: () => void;
         setField: (position: [number, number], field: number) => void;
     }
-] => {
+];
+
+const useMap = (): MapState => {
     const [map, setMap] = useState<GameMap>(defaultMap);
     const [editorMap, setEditorMap] = useState<GameMap>(defaultMap);
     const [editMode, setEditMode] = useState<boolean>(false);
@@ -65,10 +68,28 @@ const useMap = (): [
         setEditMode(false);
     };
 
+    // get walls
+    const getWalls = (): [number, number][] => {
+        const walls: [number, number][] = [];
+        for (const [position, field] of map.objects)
+            if (field == 1) walls.push(position);
+        return walls;
+    };
+
     return [
         editMode ? editorMap : map,
         editMode,
-        { edit, save, cancel, loadMap, setField, setSize, setType, clearAll },
+        {
+            edit,
+            save,
+            cancel,
+            loadMap,
+            setType,
+            setSize,
+            getWalls,
+            setField,
+            clearAll,
+        },
     ];
 };
 
