@@ -1,4 +1,4 @@
-import { Game, Scoreboard } from '../../lib/hooks/game';
+import { Game, Scoreboard } from '../../lib/_hooks/game';
 import { GameMap, GamePhase } from '../../lib/shared/types';
 import PreJoin from '../multi/PreJoin';
 import Join from '../multi/Join';

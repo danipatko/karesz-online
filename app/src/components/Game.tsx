@@ -1,4 +1,4 @@
-import type { Game as GameType } from '../lib/hooks/game';
+import type { Game as GameType } from '../lib/_hooks/game';
 
 const Game = ({ game }: { game: GameType }) => {
     return (

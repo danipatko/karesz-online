@@ -34,6 +34,7 @@ export const MULITPLAYER_IMPORTS: string[] = [
     ...CRUCIAL_IMPORTS,
     'System.Linq.dll',
     'System.Threading.dll',
+    'System.Collections.dll',
     'System.Threading.Thread.dll',
     'System.Collections.Concurrent.dll',
     'System.Threading.Tasks.Parallel.dll',

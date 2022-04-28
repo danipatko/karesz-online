@@ -215,10 +215,10 @@ export default class Session {
         const result = await Runner.run(template.code, template.rand);
 
         if (result.exitCode !== 0) {
-            // find user who caused the error
-            const trace = result.stderr
-                .split('\n')
-                .filter((x) => x.match(/^\s*at\s/))[0];
+            // TODO: find user who caused the error
+            // const trace = result.stderr
+            //     .split('\n')
+            //     .filter((x) => x.match(/^\s*at\s/))[0];
 
             this.announce('game_error', {
                 stderr: result.stderr,

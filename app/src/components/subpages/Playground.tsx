@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import useMap from '../../lib/hooks/map';
-import usePlayground from '../../lib/hooks/playground';
+import useMap from '../../lib/_hooks/map';
+import usePlayground from '../../lib/_hooks/playground';
 import CompileError from '../multi/CompileError';
 import MapEditor from '../multi/MapEditor';
 import Spawn from '../multi/Spawn';

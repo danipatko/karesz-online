@@ -1,19 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Player } from '../shared/types';
 import { Scoreboard } from './game';
-/*
- * STEPS
- * 0 - forward
- * 1 - turn left
- * 2 - turn right
- * 3 - kilépek a pályáról
- * 4 - pick up rock
- * 5 - place rock
- * 6 - merre néz
- * 7 - van e alattam kavics
- * 8 - mi van alattam
- * 9 - van e előttem fal
- */
+
 export interface State {
     x: number;
     y: number;

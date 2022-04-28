@@ -1,4 +1,4 @@
-import { Scoreboard } from '../../lib/hooks/game';
+import { Scoreboard } from '../../lib/_hooks/game';
 
 const Scoreboard = ({ scoreboard }: { scoreboard: Scoreboard | null }) => {
     return (

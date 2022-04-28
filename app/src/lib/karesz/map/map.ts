@@ -24,7 +24,7 @@ export class MapCreator implements GameMap {
     // fetch all data about the map (for new players)
     public fetch(): GameMap {
         return {
-            ...this,
+            ...(this as GameMap),
         };
     }
 

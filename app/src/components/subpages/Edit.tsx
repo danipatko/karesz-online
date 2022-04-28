@@ -1,7 +1,7 @@
 import Editor, { Monaco } from '@monaco-editor/react';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { getCompletionItems } from '../../lib/front/autocomplete';
-import useScripts from '../../lib/hooks/scripts';
+import useScripts from '../../lib/_hooks/scripts';
 
 const Edit = ({
     shown,

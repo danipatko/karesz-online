@@ -1,8 +1,8 @@
 import React, { Children, useEffect, useRef, useState } from 'react';
 import { aliases } from '../../lib/front/aliases';
-import { Scoreboard } from '../../lib/hooks/game';
-import useKaresz, { State } from '../../lib/hooks/karesz';
-import useSKaresz from '../../lib/hooks/skaresz';
+import { Scoreboard } from '../../lib/_hooks/game';
+import useKaresz, { State } from '../../lib/_hooks/karesz';
+import useSKaresz from '../../lib/_hooks/skaresz';
 import { GameMap } from '../../lib/shared/types';
 
 const Obj = ({

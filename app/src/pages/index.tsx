@@ -9,7 +9,7 @@ import Playground from '../components/subpages/Playground';
 import Edit from '../components/subpages/Edit';
 import { View } from '../lib/shared/types';
 import Navbar from '../components/head/Navbar';
-import { useGame } from '../lib/hooks/game';
+import { useGame } from '../lib/_hooks/game';
 import Errors from '../components/head/Error';
 import CompileError from '../components/multi/CompileError';
 
