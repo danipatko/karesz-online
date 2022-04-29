@@ -33,10 +33,11 @@ export default class ProcessCode {
         );
 
         // replace writelines so that players can see their logs
-        code = code.replaceAll(
-            /Console\.(WriteLine|Write)\((?<value>.*)\)/g,
-            `Console.WriteLine($"[{ROUND${rand}}]: ${name} > "+$1)`
-        );
+        if (type == 'multi')
+            code = code.replaceAll(
+                /Console\.(WriteLine|Write)\((?<value>.*)\)/g,
+                `Console.WriteLine($"[{ROUND${rand}}]: ${name} > "+ $2)`
+            );
 
         for (const replacement of REPLACE) {
             // replace with a function alias

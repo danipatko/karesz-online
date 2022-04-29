@@ -42,7 +42,6 @@ class Program
 
     static void FinishGame${rand}(string Reason)
     {
-        Console.WriteLine("CALLED HERE");
         Console.WriteLine($"{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":0, \\"y\\":0, \\"rotation\\":0 }} }}");
         Environment.Exit(0);
     }
