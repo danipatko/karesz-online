@@ -4,10 +4,13 @@ import {
     COMPILER_LOCATION,
     LIBRARY_LOCATIONS,
     MULITPLAYER_IMPORTS,
+    SINGLEPLAYER_IMPORTS,
+    CRUCIAL_IMPORTS,
 } from '../config';
 import path from 'path/posix';
 import cp from 'child_process';
 import { CommandResult, random } from '../types';
+import { MultiResult, SingleResult } from '../../shared/types';
 
 // run a command in a specific directory
 // returns the exit code, stderr, and stdout
@@ -38,8 +41,12 @@ const run = async (
             child.on('close', (exitCode) => {
                 res({
                     exitCode: exitCode === null ? 1 : exitCode,
-                    stdout: Buffer.concat(stdout).toString('utf-8'),
-                    stderr: Buffer.concat(stderr).toString('utf-8'),
+                    stdout: Buffer.concat(stdout)
+                        .toString('utf-8')
+                        .replaceAll('\r', ''),
+                    stderr: Buffer.concat(stderr)
+                        .toString('utf-8')
+                        .replaceAll('\r', ''),
                 });
             });
         }
@@ -54,45 +61,40 @@ export class Runner {
     // run a multiplayer instance
     public static async run(
         template: string,
-        resultKey: string
-    ): Promise<CommandResult> {
+        type: 'single' | 'multi'
+    ): Promise<CommandResult<null | SingleResult | MultiResult>> {
         // generate template and write to file
         const self = new Runner(template);
         self.write();
         // compile
-        const compileResult = await self.compile();
+        const compileResult = await self.compile(type);
         self.rmCode();
         if (compileResult.exitCode !== 0)
-            return { ...compileResult, result: {} };
+            return { ...compileResult, result: null };
 
         // run
         const runtimeResult = await self.run();
         self.rmDll();
-        if (compileResult.exitCode !== 0)
-            return { ...compileResult, result: {} };
+        if (runtimeResult.exitCode !== 0)
+            return { ...runtimeResult, result: null };
 
-        const results = self.getJson(runtimeResult.stdout, resultKey);
+        // parse result
+        const result = JSON.parse(
+            runtimeResult.stdout.trim().split('\n').pop() ?? '{}'
+        );
+
         // cannot find or parse result
-        if (!Object.keys(results).length)
+        if (!Object.keys(result).length)
             return {
                 ...runtimeResult,
                 exitCode: 1,
                 stderr: runtimeResult.stderr + '\nUnable to find results',
-                result: {},
+                result: null,
             };
 
         // evalute
-        return { ...compileResult, result: {} };
+        return { ...runtimeResult, result };
     }
-
-    // extracts the result from the logs
-    private getJson = (stdout: string, resultKey: string): object =>
-        JSON.parse(
-            stdout
-                .split('\n')
-                .find((x) => x.startsWith(resultKey))
-                ?.replaceAll(resultKey, '') ?? '{}'
-        );
 
     private constructor(template: string) {
         this.template = template;
@@ -107,11 +109,11 @@ export class Runner {
     }
 
     // compile the template
-    private compile = async () =>
+    private compile = async (type: 'single' | 'multi') =>
         await run(
-            `dotnet ${COMPILER_LOCATION} ${MULITPLAYER_IMPORTS.map(
-                (lib) => `-r:"${path.join(LIBRARY_LOCATIONS, lib)}"`
-            ).join(' ')} ${this.rand}.cs -out:${this.rand}.dll`,
+            `dotnet ${COMPILER_LOCATION} ${this.getImports(type)} ${
+                this.rand
+            }.cs -out:${this.rand}.dll`,
             RUNNER_DIRECTORY
         );
 
@@ -129,6 +131,17 @@ export class Runner {
 
     // remove the .dll file
     private rmDll = () =>
-        process.env.NODE_ENV === 'production' &&
+        process.env.NODE_ENV !== 'production' &&
         fs.unlinkSync(path.join(RUNNER_DIRECTORY, `${this.rand}.dll`));
+
+    // the imports as command line arguments
+    private getImports(type: 'single' | 'multi'): string {
+        return [
+            ...CRUCIAL_IMPORTS,
+            ...(type == 'multi' ? MULITPLAYER_IMPORTS : SINGLEPLAYER_IMPORTS),
+        ]
+            .filter((x) => x != 'System.Collections.Generic')
+            .map((lib) => `-r:"${path.join(LIBRARY_LOCATIONS, `${lib}.dll`)}"`)
+            .join(' ');
+    }
 }

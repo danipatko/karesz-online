@@ -26,10 +26,10 @@ export default class ProcessCode {
     ): { code: string; length: number } {
         // replace entry
         code = code.replaceAll(
-            /void\s+FELADAT\s*\(\s*\)/gm,
+            /void\s+FELADAT\s*\(\s*\)[\n\r\s]*{/gm,
             type == 'single'
-                ? 'static void Main(string args[])'
-                : `void Thread${index}${rand}()`
+                ? `void Main(string[] args)\n{\nnew Thread(() => { Thread.Sleep(TIMEOUT); FinishGame${rand}("Timeout"); }).Start();\n`
+                : `void Thread${index}${rand}()\n{\n`
         );
 
         // replace writelines so that players can see their logs

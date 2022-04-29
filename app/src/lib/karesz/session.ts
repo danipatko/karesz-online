@@ -202,17 +202,7 @@ export default class Session {
             })
             .generate();
 
-        // single
-        // const template2 = Template.create()
-        //     .singlePlayer()
-        //     .generate(
-        //         { code: '', id: '', name: '', rotation: 0, x: 0, y: 0 },
-        //         () => {
-        //             console.log('bruh');
-        //         }
-        //     );
-
-        const result = await Runner.run(template.code, template.rand);
+        const result = await Runner.run(template.code, 'multi');
 
         if (result.exitCode !== 0) {
             // TODO: find user who caused the error

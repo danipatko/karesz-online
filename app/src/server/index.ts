@@ -1,7 +1,11 @@
 import { createServer } from 'http';
 import next from 'next';
 import { Server } from 'socket.io';
+import { Spawn } from '../lib/hooks/singleplayer/spawn';
+import { Runner } from '../lib/karesz/run/runner';
+import { Template } from '../lib/karesz/run/template';
 import Session from '../lib/karesz/session';
+import { GameMap } from '../lib/shared/types';
 
 const randCode = () => Math.floor(1000 + Math.random() * 9000);
 
@@ -63,4 +67,42 @@ io.on('connection', (socket) => {
             )
         );
     });
+
+    // run singleplayer game
+    socket.on(
+        'run',
+        async ({
+            map,
+            code,
+            spawn,
+        }: {
+            map: GameMap;
+            code: string;
+            spawn: Spawn;
+        }) => {
+            console.log(map, code, spawn);
+
+            const template = Template.create()
+                .setMap({ x: map.width, y: map.height })
+                // .addObjects(map.objects)
+                .singlePlayer()
+                .generate(
+                    { code, id: '0', name: 'default', ...spawn },
+                    (result) => socket.emit('game_error', { error: result })
+                );
+
+            if (!template) return;
+
+            const result = await Runner.run(template.code, 'single');
+            console.log(result); // DEBUG
+
+            if (result.exitCode !== 0)
+                return void socket.emit('game_error_logs', {
+                    stderr: result.stderr,
+                    stdout: result.stdout,
+                });
+
+            socket.emit('game_result_single', result);
+        }
+    );
 });

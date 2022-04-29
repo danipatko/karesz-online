@@ -1,16 +1,12 @@
 import { PlayerStartState, TemplateSettings } from '../types';
+import { MULITPLAYER_IMPORTS } from '../config';
 
 const getMultiPlayerTemplate = (
     rand: string,
     settings: TemplateSettings,
     players: PlayerStartState[]
 ) => `// allowed imports
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
+${MULITPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
 
 class Program
 {

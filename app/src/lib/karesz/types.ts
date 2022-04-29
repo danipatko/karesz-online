@@ -36,9 +36,9 @@ export const random = (): string => {
     return `_${Math.random().toString(16).substring(2, 10)}`;
 };
 
-export interface CommandResult {
+export interface CommandResult<Type> {
     exitCode: number;
     stdout: string;
     stderr: string;
-    result: object; // the last line parsed from stdout
+    result: Type; // the last line parsed from stdout
 }

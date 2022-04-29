@@ -13,7 +13,7 @@ export const LIBRARY_LOCATIONS: string =
 export const COMPILER_LOCATION: string =
     process.platform === 'win32'
         ? `"C:/Program Files/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll"`
-        : `/usr/share/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll`;
+        : `/usr/share/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc`;
 
 export const RUNNER_DIRECTORY: string =
     process.platform === 'win32'
@@ -22,26 +22,28 @@ export const RUNNER_DIRECTORY: string =
 
 // necessary for the template to work
 export const CRUCIAL_IMPORTS: string[] = [
-    'System.Console.dll',
-    'System.Runtime.dll',
-    'System.Private.CoreLib.dll',
-    'System.Runtime.Extensions.dll',
-    'System.Diagnostics.Tracing.dll',
-    'System.Text.Encoding.Extensions.dll',
+    'System.Console',
+    'System.Runtime',
+    'System.Threading',
+    'System.Collections',
+    'System.Private.CoreLib',
+    'System.Runtime.Extensions',
+    'System.Diagnostics.Tracing',
+    'System.Text.Encoding.Extensions',
 ];
 
 export const MULITPLAYER_IMPORTS: string[] = [
-    ...CRUCIAL_IMPORTS,
-    'System.Linq.dll',
-    'System.Threading.dll',
-    'System.Collections.dll',
-    'System.Threading.Thread.dll',
-    'System.Collections.Concurrent.dll',
-    'System.Threading.Tasks.Parallel.dll',
+    'System',
+    'System.Linq',
+    'System.Threading',
+    'System.Collections.Concurrent',
+    'System.Threading.Tasks.Parallel',
     // ^^^^ necessary for multithreading
 ];
 
 export const SINGLEPLAYER_IMPORTS: string[] = [
-    ...CRUCIAL_IMPORTS,
-    'System.Collections.dll',
+    'System',
+    'System.Linq',
+    'System.Threading',
+    'System.Collections.Generic',
 ];

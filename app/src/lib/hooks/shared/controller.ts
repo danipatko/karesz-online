@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { clamp, ObjectStates, Step } from './replay';
 
-type SingleStates = [Step[], ObjectStates];
+type SingleStates = { steps: Step[]; objects: ObjectStates };
 type MultiStates = [
     { [key: string]: { name: string; steps: Step[] } },
     ObjectStates
@@ -9,17 +9,17 @@ type MultiStates = [
 
 const useController = (
     states: SingleStates
-): [
-    { players: Step; objects: Map<[number, number], number> },
-    boolean,
-    number,
-    {
+): {
+    state: { players: Step; objects: Map<[number, number], number> };
+    isPlaying: boolean;
+    index: number;
+    functions: {
         play: (speed: number) => void;
         stop: () => void;
         reset: () => void;
         stepTo: (index: number) => void;
-    }
-] => {
+    };
+} => {
     const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
     const [index, setIndex] = useState<number>(0);
     const [isPlaying, setPlaying] = useState<boolean>(false);
@@ -27,7 +27,7 @@ const useController = (
     // filter out the objects that are not at the current step
     const getObjectsAtStep = (index: number): Map<[number, number], number> => {
         const result: Map<[number, number], number> = new Map();
-        states[1].forEach((value) => {
+        states.objects.forEach((value) => {
             Array.from(value.entries()).forEach(([inter, field]) => {
                 // the object is at the current step
                 if (inter[0] >= index && inter[1] < index)
@@ -38,7 +38,7 @@ const useController = (
     };
 
     // get a step of players
-    const getStep = (index: number) => states[0][index];
+    const getStep = (index: number) => states.steps[index];
 
     // state used for animation
     const [state, setState] = useState<{
@@ -63,7 +63,7 @@ const useController = (
     // go to a step
     const stepTo = (step: number) => {
         if (isPlaying) stop();
-        step = clamp(step, 0, states[0].length - 1);
+        step = clamp(step, 0, states.steps.length - 1);
         setIndex(step);
 
         setState({
@@ -95,7 +95,12 @@ const useController = (
         });
     };
 
-    return [state, isPlaying, index, { play, stop, reset, stepTo }];
+    return {
+        index,
+        state,
+        isPlaying,
+        functions: { play, stop, reset, stepTo },
+    };
 };
 
 export default useController;

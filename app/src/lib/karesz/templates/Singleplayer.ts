@@ -1,4 +1,5 @@
 import { TemplateSettings } from '../types';
+import { SINGLEPLAYER_IMPORTS } from '../config';
 
 const getSinglePlayerTemplate = (
     rand: string,
@@ -10,15 +11,10 @@ const getSinglePlayerTemplate = (
         code: string;
     }
 ) => `// allowed imports
-// allowed imports
-using System;
-using System.Linq;
-using System.Collections.Generic;
+${SINGLEPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
 
 class Program
 {
-    // the number of steps each player can do
-    static readonly int MAX_ITERATIONS = ${settings.MAX_ITERATIONS};
     // termination timeout in ms
     static readonly int TIMEOUT = ${settings.TIMEOUT};
     // add map dimensions from template here
@@ -46,6 +42,7 @@ class Program
 
     static void FinishGame${rand}(string Reason)
     {
+        Console.WriteLine("CALLED HERE");
         Console.WriteLine($"{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":0, \\"y\\":0, \\"rotation\\":0 }} }}");
         Environment.Exit(0);
     }

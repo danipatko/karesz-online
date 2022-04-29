@@ -10,9 +10,14 @@ import {
 export type ReplayState = [[Step[], ObjectStates], boolean, [number, number][]];
 
 // get player and object states from result object
-const getSteps = (result: SingleResult): [Step[], ObjectStates] => {
+const getSteps = (
+    result: SingleResult,
+    startingObjects: Map<[number, number], number>
+): [Step[], ObjectStates] => {
     const steps: Step[] = [{ step: -1, ...result.start }];
     let objects: ObjectStates = new Map();
+    for (const [position, value] of startingObjects.entries())
+        objects.set(position, new Map([[[0, -1], value]]));
 
     for (const [index, step] of result.steps.entries()) {
         // step with the player
@@ -35,7 +40,7 @@ export const useReplay = ({
     objects,
 }: {
     walls: [number, number][];
-    result: SingleResult;
+    result: SingleResult | null;
     objects: Map<[number, number], number>;
 }): ReplayState => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -43,8 +48,9 @@ export const useReplay = ({
 
     // called when result is updated
     useEffect(() => {
+        if (!result) return;
         setLoading(true);
-        setState(getSteps(result));
+        setState(getSteps(result, objects));
         setLoading(false);
     }, [result]);
 
