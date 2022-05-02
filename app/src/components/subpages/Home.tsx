@@ -1,6 +1,6 @@
 const Home = () => {
     return (
-        <div className='h-[90vh] flex justify-center text-white items-center'>
+        <div className='h-full fadein flex justify-center text-white items-center'>
             <div className='text-center'>
                 <div className='text-3xl font-bold'>
                     Karesz online

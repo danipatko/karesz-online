@@ -24,24 +24,18 @@ const DarkButton = ({ children }: { children?: ReactNode }) => {
     );
 };
 
-const SideButton = ({
-    click,
+const NumberSlider = ({
+    min,
+    max,
     children,
-}: {
-    click: () => void;
-    children?: ReactNode;
-}) => {
-    return (
-        <div onClick={click} className='p-2'>
-            {children}
-        </div>
-    );
-};
-
-const Number = ({
     onChange,
+    className,
     defaultValue,
 }: {
+    min: number;
+    max: number;
+    children?: ReactNode;
+    className?: string;
     onChange: (n: number) => void;
     defaultValue?: number;
 }) => {
@@ -49,38 +43,34 @@ const Number = ({
 
     const changed = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue((x) => {
-            x = parseInt(e.target.value.replaceAll(/[^0-9\-\.]+/gm, ''));
+            x = e.target.valueAsNumber;
             if (isNaN(x)) return 0;
             onChange(x);
             return x;
         });
     };
 
-    const incr = () => setValue((x) => x + 1);
-    const decr = () => setValue((x) => x - 1);
-
     return (
-        <div className='flex justify-around items-center'>
-            <div
-                onClick={decr}
-                className='font-bold select-none p-2 border-r-0 cursor-pointer border-transparent border-zinc-600 border-[1px] hover:bg-zinc-600 hover:text-karesz-light rounded-l-md'
-            >
-                &#8722;
-            </div>
+        <div className='flex gap-4 justify-around items-center'>
+            {children}
             <input
-                type='text'
+                min={min}
+                max={max}
+                type='range'
                 value={value}
                 onChange={changed}
-                className='p-2 bg-transparent outline-none border-[1px] border-zinc-600 focus:border-karesz-light'
+                className={`range ${className}`}
             />
-            <div
-                onClick={incr}
-                className='font-bold select-none p-2 border-l-0 cursor-pointer border-transparent border-zinc-600 border-[1px] hover:bg-zinc-600 hover:text-karesz-light rounded-r-md'
-            >
-                &#43;
-            </div>
+            <input
+                type='number'
+                min={min}
+                max={max}
+                value={value}
+                onChange={changed}
+                className='py-1 text-sm nput text-center font-semibold outline-none focus:border-karesz rounded-md bg-transparent border-[2px] border-zinc-500'
+            />
         </div>
     );
 };
 
-export { TransparentButton, WhiteButton, DarkButton, Number };
+export { TransparentButton, WhiteButton, DarkButton, NumberSlider as Number };

@@ -6,14 +6,12 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                karesz: '#005eff',
-                'karesz-light': '#227fff',
-                back: '#0F1419',
-                'back-vs': '#2f2f2f',
-                main: '#333C4A',
-                'main-highlight': '#555E6C',
-                fore: '#323EDD',
-                'fore-highlight': '#545FEE',
+                dkaresz: '#005eff',
+                karesz: '#227fff', // blue
+                back: '#0F1419', // back
+                lback: '#232933', // light back
+                main: '#333C4A', // main
+                vsc: '#2f2f2f', // vscode gray
             },
         },
     },

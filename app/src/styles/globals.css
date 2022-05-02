@@ -34,7 +34,7 @@
     }
 
     .fadein {
-        animation: fadein 0.3s ease-in-out;
+        animation: fadein 0.2s ease-in-out;
     }
 
     @keyframes fadein {
@@ -127,6 +127,48 @@
 
     .slider::-moz-range-thumb {
         @apply rounded-full w-4 h-4 bg-karesz cursor-pointer;
+    }
+
+    .range {
+        @apply overflow-hidden bg-slate-700 outline-none transition-opacity cursor-pointer h-3 appearance-none rounded-full;
+        -webkit-appearance: none;
+    }
+
+    .range::-webkit-slider-runnable-track {
+        @apply h-2;
+        -webkit-appearance: none;
+    }
+
+    .range::-webkit-slider-thumb {
+        @apply bg-karesz cursor-pointer h-2 w-2 appearance-none;
+        -webkit-appearance: none;
+        box-shadow: -100px 0 0 100px rgb(34, 127, 255);
+    }
+
+    /** FF*/
+    .range::-moz-range-progress {
+        background-color: rgb(34, 127, 255);
+    }
+    .range::-moz-range-track {
+        background-color: rgb(100, 116, 139);
+    }
+    /* IE*/
+    .range::-ms-fill-lower {
+        background-color: rgb(34, 127, 255);
+    }
+    .range::-ms-fill-upper {
+        background-color: rgb(100, 116, 139);
+    }
+
+    .nput::-webkit-outer-spin-button,
+    .nput::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    .nput[type='number'] {
+        -moz-appearance: textfield;
     }
 
     body,

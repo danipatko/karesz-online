@@ -8,7 +8,7 @@ export const Nav = ({
     setView: (view: View) => void;
 }) => {
     return (
-        <div className='flex justify-start items-center flex-col gap-4 p-2'>
+        <div className='bg-back flex justify-start items-center flex-col gap-4 p-2'>
             <Item click={() => setView(View.Home)} current={view === View.Home}>
                 <i className='fa fa-house'></i>
             </Item>
@@ -23,10 +23,6 @@ export const Nav = ({
             </Item>
             <Item click={() => setView(View.Docs)} current={view === View.Docs}>
                 <i className='fa fa-book'></i>
-            </Item>
-            <div className='flex-1'></div>
-            <Item click={() => {}} current={false}>
-                <b>info</b>
             </Item>
         </div>
     );
