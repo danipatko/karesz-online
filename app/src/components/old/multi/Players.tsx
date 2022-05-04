@@ -1,4 +1,4 @@
-import { IPlayer as Player } from '../../lib/shared/types';
+import { IPlayer as Player } from '../../../lib/shared/types';
 
 // not the scoreboard, just the players
 const Players = ({ players, host }: { players: Player[]; host: string }) => {

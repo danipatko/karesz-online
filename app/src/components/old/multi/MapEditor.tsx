@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { MapProps } from '../../lib/_hooks/map';
-import { GameMap } from '../../lib/shared/types';
+import { MapProps } from '../../../lib/_hooks/map';
+import { GameMap } from '../../../lib/shared/types';
 
 const MapEditor = ({
     map,

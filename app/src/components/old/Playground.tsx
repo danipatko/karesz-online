@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import useMap from '../../lib/_hooks/map';
 import usePlayground from '../../lib/_hooks/playground';
-import CompileError from '../multi/CompileError';
-import MapEditor from '../multi/MapEditor';
-import Spawn from '../multi/Spawn';
-import Submit from '../multi/Submit';
-import Playback from '../playback/Playback';
+import CompileError from './multi/CompileError';
+import MapEditor from './multi/MapEditor';
+import Spawn from './multi/Spawn';
+import Submit from './multi/Submit';
+import Playback from './playback/Playback';
 
 const Playground = ({
     shown,

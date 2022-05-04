@@ -2,7 +2,7 @@ import { NextPageContext } from 'next';
 import Router from 'next/router';
 import { useRef } from 'react';
 import Game from '../../components/Game';
-import PreJoin from '../../components/multi/PreJoin';
+import PreJoin from '../../components/old/multi/PreJoin';
 import ScoreBoard from '../../components/ScoreBoard';
 import { GameState, useGame } from '../../lib/_hooks/game';
 

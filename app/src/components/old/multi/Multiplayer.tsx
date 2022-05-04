@@ -1,8 +1,8 @@
-import { Game, Scoreboard } from '../../lib/_hooks/game';
-import { GameMap, GamePhase } from '../../lib/shared/types';
-import PreJoin from '../multi/PreJoin';
-import Join from '../multi/Join';
-import Main from '../multi/Main';
+import { Game, Scoreboard } from '../../../lib/_hooks/game';
+import { GameMap, GamePhase } from '../../../lib/shared/types';
+import PreJoin from './PreJoin';
+import Join from './Join';
+import Main from './Main';
 
 const Multiplayer = ({
     game,

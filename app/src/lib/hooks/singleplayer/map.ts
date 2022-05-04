@@ -27,8 +27,8 @@ export type MapState = {
 
 const useMap = (): MapState => {
     const [map, setMap] = useState<GameMap>(defaultMap);
-    const [editorMap, setEditorMap] = useState<GameMap>(defaultMap);
     const [editMode, setEditMode] = useState<boolean>(false);
+    const [editorMap, setEditorMap] = useState<GameMap>(defaultMap);
 
     // set the type of the map
     const setType = (type: 'parse' | 'load') =>

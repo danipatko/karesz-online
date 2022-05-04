@@ -1,5 +1,5 @@
 import { Dispatch, MouseEventHandler, SetStateAction } from 'react';
-import { View } from '../../lib/shared/types';
+import { View } from '../../../lib/shared/types';
 
 /* 
     boxShadow: selected ? '0 4px 10px -2px #1f2eff' : 'none',

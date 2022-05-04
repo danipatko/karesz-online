@@ -6,7 +6,14 @@ import useReplay, { ReplayState } from './replay';
 import { SingleResult } from '../../shared/types';
 import { CommandResult } from '../../karesz/types';
 
-export const useSingleplayer = (socket: Socket) => {
+export type SingleState = {
+    map: MapState;
+    run: (code: string) => void;
+    spawn: SpawnState;
+    replay: ReplayState;
+};
+
+export const useSingleplayer = (socket: Socket): SingleState => {
     const [result, setResult] = useState<SingleResult | null>(null);
     const map: MapState = useMap();
     const spawn: SpawnState = useSpawn();

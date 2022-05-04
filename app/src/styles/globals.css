@@ -193,4 +193,49 @@
         -webkit-box-shadow: -5px 0px 10px 0px rgba(0, 0, 0, 0.3);
         box-shadow: -5px 0px 10px 0px rgba(0, 0, 0, 0.3);
     }
+
+    .drop {
+        animation: drop 0.05s ease-in-out;
+    }
+
+    @keyframes drop {
+        0% {
+            transform: translateY(-200px);
+        }
+        100% {
+            transform: translateY(0);
+        }
+    }
+
+    .r-down {
+        animation: r-down 0.1s ease-in-out;
+        transform: rotate(90deg);
+    }
+
+    @keyframes r-down {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(90deg);
+        }
+    }
+
+    .r-back {
+        animation: r-back 0.1s ease-in-out;
+        transform: rotate(0deg);
+    }
+
+    @keyframes r-back {
+        0% {
+            transform: rotate(90deg);
+        }
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
+    .s-text {
+        @apply text-zinc-400 text-sm font-semibold uppercase;
+    }
 }

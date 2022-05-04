@@ -3,10 +3,10 @@ import Players from './Players';
 import { useState } from 'react';
 import MapEditor from './MapEditor';
 import Scoreboard from './Scoreboard';
-import useMap from '../../lib/_hooks/map';
+import useMap from '../../../lib/_hooks/map';
 import Playback from '../playback/Playback';
-import { GameMap, GamePhase } from '../../lib/shared/types';
-import { Game, Scoreboard as SB } from '../../lib/_hooks/game';
+import { GameMap, GamePhase } from '../../../lib/shared/types';
+import { Game, Scoreboard as SB } from '../../../lib/_hooks/game';
 
 const Main = ({
     game,

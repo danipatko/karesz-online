@@ -1,8 +1,8 @@
-import Editor, { Monaco } from '@monaco-editor/react';
+import { NumberSlider } from './Util';
 import { useEffect, useRef, useState } from 'react';
-import { getCompletionItems } from '../../lib/front/autocomplete';
+import Editor, { Monaco } from '@monaco-editor/react';
 import { codeState } from '../../lib/hooks/shared/code';
-import { Number } from './Util';
+import { getCompletionItems } from '../../lib/front/autocomplete';
 
 export const CodeEditor = ({
     code,
@@ -13,7 +13,6 @@ export const CodeEditor = ({
 }) => {
     // dynamically resize the editor (does not apply for height)
     const [width, setWidth] = useState<string>('100%');
-    const [font, setFont] = useState<number>(14);
     const container = useRef<HTMLDivElement>(null as any);
     const resize = () => {
         const rect = container.current?.getBoundingClientRect();
@@ -44,30 +43,17 @@ export const CodeEditor = ({
         >
             <div className='p-4 h-full flex flex-col bg-lback abg-slate-800'>
                 <div className='font-bold text-lg'>Code editor</div>
-                <div>
-                    <div className='items-center p-1'>
-                        <i className='text-sm text-zinc-500 pr-2 fa fa-file'></i>{' '}
-                        {'name.cs'}
-                    </div>
-                    <div className='items-center p-1'>
-                        <i className='text-sm text-zinc-500 pr-2 fa fa-file'></i>{' '}
-                        {'name2.cs'}
-                    </div>
-                    <div className='items-center p-1'>
-                        <i className='text-sm text-zinc-500 pr-2 fa fa-file'></i>{' '}
-                        {'name3.cs'}
-                    </div>
-                </div>
+                <div></div>
                 <div className='flex-1'></div>
                 <div className=''>
-                    <Number
+                    <NumberSlider
                         max={30}
                         min={9}
-                        onChange={setFont}
-                        defaultValue={font}
+                        value={code.fontSize}
+                        onChange={code.functions.setFontSize}
                     >
                         <i className='fa fa-text-height text-zinc-200'></i>
-                    </Number>
+                    </NumberSlider>
                 </div>
             </div>
             <div
@@ -77,7 +63,7 @@ export const CodeEditor = ({
                 <Editor
                     width={width}
                     options={{
-                        fontSize: font,
+                        fontSize: code.fontSize,
                         automaticLayout: true,
                         suggestSelection: 'first',
                     }}

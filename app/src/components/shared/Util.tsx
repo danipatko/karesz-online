@@ -27,27 +27,22 @@ const DarkButton = ({ children }: { children?: ReactNode }) => {
 const NumberSlider = ({
     min,
     max,
+    value,
     children,
     onChange,
     className,
-    defaultValue,
 }: {
     min: number;
     max: number;
+    value: number;
     children?: ReactNode;
     className?: string;
     onChange: (n: number) => void;
-    defaultValue?: number;
 }) => {
-    const [value, setValue] = useState<number>(defaultValue ?? 0);
-
     const changed = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setValue((x) => {
-            x = e.target.valueAsNumber;
-            if (isNaN(x)) return 0;
-            onChange(x);
-            return x;
-        });
+        const x = e.target.valueAsNumber;
+        if (isNaN(x)) return 0;
+        onChange(x);
     };
 
     return (
@@ -73,4 +68,92 @@ const NumberSlider = ({
     );
 };
 
-export { TransparentButton, WhiteButton, DarkButton, NumberSlider as Number };
+const Option = ({
+    select,
+    current,
+    options,
+    children,
+}: {
+    select: (key: string) => void;
+    current: string;
+    options: { [key: string]: string };
+    children?: ReactNode;
+}) => {
+    const [expanded, expand] = useState<boolean>(false);
+
+    return (
+        <div className='select-none w-full'>
+            <div
+                style={{
+                    borderColor: expanded ? 'rgb(34,127,255)' : 'transparent',
+                }}
+                onClick={() => expand((x) => !x)}
+                className='py-1 px-2 text-center items-center justify-end rounded-md flex gap-4 border-transparent border-[2px] bg-back font-semibold'
+            >
+                <div className='flex-1'>{options[current] ?? 'N/A'}</div>
+                <div>
+                    <i
+                        className={`${
+                            expanded ? 'r-down' : 'r-back'
+                        } fa text-xs text-zinc-500 fa-chevron-right`}
+                    ></i>
+                </div>
+            </div>
+            <div className='overflow-hidden'>
+                {expanded && (
+                    <div className='drop bg-white overflow-hidden rounded-md'>
+                        {Object.entries(options).map(([key, val], i) => (
+                            <div
+                                key={i}
+                                className={`px-2 cursor-pointer py-[2px] bg-back text-center font-semibold hover:bg-zinc-700`}
+                                onClick={() => {
+                                    select(key);
+                                    expand(false);
+                                }}
+                            >
+                                {val}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const InlineOption = ({
+    select,
+    options,
+    current,
+}: {
+    select: (key: string) => void;
+    options: { [key: string]: ReactNode };
+    current: string;
+}) => {
+    return (
+        <div className='flex select-none font-semibold justify-between overflow-hidden rounded-md bg-back'>
+            {Object.entries(options).map(([key, dom], i) => (
+                <div
+                    style={{
+                        backgroundColor:
+                            key == current ? 'rgb(34, 127, 255)' : '',
+                    }}
+                    onClick={() => select(key)}
+                    className='p-2'
+                    key={i}
+                >
+                    {dom}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+export {
+    TransparentButton,
+    WhiteButton,
+    DarkButton,
+    NumberSlider,
+    Option,
+    InlineOption,
+};
