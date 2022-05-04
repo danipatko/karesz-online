@@ -1,8 +1,46 @@
 import { useState } from 'react';
-import { SingleState } from '../../lib/hooks/singleplayer/game';
 import { MapState } from '../../lib/hooks/singleplayer/map';
 import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
-import { InlineOption, NumberSlider, Option } from './Util';
+import { InlineOption, Option } from './Util';
+
+const RockColors = [
+    '#8f1110',
+    '#000',
+    '#f00',
+    '#0f0',
+    '#ff0',
+    '#00f',
+    '#0ff',
+    '#f0f',
+];
+
+const Obj = ({ type }: { type: number }) => {
+    return (
+        <div
+            style={{
+                borderRadius: type > 0 ? '100%' : '0',
+                backgroundColor: RockColors[type],
+            }}
+            className='h-8 w-8'
+        ></div>
+    );
+};
+
+const Objects = ({}: {}) => {
+    return (
+        <div className='p-2 grid grid-cols-3 gap-2 items-center'>
+            {RockColors.map((_, i) => (
+                <div
+                    style={{ borderColor: 'transparent' }}
+                    key={i}
+                    className='bg-back p-2 rounded-md border-[2px]'
+                >
+                    <Obj type={i} />
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export const GameSettings = ({
     map,
@@ -53,6 +91,7 @@ export const GameSettings = ({
                         options={{ 1: 'palya1', 2: 'palya2', 3: 'palya3' }}
                     />
                 </div>
+                <Objects />
             </div>
         </div>
     );
