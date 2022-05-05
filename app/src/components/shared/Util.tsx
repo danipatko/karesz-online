@@ -82,7 +82,7 @@ const Option = ({
     const [expanded, expand] = useState<boolean>(false);
 
     return (
-        <div className='select-none w-full'>
+        <div className='select-none w-full relative'>
             <div
                 style={{
                     borderColor: expanded ? 'rgb(34,127,255)' : 'transparent',
@@ -99,9 +99,9 @@ const Option = ({
                     ></i>
                 </div>
             </div>
-            <div className='overflow-hidden'>
+            <div className='overflow-hidden absolute w-full'>
                 {expanded && (
-                    <div className='drop bg-white overflow-hidden rounded-md'>
+                    <div className='drop overflow-hidden rounded-md shadow-sm'>
                         {Object.entries(options).map(([key, val], i) => (
                             <div
                                 key={i}
@@ -149,11 +149,43 @@ const InlineOption = ({
     );
 };
 
+const Switch = ({
+    value,
+    onClick,
+    option1,
+    option2,
+}: {
+    value: boolean; // when option1 is true
+    option1: ReactNode;
+    option2: ReactNode;
+    onClick: () => void;
+}) => {
+    return (
+        <div
+            onClick={onClick}
+            className='flex w-fit overflow-hidden relative bg-back rounded-md cursor-pointer select-none'
+        >
+            <div
+                className={`${
+                    value ? 'option-l' : 'option-r'
+                } absolute w-1/2 h-10 bg-karesz`}
+            ></div>
+            <div className='font-bold px-2 py-1 text-center flex-1 text-sm z-10'>
+                {option1}
+            </div>
+            <div className='font-bold px-2 py-1 text-center flex-1 text-sm z-10'>
+                {option2}
+            </div>
+        </div>
+    );
+};
+
 export {
-    TransparentButton,
-    WhiteButton,
-    DarkButton,
-    NumberSlider,
+    Switch,
     Option,
+    DarkButton,
+    WhiteButton,
+    NumberSlider,
     InlineOption,
+    TransparentButton,
 };

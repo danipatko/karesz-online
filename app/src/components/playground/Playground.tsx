@@ -1,5 +1,6 @@
 import { SingleState } from '../../lib/hooks/singleplayer/game';
 import { GameSettings } from '../shared/GameSettings';
+import { Replay } from '../shared/Replay';
 
 export const Playground = ({
     game,
@@ -14,6 +15,7 @@ export const Playground = ({
             className='flex w-full h-screen fadein'
         >
             <GameSettings map={game.map} spawn={game.spawn} />
+            <Replay map={game.map} replay={game.replay} spawn={game.spawn} />
         </div>
     );
 };

@@ -173,7 +173,7 @@
 
     body,
     html {
-        @apply bg-back;
+        @apply bg-back overflow-hidden;
     }
 
     .sb > thead > tr > th {
@@ -237,5 +237,41 @@
 
     .s-text {
         @apply text-zinc-400 text-sm font-semibold uppercase;
+    }
+
+    .lightbutton {
+        @apply uppercase text-sm text-karesz bg-white hover:text-white hover:bg-karesz font-bold p-2 rounded-md transition-colors;
+    }
+
+    .button {
+        @apply uppercase text-sm font-bold p-2 cursor-pointer rounded-md transition-colors;
+    }
+
+    .option-r {
+        animation: option-r 0.1s ease-in-out;
+        transform: translateX(100%);
+    }
+
+    @keyframes option-r {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .option-l {
+        animation: option-l 0.1s ease-in-out;
+        transform: translateX(0);
+    }
+
+    @keyframes option-l {
+        0% {
+            transform: translateX(100%);
+        }
+        100% {
+            transform: translateX(0);
+        }
     }
 }

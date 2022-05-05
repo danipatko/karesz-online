@@ -38,7 +38,7 @@ export interface GameMap {
     width: number;
     height: number;
     mapName: string;
-    objects: Map<[number, number], number>;
+    objects: Map<string, number>;
 }
 
 // "{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":0, \\"y\\":0, \\"rotation\\":0 }} }}");

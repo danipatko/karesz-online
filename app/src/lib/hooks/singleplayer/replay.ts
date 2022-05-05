@@ -7,7 +7,11 @@ import {
     Step,
 } from '../shared/replay';
 
-export type ReplayState = [[Step[], ObjectStates], boolean, [number, number][]];
+export type ReplayState = {
+    walls: [number, number][];
+    state: [Step[], ObjectStates];
+    loading: boolean;
+};
 
 // get player and object states from result object
 const getSteps = (
@@ -54,7 +58,7 @@ export const useReplay = ({
         setLoading(false);
     }, [result]);
 
-    return [state, loading, walls];
+    return { state, loading, walls };
 };
 
 export default useReplay;
