@@ -1,4 +1,5 @@
 import { GameMap } from '../../shared/types';
+import { pointToString } from '../../shared/util';
 
 export default 0;
 
@@ -7,7 +8,7 @@ export class MapCreator implements GameMap {
     public width: number = 20;
     public height: number = 20;
     public mapName: string = '';
-    public objects: Map<[number, number], number> = new Map();
+    public objects: Map<string, number> = new Map();
     // event handlers
     private objectChange:
         | ((position: [number, number], field: number) => void)
@@ -63,13 +64,13 @@ export class MapCreator implements GameMap {
 
     // set a tile
     public addObject(position: [number, number], field: number): void {
-        this.objects.set(position, field);
+        this.objects.set(pointToString(position), field);
         this.objectChange && this.objectChange(position, 0);
     }
 
     // remove a tile
     public removeObject(position: [number, number]): void {
-        this.objects.delete(position);
+        this.objects.delete(pointToString(position));
         this.objectChange && this.objectChange(position, -1);
     }
 }

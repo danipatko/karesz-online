@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useController from '../../lib/hooks/shared/controller';
-import { MapState, stringToPoint } from '../../lib/hooks/singleplayer/map';
+import { MapState } from '../../lib/hooks/singleplayer/map';
 import { ReplayState } from '../../lib/hooks/singleplayer/replay';
 import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
+import { stringToPoint } from '../../lib/shared/util';
+import { GameObject } from './objects';
 
 export const Replay = ({
     map,
@@ -108,27 +110,12 @@ export const Replay = ({
                 className='bg-slate-800 h-full w-full relative overflow-hidden'
             >
                 {children}
-                {JSON.stringify(map.current.objects)}
-                {Object.entries(map.current.objects).map(
-                    ([type, pos], index) => {
-                        const [x, y] = stringToPoint(pos);
-                        return (
-                            <div
-                                key={index}
-                                style={{
-                                    width: tileSize + 'px',
-                                    height: tileSize + 'px',
-                                    transform: `translate(${x * tileSize}px,${
-                                        y * tileSize
-                                    })`,
-                                    backgroundColor: '#fff',
-                                }}
-                            >
-                                {type}
-                            </div>
-                        );
-                    }
-                )}
+                {Array.from(map.current.objects).map(([pos, type], index) => {
+                    const [x, y] = stringToPoint(pos);
+                    return (
+                        <GameObject size={tileSize} x={x} y={y} type={type} />
+                    );
+                })}
             </div>
 
             <div className='p-2'>

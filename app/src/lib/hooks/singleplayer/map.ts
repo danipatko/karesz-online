@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { GameMap } from '../../shared/types';
+import { pointToString, stringToPoint } from '../../shared/util';
 
 const defaultMap: GameMap = {
     type: 'parse',
@@ -8,14 +9,6 @@ const defaultMap: GameMap = {
     mapName: '',
     objects: new Map(),
 };
-
-export const stringToPoint = (str: string): [number, number] => {
-    const split = str.split('_');
-    return [parseInt(split[0]), parseInt(split[1])];
-};
-
-export const pointToString = (position: [number, number]): string =>
-    `${position[0]}_${position[1]}`;
 
 export type MapState = {
     current: GameMap;
@@ -51,6 +44,7 @@ const useMap = (): MapState => {
         console.log(width, height);
         setEditorMap({ ...map, width, height, type: 'parse', mapName: '' });
     };
+
     // TODO: load a map
     const loadMap = (mapName: string) =>
         setEditorMap({ ...map, mapName, type: 'load' });

@@ -1,6 +1,6 @@
-import { SingleState } from '../../lib/hooks/singleplayer/game';
-import { GameSettings } from '../shared/GameSettings';
 import { Replay } from '../shared/Replay';
+import { GameSettings } from '../shared/GameSettings';
+import { SingleState } from '../../lib/hooks/singleplayer/game';
 
 export const Playground = ({
     game,

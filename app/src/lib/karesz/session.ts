@@ -160,7 +160,7 @@ export default class Session {
         const isOccupied = (_x: number, _y: number): boolean => {
             for (const { x, y } of Object.values(result))
                 if (x === _x && y === _y) return true;
-            return this.map.objects.has([_x, _y]);
+            return this.map.objects.has(`${_x}_${_y}`);
         };
 
         this.players.forEach((player) => {

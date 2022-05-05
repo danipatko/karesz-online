@@ -28,7 +28,7 @@ export interface TemplateSettings {
     MAP_WIDTH: number;
     MAP_HEIGHT: number;
     MIN_PLAYERS: number;
-    MAP_OBJECTS: Map<[number, number], number>;
+    MAP_OBJECTS: Map<string, number>;
     MAX_ITERATIONS: number;
 }
 
