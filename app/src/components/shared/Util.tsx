@@ -139,7 +139,7 @@ const InlineOption = ({
                             key == current ? 'rgb(34, 127, 255)' : '',
                     }}
                     onClick={() => select(key)}
-                    className='p-2'
+                    className='p-2 flex-1 text-center'
                     key={i}
                 >
                     {dom}
@@ -154,20 +154,22 @@ const Switch = ({
     onClick,
     option1,
     option2,
+    disabled,
 }: {
     value: boolean; // when option1 is true
     option1: ReactNode;
     option2: ReactNode;
     onClick: () => void;
+    disabled?: boolean;
 }) => {
     return (
         <div
-            onClick={onClick}
+            onClick={() => !disabled && onClick()}
             className='flex w-fit overflow-hidden relative bg-back rounded-md cursor-pointer select-none'
         >
             <div
-                className={`${
-                    value ? 'option-l' : 'option-r'
+                className={`${value ? 'option-l' : 'option-r'} ${
+                    disabled ? 'opacity-50' : ''
                 } absolute w-1/2 h-10 bg-karesz`}
             ></div>
             <div className='font-bold px-2 py-1 text-center flex-1 text-sm z-10'>
@@ -180,9 +182,47 @@ const Switch = ({
     );
 };
 
+const Number = ({
+    min,
+    max,
+    value,
+    children,
+    onChange,
+}: {
+    min?: number;
+    max?: number;
+    value: number;
+    children: ReactNode;
+    onChange: (n: number) => void;
+}) => {
+    const [focused, setFocus] = useState<boolean>(false);
+
+    return (
+        <div
+            style={{
+                borderColor: focused ? 'rgb(34,127,255)' : 'transparent',
+            }}
+            className='flex gap-4 bg-back p-2 border-[2px] rounded-md'
+        >
+            <div className='text-zinc-500 font-bold'>{children}</div>
+            <input
+                onFocus={() => setFocus(true)}
+                onBlur={() => setFocus(false)}
+                min={min ?? 0}
+                max={max ?? 100}
+                type='number'
+                value={value}
+                onChange={(e) => onChange(e.target.valueAsNumber)}
+                className='outline-none w-[2.2rem] bg-transparent border-none'
+            />
+        </div>
+    );
+};
+
 export {
     Switch,
     Option,
+    Number,
     DarkButton,
     WhiteButton,
     NumberSlider,

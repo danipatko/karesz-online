@@ -247,6 +247,10 @@
         @apply uppercase text-sm font-bold p-2 cursor-pointer rounded-md transition-colors;
     }
 
+    .input-number {
+        @apply p-1 bg-transparent rounded-md text-center border-[2px] border-zinc-600 focus:border-karesz transition-colors outline-none;
+    }
+
     .option-r {
         animation: option-r 0.1s ease-in-out;
         transform: translateX(100%);

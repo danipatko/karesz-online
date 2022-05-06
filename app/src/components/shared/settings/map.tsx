@@ -25,7 +25,12 @@ const Objects = ({
 }) => {
     return (
         <div className='py-2'>
-            <div className='s-text'>Edit objects</div>
+            <div>
+                <span className='s-text'>Edit objects</span>{' '}
+                <span className='text-xs text-zinc-400'>
+                    (click on map to place)
+                </span>
+            </div>
             <div className='px-1 py-2 grid grid-cols-3 gap-2 items-center'>
                 {ObjectTypes.map((item, i) => (
                     <div
@@ -129,7 +134,7 @@ export const MapSettings = ({ map }: { map: MapState }) => {
                         onClear={map.functions.clearAll}
                     />
                 </div>
-                <div className='p-2 flex gap-4'>
+                {/* <div className='p-2 flex gap-4'>
                     <div
                         onClick={map.functions.cancel}
                         className='flex-1 text-center hover:bg-opacity-20 bg-zinc-300 bg-opacity-0 button text-red-600'
@@ -142,7 +147,7 @@ export const MapSettings = ({ map }: { map: MapState }) => {
                     >
                         save
                     </div>
-                </div>
+                </div> */}
             </div>
         </>
     );

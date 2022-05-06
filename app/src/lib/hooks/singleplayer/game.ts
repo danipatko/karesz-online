@@ -16,7 +16,10 @@ export type SingleState = {
 export const useSingleplayer = (socket: Socket): SingleState => {
     const [result, setResult] = useState<SingleResult | null>(null);
     const map: MapState = useMap();
-    const spawn: SpawnState = useSpawn();
+    const spawn: SpawnState = useSpawn({
+        height: map.current.height,
+        width: map.current.width,
+    });
     const replay: ReplayState = useReplay({
         objects: map.current.objects,
         walls: map.functions.getWalls(),

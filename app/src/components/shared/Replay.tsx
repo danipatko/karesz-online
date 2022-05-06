@@ -10,11 +10,13 @@ export const Replay = ({
     map,
     spawn,
     replay,
+    onClick,
     children,
 }: {
     map: MapState;
     spawn: SpawnState;
     replay: ReplayState;
+    onClick: (x: number, y: number) => void;
     children?: React.ReactNode;
 }) => {
     const controller = useController(replay);
@@ -46,10 +48,10 @@ export const Replay = ({
 
     const handleClick = (e: any) => {
         const rect = container.current.getBoundingClientRect();
-        map.functions.setField([
+        onClick(
             Math.floor((e.clientX - rect.left) / tileSize),
-            Math.floor((e.clientY - rect.top) / tileSize),
-        ]);
+            Math.floor((e.clientY - rect.top) / tileSize)
+        );
     };
 
     useEffect(() => {
@@ -66,6 +68,12 @@ export const Replay = ({
             ref={rightSide}
             className='text-white flex-1 h-screen w-full overflow-hidden'
         >
+            <style jsx>{`
+                div > :global(.tilesize) {
+                    width: ${tileSize}px !important;
+                    height: ${tileSize}px !important;
+                }
+            `}</style>
             <div className='flex gap-5 p-2 items-center'>
                 <button className='text-xl px-2 fa fa-play hover:text-[#0f0]'></button>
                 <button className='text-xl px-2 fa fa-pause hover:text-karesz'></button>
@@ -103,17 +111,23 @@ export const Replay = ({
                 style={{
                     width: size[0] + 'px',
                     height: size[1] + 'px',
-                    backgroundImage: `url('/grids/grid-${map.current.width}x${map.current.height}.svg')`,
                     backgroundSize: true ? 'cover' : 'none',
+                    backgroundImage: `url('/grids/grid-${map.current.width}x${map.current.height}.svg')`,
                 }}
                 onClick={handleClick}
                 className='bg-slate-800 h-full w-full relative overflow-hidden'
             >
                 {children}
-                {Array.from(map.current.objects).map(([pos, type], index) => {
+                {Array.from(map.current.objects).map(([pos, type], i) => {
                     const [x, y] = stringToPoint(pos);
                     return (
-                        <GameObject size={tileSize} x={x} y={y} type={type} />
+                        <GameObject
+                            x={x}
+                            y={y}
+                            key={i}
+                            type={type}
+                            size={tileSize}
+                        />
                     );
                 })}
             </div>
