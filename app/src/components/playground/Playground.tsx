@@ -20,14 +20,17 @@ export const Playground = ({
             style={{ display: visible ? 'flex' : 'none' }}
             className='flex w-full h-screen fadein'
         >
-            <GameSettings map={game.map} spawn={game.spawn} />
+            <GameSettings run={game.run} map={game.map} spawn={game.spawn} />
             <Replay
                 map={game.map}
                 spawn={game.spawn}
                 replay={game.replay}
                 onClick={handleClick}
             >
-                <Karesz state={game.spawn.current} />
+                <Karesz
+                    state={game.spawn.current}
+                    className='opacity-50 z-20'
+                />
             </Replay>
         </div>
     );

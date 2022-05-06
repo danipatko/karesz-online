@@ -3,17 +3,17 @@ import useMap, { MapState } from './map';
 import { useEffect, useState } from 'react';
 import { SpawnState, useSpawn } from './spawn';
 import useReplay, { ReplayState } from './replay';
-import { SingleResult } from '../../shared/types';
+import { GameMap, SingleResult } from '../../shared/types';
 import { CommandResult } from '../../karesz/types';
 
 export type SingleState = {
     map: MapState;
-    run: (code: string) => void;
+    run: () => void;
     spawn: SpawnState;
     replay: ReplayState;
 };
 
-export const useSingleplayer = (socket: Socket): SingleState => {
+export const useSingleplayer = (socket: Socket, code: string): SingleState => {
     const [result, setResult] = useState<SingleResult | null>(null);
     const map: MapState = useMap();
     const spawn: SpawnState = useSpawn({
@@ -21,7 +21,7 @@ export const useSingleplayer = (socket: Socket): SingleState => {
         width: map.current.width,
     });
     const replay: ReplayState = useReplay({
-        objects: map.current.objects,
+        objects: map.viewMap.objects,
         walls: map.functions.getWalls(),
         result,
     });
@@ -39,8 +39,14 @@ export const useSingleplayer = (socket: Socket): SingleState => {
         [socket]
     );
 
-    const run = (code: string) => {
-        socket?.emit('run', { code, map: map.current, spawn: spawn.current });
+    const run = () => {
+        // set edited map as viewer map for replay
+        map.functions.setViewMap(map.current);
+        socket?.emit('run', {
+            map: map.functions.get(),
+            code,
+            spawn: spawn.current,
+        });
     };
 
     return { map, run, spawn, replay };

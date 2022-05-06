@@ -39,8 +39,8 @@ export class Template {
         return this;
     }
 
-    public addObjects(objects: Map<string, number>) {
-        this.settings.MAP_OBJECTS = objects;
+    public addObjects(objectEntries: [string, number][] | Map<string, number>) {
+        this.settings.MAP_OBJECTS = new Map(objectEntries);
         return this;
     }
 

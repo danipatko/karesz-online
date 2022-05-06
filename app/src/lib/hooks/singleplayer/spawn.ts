@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useState } from 'react';
+import { modulus } from '../../shared/util';
 export interface Spawn {
     x: number;
     y: number;
@@ -11,6 +12,8 @@ export type SpawnState = {
     functions: {
         setX: (x: number) => void;
         setY: (y: number) => void;
+        rotateLeft: () => void;
+        rotateRight: () => void;
         setChoosing: Dispatch<SetStateAction<boolean>>;
         setPosition: (position: [number, number]) => void;
         setRotation: (rotation: number) => void;
@@ -44,6 +47,14 @@ export const useSpawn = ({
     const setRotation = (rotation: number) =>
         setSpawn((s) => ({ ...s, rotation: clamp(rotation, 0, 3) }));
 
+    // rotate right
+    const rotateRight = () =>
+        setSpawn((s) => ({ ...s, rotation: modulus(s.rotation + 1, 4) }));
+
+    // rotate left
+    const rotateLeft = () =>
+        setSpawn((s) => ({ ...s, rotation: modulus(s.rotation - 1, 4) }));
+
     // set only x or y
     const setX = (x: number) =>
         setSpawn((s) => ({ ...s, x: clamp(x, 0, width) }));
@@ -53,6 +64,14 @@ export const useSpawn = ({
     return {
         current: spawn,
         choosing,
-        functions: { setX, setY, setChoosing, setPosition, setRotation },
+        functions: {
+            setX,
+            setY,
+            rotateLeft,
+            rotateRight,
+            setChoosing,
+            setPosition,
+            setRotation,
+        },
     };
 };

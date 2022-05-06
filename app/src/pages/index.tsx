@@ -10,10 +10,10 @@ import { useSingleplayer } from '../lib/hooks/singleplayer/game';
 import { Playground } from '../components/playground/Playground';
 
 const Index: NextPage = () => {
-    const socket = useSocket();
-    const singlePlayer = useSingleplayer(socket as any);
-    const [view, setView] = useState<View>(View.Edit);
     const code = useCode();
+    const socket = useSocket();
+    const singlePlayer = useSingleplayer(socket as any, code.code);
+    const [view, setView] = useState<View>(View.Edit);
 
     return (
         <div className='text-white h-[100vh] w-[100vw] flex'>

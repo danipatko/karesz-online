@@ -53,9 +53,12 @@ export const useReplay = ({
 
     // called when result is updated
     useEffect(() => {
+        console.log('CALLED');
         if (!result) return;
         setLoading(true);
-        setState(getSteps(result, objects));
+        const x = getSteps(result, objects);
+        setState(x);
+        console.log(x);
         setLoading(false);
     }, [result]);
 

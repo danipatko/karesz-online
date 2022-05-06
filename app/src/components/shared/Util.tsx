@@ -188,12 +188,14 @@ const Number = ({
     value,
     children,
     onChange,
+    className,
 }: {
     min?: number;
     max?: number;
     value: number;
     children: ReactNode;
     onChange: (n: number) => void;
+    className?: string;
 }) => {
     const [focused, setFocus] = useState<boolean>(false);
 
@@ -202,7 +204,7 @@ const Number = ({
             style={{
                 borderColor: focused ? 'rgb(34,127,255)' : 'transparent',
             }}
-            className='flex gap-4 bg-back p-2 border-[2px] rounded-md'
+            className={`${className} flex gap-4 bg-back p-2 border-[2px] rounded-md`}
         >
             <div className='text-zinc-500 font-bold'>{children}</div>
             <input

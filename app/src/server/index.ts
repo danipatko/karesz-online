@@ -6,6 +6,7 @@ import { GameMap } from '../lib/shared/types';
 import { Runner } from '../lib/karesz/run/runner';
 import { Template } from '../lib/karesz/run/template';
 import { Spawn } from '../lib/hooks/singleplayer/spawn';
+import { GameMapEntries } from '../lib/hooks/singleplayer/map';
 
 const randCode = () => Math.floor(1000 + Math.random() * 9000);
 
@@ -76,7 +77,7 @@ io.on('connection', (socket) => {
             code,
             spawn,
         }: {
-            map: GameMap;
+            map: GameMapEntries;
             code: string;
             spawn: Spawn;
         }) => {
@@ -84,7 +85,7 @@ io.on('connection', (socket) => {
 
             const template = Template.create()
                 .setMap({ x: map.width, y: map.height })
-                // .addObjects(map.objects)
+                .addObjects(map.objects)
                 .singlePlayer()
                 .generate(
                     { code, id: '0', name: 'default', ...spawn },

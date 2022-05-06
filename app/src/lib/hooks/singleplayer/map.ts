@@ -10,14 +10,22 @@ const defaultMap: GameMap = {
     objects: new Map(),
 };
 
+export type GameMapEntries = {
+    width: number;
+    height: number;
+    mapName: string;
+    type: 'parse' | 'load';
+    objects: [string, number][];
+};
+
 export type MapState = {
     current: GameMap;
+    viewMap: GameMap;
     editMode: boolean;
     selected: number;
     functions: {
+        get: () => GameMapEntries;
         edit: () => void;
-        save: () => void;
-        cancel: () => void;
         switchView: () => void;
         getWalls: () => [number, number][];
         setType: (type: 'parse' | 'load') => void;
@@ -26,28 +34,35 @@ export type MapState = {
         clearAll: () => void;
         setField: (position: [number, number]) => void;
         setCurrent: (field: number) => void;
+        setViewMap: (map: GameMap) => void;
     };
 };
 
 const useMap = (): MapState => {
-    const [map, setMap] = useState<GameMap>(defaultMap);
+    const [viewMap, setViewMap] = useState<GameMap>(defaultMap);
     const [current, setCurrent] = useState<number>(0);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editorMap, setEditorMap] = useState<GameMap>(defaultMap);
 
     // set the type of the map
     const setType = (type: 'parse' | 'load') =>
-        setEditorMap({ ...map, type, mapName: '' });
+        setEditorMap((m) => ({ ...m, type, mapName: '' }));
 
     // set the size of the map
     const setSize = (width: number, height: number) => {
         console.log(width, height);
-        setEditorMap({ ...map, width, height, type: 'parse', mapName: '' });
+        setEditorMap((m) => ({
+            ...m,
+            width,
+            height,
+            type: 'parse',
+            mapName: '',
+        }));
     };
 
     // TODO: load a map
     const loadMap = (mapName: string) =>
-        setEditorMap({ ...map, mapName, type: 'load' });
+        setEditorMap((m) => ({ ...m, mapName, type: 'load' }));
 
     // set a field of the map
     const setField = (position: [number, number]) => {
@@ -55,7 +70,6 @@ const useMap = (): MapState => {
         setEditorMap((m) => {
             if (current > 0) m.objects.set(pointToString(position), current);
             else m.objects.delete(pointToString(position));
-            console.log(m.objects);
             return { ...m };
         });
     };
@@ -72,22 +86,10 @@ const useMap = (): MapState => {
     // enable editing
     const edit = () => setEditMode(true);
 
-    // set editor map to current map
-    const cancel = () => {
-        setEditorMap(map);
-        setEditMode(false);
-    };
-
-    // copy editor map to current map
-    const save = () => {
-        setMap(editorMap);
-        setEditMode(false);
-    };
-
     // get walls
     const getWalls = (): [number, number][] => {
         const walls: [number, number][] = [];
-        for (const [position, field] of map.objects)
+        for (const [position, field] of viewMap.objects)
             if (field == 1) walls.push(stringToPoint(position));
         return walls;
     };
@@ -95,14 +97,20 @@ const useMap = (): MapState => {
     // switch between edit and view mode
     const switchView = () => setEditMode((x) => !x);
 
+    // get the objects
+    const get = (): GameMapEntries => ({
+        ...editorMap,
+        objects: Array.from(editorMap.objects),
+    });
+
     return {
-        current: editMode ? editorMap : map,
+        current: editMode ? editorMap : viewMap,
+        viewMap,
         editMode,
         selected: current,
         functions: {
+            get,
             edit,
-            save,
-            cancel,
             loadMap,
             setType,
             setSize,
@@ -111,6 +119,7 @@ const useMap = (): MapState => {
             clearAll,
             switchView,
             setCurrent,
+            setViewMap,
         },
     };
 };

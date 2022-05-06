@@ -1,5 +1,6 @@
 import { TemplateSettings } from '../types';
 import { SINGLEPLAYER_IMPORTS } from '../config';
+import { stringToPoint } from '../../shared/util';
 
 const getSinglePlayerTemplate = (
     rand: string,
@@ -25,7 +26,10 @@ class Program
     {
         // Assign map points from template here
         ${Array.from(settings.MAP_OBJECTS.entries())
-            .map(([key, value]) => `[(${key[0]},${key[1]})]=${value}`)
+            .map(([key, value]) => {
+                const [x, y] = stringToPoint(key);
+                return `[(${x},${y})]=${value}`;
+            })
             .join(',')}
     };
 
