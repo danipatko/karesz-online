@@ -1,7 +1,7 @@
 import { Replay } from '../shared/Replay';
 import { GameSettings } from '../shared/GameSettings';
 import { SingleState } from '../../lib/hooks/singleplayer/game';
-import { Karesz } from '../shared/karesz';
+import { Karesz } from '../shared/Karesz';
 
 export const Playground = ({
     game,
@@ -23,13 +23,15 @@ export const Playground = ({
             <GameSettings run={game.run} map={game.map} spawn={game.spawn} />
             <Replay
                 map={game.map}
-                spawn={game.spawn}
                 replay={game.replay}
+                visible={visible}
                 onClick={handleClick}
             >
                 <Karesz
                     state={game.spawn.current}
-                    className='opacity-50 z-20'
+                    className={`${
+                        game.map.editMode ? 'opacity-50' : 'hidden'
+                    } z-20`}
                 />
             </Replay>
         </div>

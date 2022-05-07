@@ -1,22 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import useController from '../../lib/hooks/shared/controller';
-import { MapState } from '../../lib/hooks/singleplayer/map';
-import { ReplayState } from '../../lib/hooks/singleplayer/replay';
-import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
+import { Karesz } from './Karesz';
+import { GameObject } from './Objects';
 import { stringToPoint } from '../../lib/shared/util';
-import { GameObject } from './objects';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapState } from '../../lib/hooks/singleplayer/map';
+import useController from '../../lib/hooks/shared/controller';
+import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
+import { ReplayState } from '../../lib/hooks/singleplayer/replay';
 
 export const Replay = ({
     map,
-    spawn,
     replay,
     onClick,
+    visible,
     children,
 }: {
     map: MapState;
-    spawn: SpawnState;
     replay: ReplayState;
     onClick: (x: number, y: number) => void;
+    visible: boolean;
     children?: React.ReactNode;
 }) => {
     const controller = useController(replay);
@@ -54,20 +55,23 @@ export const Replay = ({
         );
     };
 
-    useEffect(() => {
+    const adjust = () => {
         calculateTileSize();
-        window.onresize = () => {
-            calculateTileSize();
-            resize();
-        };
-        window.addEventListener('onload', calculateTileSize);
-    });
+        resize();
+    };
+
+    useEffect(() => {
+        adjust();
+        window.onresize = adjust;
+        // window.addEventListener('onload', adjust);
+    }, [map.current, visible]);
 
     return (
         <div
             ref={rightSide}
             className='text-white flex-1 h-screen w-full overflow-hidden'
         >
+            <button onClick={() => console.log(map.current)}>TEST</button>
             <style jsx>{`
                 div > :global(.tilesize) {
                     width: ${tileSize}px !important;
@@ -75,9 +79,18 @@ export const Replay = ({
                 }
             `}</style>
             <div className='flex gap-5 p-2 items-center'>
-                <button className='text-xl px-2 fa fa-play hover:text-[#0f0]'></button>
-                <button className='text-xl px-2 fa fa-pause hover:text-karesz'></button>
-                <button className='text-xl px-2 fa fa-square hover:text-[#f00]'></button>
+                <button
+                    onClick={controller.functions.play}
+                    className='text-xl px-2 fa fa-play hover:text-[#0f0]'
+                ></button>
+                <button
+                    onClick={controller.functions.stop}
+                    className='text-xl px-2 fa fa-pause hover:text-karesz'
+                ></button>
+                <button
+                    onClick={controller.functions.reset}
+                    className='text-xl px-2 fa fa-square hover:text-[#f00]'
+                ></button>
                 <div
                     style={{ color: controller.isPlaying ? '#0f0' : '#f00' }}
                     className='text-base font-semibold'
@@ -118,6 +131,7 @@ export const Replay = ({
                 className='bg-slate-800 h-full w-full relative overflow-hidden'
             >
                 {children}
+                <Karesz state={controller.state.players} />
                 {Array.from(map.current.objects).map(([pos, type], i) => {
                     const [x, y] = stringToPoint(pos);
                     return (
@@ -135,7 +149,7 @@ export const Replay = ({
             <div className='p-2'>
                 <input
                     min={0}
-                    max={2000}
+                    max={replay.state[0].length - 1}
                     type='range'
                     value={controller.index}
                     onChange={(e) =>

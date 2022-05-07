@@ -78,6 +78,8 @@ export class Runner {
         if (runtimeResult.exitCode !== 0)
             return { ...runtimeResult, result: null };
 
+        console.log('output:', '\n', runtimeResult.stdout);
+
         // parse result
         const result = JSON.parse(
             runtimeResult.stdout.trim().split('\n').pop() ?? '{}'

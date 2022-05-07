@@ -81,7 +81,7 @@ io.on('connection', (socket) => {
             code: string;
             spawn: Spawn;
         }) => {
-            console.log(map, code, spawn);
+            console.log(map, '\n', code, '\n', spawn);
 
             const template = Template.create()
                 .setMap({ x: map.width, y: map.height })

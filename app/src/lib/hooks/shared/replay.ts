@@ -37,14 +37,14 @@ export const nextState = (
                 step,
                 rotation: state.rotation,
             };
-        case 1:
+        case 2:
             // turn left
             return {
                 ...state,
                 step,
                 rotation: modulo(state.rotation - 1, 4),
             };
-        case 2:
+        case 3:
             // turn right
             return {
                 ...state,

@@ -39,18 +39,23 @@ export type MapState = {
 };
 
 const useMap = (): MapState => {
-    const [viewMap, setViewMap] = useState<GameMap>(defaultMap);
+    const [viewMap, setViewMap] = useState<GameMap>({
+        ...defaultMap,
+        objects: new Map(),
+    });
     const [current, setCurrent] = useState<number>(0);
     const [editMode, setEditMode] = useState<boolean>(false);
-    const [editorMap, setEditorMap] = useState<GameMap>(defaultMap);
+    const [editorMap, setEditorMap] = useState<GameMap>({
+        ...defaultMap,
+        objects: new Map(),
+    });
 
     // set the type of the map
     const setType = (type: 'parse' | 'load') =>
         setEditorMap((m) => ({ ...m, type, mapName: '' }));
 
     // set the size of the map
-    const setSize = (width: number, height: number) => {
-        console.log(width, height);
+    const setSize = (width: number, height: number) =>
         setEditorMap((m) => ({
             ...m,
             width,
@@ -58,7 +63,6 @@ const useMap = (): MapState => {
             type: 'parse',
             mapName: '',
         }));
-    };
 
     // TODO: load a map
     const loadMap = (mapName: string) =>
@@ -66,11 +70,11 @@ const useMap = (): MapState => {
 
     // set a field of the map
     const setField = (position: [number, number]) => {
-        console.log(`set field at ${position} to ${current}`);
-        setEditorMap((m) => {
-            if (current > 0) m.objects.set(pointToString(position), current);
-            else m.objects.delete(pointToString(position));
-            return { ...m };
+        console.log(`set field at ${position} to ${current}`, defaultMap);
+        setEditorMap((map) => {
+            if (current > 0) map.objects.set(pointToString(position), current);
+            else map.objects.delete(pointToString(position));
+            return { ...map };
         });
     };
 
