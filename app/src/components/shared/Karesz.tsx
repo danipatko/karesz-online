@@ -14,7 +14,7 @@ export const Karesz = ({
                     100 * state.y
                 }%) rotate(${(state.rotation % 4) * 90}deg)`,
             }}
-            className={`${className} absolute tilesize`}
+            className={`${className} absolute tilesize z-30`}
         ></div>
     );
 };

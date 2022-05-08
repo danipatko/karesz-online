@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { stringToPoint } from '../../shared/util';
 import { ReplayState } from '../singleplayer/replay';
 import { clamp, ObjectStates, Step } from './replay';
 
 export type ControllerState = {
-    state: { players: Step; objects: Map<[number, number], number> };
+    state: { players: Step; objects: [string, number][] };
     isPlaying: boolean;
     index: number;
     speed: number;
@@ -23,25 +24,27 @@ const useController = (replay: ReplayState): ControllerState => {
     const [isPlaying, setPlaying] = useState<boolean>(false);
 
     // filter out the objects that are not at the current step
-    const getObjectsAtStep = (index: number): Map<[number, number], number> => {
-        const result: Map<[number, number], number> = new Map();
-        replay.state[1].forEach((value) => {
-            Array.from(value.entries()).forEach(([inter, field]) => {
-                // the object is at the current step
-                if (inter[0] >= index && inter[1] < index)
-                    result.set(inter, field);
-            });
-        });
+    const getObjectsAtStep = (index: number): [string, number][] => {
+        const result: [string, number][] = [];
+        for (const [position, here] of replay.state.objects.entries()) {
+            for (let i = 0; i < here.length; i++) {
+                if (here[i][0] <= index - 1 && here[i + 1]?.[0] > index) {
+                    if (here[i][1] != 0) result.push([position, here[i][1]]);
+                    break;
+                }
+            }
+        }
+
         return result;
     };
 
     // get a step of players
-    const getStep = (index: number) => replay.state[0][index];
+    const getStep = (index: number) => replay.state.steps[index];
 
     // state used for animation
     const [state, setState] = useState<{
         players: Step;
-        objects: Map<[number, number], number>;
+        objects: [string, number][];
     }>({
         players: getStep(0),
         objects: getObjectsAtStep(0),
@@ -50,7 +53,7 @@ const useController = (replay: ReplayState): ControllerState => {
     // increment the index, stop if reached the end othervise update the state
     const round = () => {
         setIndex((i) => {
-            if (i + 1 >= replay.state[0].length) i = 0;
+            if (i + 1 >= replay.state.steps.length) i = 0;
             setState({
                 objects: getObjectsAtStep(i + 1),
                 players: getStep(i + 1),
@@ -62,7 +65,7 @@ const useController = (replay: ReplayState): ControllerState => {
     // go to a step
     const stepTo = (step: number) => {
         if (isPlaying) stop();
-        step = clamp(step, 0, replay.state[0].length - 1);
+        step = clamp(step, 0, replay.state.steps.length - 1);
         setIndex(step);
 
         setState({

@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // the default value of the editor hook
 const example: string = `// start here
 void FELADAT() {
-    while(true) Lépj();
+    while(true) {
+        Lépj();
+        Tegyél_le_egy_kavicsot(zöld);
+    }
 }
 
 

@@ -86,17 +86,8 @@ export const MapSettings = ({ map }: { map: MapState }) => {
         <>
             <div className='flex justify-between items-center'>
                 <div className='font-bold text-lg'>Map settings</div>
-                <Switch
-                    value={map.editMode}
-                    option1='edit'
-                    option2='view'
-                    onClick={map.functions.switchView}
-                />
             </div>
             <div className='relative'>
-                {!map.editMode && (
-                    <div className='w-full absolute h-full opacity-90 bg-lback rounded-md z-20'></div>
-                )}
                 <div className='py-2'>
                     <div className='py-1'>
                         <div className='s-text'>Map size</div>

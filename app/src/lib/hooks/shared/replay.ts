@@ -1,9 +1,18 @@
+import { pointToString } from '../../shared/util';
+
 export interface Step {
     x: number;
     y: number;
     step: number;
     rotation: number;
 }
+
+// [0] is the index of the step the object was placed
+// [1] is the field
+// e.g. [4] = 1 means object 1 was placed from step 4
+export type ObjectsAtPosition = [number, number][];
+
+export type ObjectStates = Map<string, ObjectsAtPosition>;
 
 // make sure a value is between min and max
 export const clamp = (val: number, min: number, max: number) =>
@@ -56,72 +65,29 @@ export const nextState = (
     }
 };
 
-export interface ObjectState {
-    field: number;
-    from: number; // the index of the step where object has been placed
-    to: number; // the index of the step where the object was removed
-}
-
-// K -> [from index, to index], V -> field value
-export type ObjectsAtPosition = Map<[number, number], number>;
-// K -> [x, y], V -> ^^^
-export type ObjectStates = Map<[number, number], ObjectsAtPosition>;
-
-// HANDLING OBJECTS
-// idea: create a map of the object data for each position
-// object data includes the time the object was placed and
-// the time it was removed (as the map key) and the field
-// value (as the map value)
 export const getObjectStates = (
     step: number,
     index: number,
-    position: [number, number], // position of the current player
+    position: string, // position of the current player
     objectStates: ObjectStates // the object states
 ): ObjectStates => {
     // object is being removed
     if (step == 7) {
         const objectsHere = objectStates.get(position);
-        // no object here !currently! -> return
-        if (!objectsHere || objectsHere.size == 0) return objectStates;
-
-        const lastObject = objectsHere.entries().next().value;
-        // no object here !currently! -> return
-        if (lastObject.key[1] != -1) return objectStates;
-
-        // set end time of the last object
-        objectsHere.set([lastObject.key[0], index], lastObject.value);
-        objectsHere.delete(lastObject.key);
-        // save
+        // no object here currently -> nothing to remove
+        if (!objectsHere) return objectStates;
+        // set field value to null
+        objectsHere.push([index, 0]);
         objectStates.set(position, objectsHere);
 
         // object is being placed
     } else if (step > 20) {
-        const objectsHere = objectStates.get(position);
+        let objectsHere = objectStates.get(position);
 
-        // create first object
-        if (!objectsHere)
-            return objectStates.set(
-                position,
-                new Map([[[index, -1], step - 18]])
-            );
-
-        // else add or overwrite
-        const lastObject = objectsHere.entries().next().value;
-        // no object here !currently!
-        if (lastObject.key[1] != -1)
-            return objectStates.set(
-                position,
-                objectsHere.set([index, -1], step - 18)
-            );
-
-        objectStates.set(
-            position,
-            objectsHere
-                // overwrite last object
-                .set([lastObject.key[0], index], lastObject.value)
-                // add new
-                .set([index, -1], step - 18)
-        );
+        // create first object or add new
+        if (!objectsHere) objectsHere = [];
+        objectsHere.push([index, step - 20]);
+        objectStates.set(position, objectsHere);
     }
 
     return objectStates;

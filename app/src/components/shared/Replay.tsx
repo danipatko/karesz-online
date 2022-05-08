@@ -70,7 +70,6 @@ export const Replay = ({
             ref={rightSide}
             className='text-white flex-1 h-screen w-full overflow-hidden'
         >
-            <button onClick={() => console.log(map.current)}>TEST</button>
             <style jsx>{`
                 div > :global(.tilesize) {
                     width: ${tileSize}px !important;
@@ -134,6 +133,18 @@ export const Replay = ({
             >
                 {children}
                 <Karesz state={controller.state.players} />
+                {Array.from(controller.state.objects).map(([pos, type], i) => {
+                    const [x, y] = stringToPoint(pos);
+                    return (
+                        <GameObject
+                            x={x}
+                            y={y}
+                            size={tileSize}
+                            type={type}
+                            key={i}
+                        />
+                    );
+                })}
                 {Array.from(map.current.objects).map(([pos, type], i) => {
                     const [x, y] = stringToPoint(pos);
                     return (
@@ -151,7 +162,7 @@ export const Replay = ({
             <div className='p-2'>
                 <input
                     min={0}
-                    max={replay.state[0].length - 1}
+                    max={replay.state.steps.length - 1}
                     type='range'
                     value={controller.index}
                     onChange={(e) =>

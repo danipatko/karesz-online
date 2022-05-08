@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SingleResult } from '../../shared/types';
-import { stringToPoint } from '../../shared/util';
+import { pointToString, stringToPoint } from '../../shared/util';
 import {
     getObjectStates,
     nextState,
@@ -10,7 +10,7 @@ import {
 
 export type ReplayState = {
     walls: [number, number][];
-    state: [Step[], ObjectStates];
+    state: { steps: Step[]; objects: ObjectStates };
     loading: boolean;
 };
 
@@ -18,25 +18,29 @@ export type ReplayState = {
 const getSteps = (
     result: SingleResult,
     startingObjects: Map<string, number>
-): [Step[], ObjectStates] => {
+): { steps: Step[]; objects: ObjectStates } => {
+    // set the 0th step
     const steps: Step[] = [{ step: -1, ...result.start }];
+    // initialize the objects with the starting objects
     let objects: ObjectStates = new Map();
     for (const [position, value] of startingObjects.entries())
-        objects.set(stringToPoint(position), new Map([[[0, -1], value]]));
+        objects.set(position, [[0, value]]);
 
+    // get the states for the steps
     for (const [index, step] of result.steps.entries()) {
-        // step with the player
         steps.push(nextState(step, steps[steps.length - 1]));
-        // adjust game objects
         objects = getObjectStates(
             step,
             index,
-            [steps[steps.length - 1].x, steps[steps.length - 1].y],
+            pointToString([
+                steps[steps.length - 1].x,
+                steps[steps.length - 1].y,
+            ]),
             objects
         );
     }
 
-    return [steps, objects];
+    return { steps, objects };
 };
 
 export const useReplay = ({
@@ -49,7 +53,10 @@ export const useReplay = ({
     objects: Map<string, number>;
 }): ReplayState => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [state, setState] = useState<[Step[], ObjectStates]>([[], new Map()]);
+    const [state, setState] = useState<{
+        steps: Step[];
+        objects: ObjectStates;
+    }>({ steps: [], objects: new Map() });
 
     // called when result is updated
     useEffect(() => {
