@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { modulus } from '../../shared/util';
 export interface Spawn {
     x: number;
@@ -33,13 +33,22 @@ export const useSpawn = ({
     const [spawn, setSpawn] = useState<Spawn>({ x: 0, y: 0, rotation: 0 });
     const [choosing, setChoosing] = useState<boolean>(false);
 
+    // clamp spawn position when map w/h is changes
+    useEffect(() => {
+        setSpawn((s) => ({
+            ...s,
+            x: clamp(s.x, 0, width - 1),
+            y: clamp(s.y, 0, height - 1),
+        }));
+    }, [width, height]);
+
     // set the spawn point in singleplayer
     const setPosition = (position: [number, number]) => {
         setChoosing(false);
         setSpawn((s) => ({
             ...s,
-            x: clamp(position[0], 0, width),
-            y: clamp(position[1], 0, height),
+            x: clamp(position[0], 0, width - 1),
+            y: clamp(position[1], 0, height - 1),
         }));
     };
 
@@ -57,9 +66,9 @@ export const useSpawn = ({
 
     // set only x or y
     const setX = (x: number) =>
-        setSpawn((s) => ({ ...s, x: clamp(x, 0, width) }));
+        setSpawn((s) => ({ ...s, x: clamp(x, 0, width - 1) }));
     const setY = (y: number) =>
-        setSpawn((s) => ({ ...s, y: clamp(y, 0, height) }));
+        setSpawn((s) => ({ ...s, y: clamp(y, 0, height - 1) }));
 
     return {
         current: spawn,

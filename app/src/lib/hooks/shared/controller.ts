@@ -50,6 +50,7 @@ const useController = (replay: ReplayState): ControllerState => {
     // increment the index, stop if reached the end othervise update the state
     const round = () => {
         setIndex((i) => {
+            if (i + 1 >= replay.state[0].length) i = 0;
             setState({
                 objects: getObjectsAtStep(i + 1),
                 players: getStep(i + 1),

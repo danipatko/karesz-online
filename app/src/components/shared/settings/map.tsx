@@ -58,7 +58,7 @@ const Objects = ({
 };
 
 export const MapSettings = ({ map }: { map: MapState }) => {
-    const [mapSize, setSize] = useState<string>('0');
+    const [mapSize, setSize] = useState<string>('2');
 
     const set = (size: string) => {
         if (size == mapSize) return;

@@ -62,8 +62,7 @@ export const Replay = ({
 
     useEffect(() => {
         adjust();
-        window.onresize = adjust;
-        // window.addEventListener('onload', adjust);
+        window.addEventListener('resize', adjust);
     }, [map.current, visible]);
 
     return (
@@ -79,14 +78,17 @@ export const Replay = ({
                 }
             `}</style>
             <div className='flex gap-5 p-2 items-center'>
-                <button
-                    onClick={controller.functions.play}
-                    className='text-xl px-2 fa fa-play hover:text-[#0f0]'
-                ></button>
-                <button
-                    onClick={controller.functions.stop}
-                    className='text-xl px-2 fa fa-pause hover:text-karesz'
-                ></button>
+                {!controller.isPlaying ? (
+                    <button
+                        onClick={controller.functions.play}
+                        className='text-xl px-2 fa fa-play hover:text-[#0f0]'
+                    ></button>
+                ) : (
+                    <button
+                        onClick={controller.functions.stop}
+                        className='text-xl px-2 fa fa-pause hover:text-karesz'
+                    ></button>
+                )}
                 <button
                     onClick={controller.functions.reset}
                     className='text-xl px-2 fa fa-square hover:text-[#f00]'

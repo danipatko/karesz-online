@@ -56,7 +56,7 @@ export const useReplay = ({
         if (!result) return;
         setLoading(true);
 
-        const x = getSteps(result, objects);
+        const x = getSteps(result, new Map(objects));
         setState(x);
         console.log(x); // DEBUG
 
