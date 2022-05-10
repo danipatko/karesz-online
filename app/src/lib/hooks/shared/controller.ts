@@ -28,13 +28,16 @@ const useController = (replay: ReplayState): ControllerState => {
         const result: [string, number][] = [];
         for (const [position, here] of replay.state.objects.entries()) {
             for (let i = 0; i < here.length; i++) {
-                if (here[i][0] <= index - 1 && here[i + 1]?.[0] > index) {
-                    if (here[i][1] != 0) result.push([position, here[i][1]]);
+                // here[i][0] is the step number
+                if (
+                    here[i][0] < index &&
+                    (!here[i + 1]?.[0] || here[i + 1]?.[0] >= index)
+                ) {
+                    if (here[i][1] !== 0) result.push([position, here[i][1]]);
                     break;
                 }
             }
         }
-
         return result;
     };
 
@@ -77,6 +80,7 @@ const useController = (replay: ReplayState): ControllerState => {
     // set an interval and set isPlaying
     const play = () => {
         if (isPlaying) return;
+
         setPlaying(true);
         setTimer(setInterval(() => round(), clamp(speed, 1, 2000))); // default speed is 50ms
     };

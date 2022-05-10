@@ -4,8 +4,8 @@ import { stringToPoint } from '../../lib/shared/util';
 import React, { useEffect, useRef, useState } from 'react';
 import { MapState } from '../../lib/hooks/singleplayer/map';
 import useController from '../../lib/hooks/shared/controller';
-import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
 import { ReplayState } from '../../lib/hooks/singleplayer/replay';
+import { NumberSlider } from './Util';
 
 export const Replay = ({
     map,
@@ -76,7 +76,10 @@ export const Replay = ({
                     height: ${tileSize}px !important;
                 }
             `}</style>
-            <div className='flex gap-5 p-2 items-center'>
+            <div className='flex gap-4 p-2 items-center relative'>
+                {map.editMode && (
+                    <div className='w-full absolute top-0 left-0 h-full opacity-80 bg-back z-20'></div>
+                )}
                 {!controller.isPlaying ? (
                     <button
                         onClick={controller.functions.play}
@@ -92,84 +95,84 @@ export const Replay = ({
                     onClick={controller.functions.reset}
                     className='text-xl px-2 fa fa-square hover:text-[#f00]'
                 ></button>
-                <div
-                    style={{ color: controller.isPlaying ? '#0f0' : '#f00' }}
-                    className='text-base font-semibold'
-                >
-                    {controller.isPlaying ? 'Playing' : 'Stopped'}
-                </div>
-                <div className='flex items-center gap-2'>
-                    <div>Tick</div>
-                    <input
-                        type='range'
-                        className='slider'
-                        min={1}
-                        max={2000}
-                        step={1}
-                        name='speed'
-                        value={1}
-                        onChange={(e) =>
-                            controller.functions.setSpeed(
-                                e.target.valueAsNumber
-                            )
-                        }
-                    />
-                    <div className='font-bold text-karesz-light'>
-                        {controller.speed}ms
-                    </div>
-                </div>
-            </div>
-            <div
-                id='map'
-                ref={container}
-                style={{
-                    width: size[0] + 'px',
-                    height: size[1] + 'px',
-                    backgroundSize: true ? 'cover' : 'none',
-                    backgroundImage: `url('/grids/grid-${map.current.width}x${map.current.height}.svg')`,
-                }}
-                onClick={handleClick}
-                className='bg-slate-800 h-full w-full relative overflow-hidden'
-            >
-                {children}
-                <Karesz state={controller.state.players} />
-                {Array.from(controller.state.objects).map(([pos, type], i) => {
-                    const [x, y] = stringToPoint(pos);
-                    return (
-                        <GameObject
-                            x={x}
-                            y={y}
-                            size={tileSize}
-                            type={type}
-                            key={i}
-                        />
-                    );
-                })}
-                {Array.from(map.current.objects).map(([pos, type], i) => {
-                    const [x, y] = stringToPoint(pos);
-                    return (
-                        <GameObject
-                            x={x}
-                            y={y}
-                            key={i}
-                            type={type}
-                            size={tileSize}
-                        />
-                    );
-                })}
-            </div>
-
-            <div className='p-2'>
-                <input
+                <NumberSlider
                     min={0}
-                    max={replay.state.steps.length - 1}
-                    type='range'
-                    value={controller.index}
-                    onChange={(e) =>
-                        controller.functions.stepTo(e.target.valueAsNumber)
-                    }
-                    className='slider'
-                />
+                    max={2000}
+                    value={controller.speed}
+                    onChange={controller.functions.setSpeed}
+                >
+                    Tick<span className='text-sm text-zinc-600'>(ms)</span>
+                </NumberSlider>
+            </div>
+            <div className='mx-5'>
+                <div
+                    id='map'
+                    ref={container}
+                    style={{
+                        width: size[0] + 'px',
+                        height: size[1] + 'px',
+                        backgroundSize: true ? 'cover' : 'none',
+                        backgroundImage: `url('/grids/grid-${map.current.width}x${map.current.height}.svg')`,
+                    }}
+                    onClick={handleClick}
+                    className='bg-slate-800 h-full w-full relative overflow-hidden'
+                >
+                    {/* any object */}
+                    {children}
+
+                    {/* player */}
+                    {!map.editMode && (
+                        <Karesz state={controller.state.players} />
+                    )}
+
+                    {/* replay objects */}
+                    {!map.editMode &&
+                        controller.state.objects.map(([pos, type], i) => {
+                            const [x, y] = stringToPoint(pos);
+                            return (
+                                <GameObject
+                                    x={x}
+                                    y={y}
+                                    size={tileSize}
+                                    type={type}
+                                    key={i}
+                                />
+                            );
+                        })}
+
+                    {/* editor or static view objects */}
+                    {map.editMode &&
+                        Array.from(map.current.objects).map(
+                            ([pos, type], i) => {
+                                const [x, y] = stringToPoint(pos);
+                                return (
+                                    <GameObject
+                                        x={x}
+                                        y={y}
+                                        key={i}
+                                        type={type}
+                                        size={tileSize}
+                                    />
+                                );
+                            }
+                        )}
+                </div>
+                <div>
+                    <input
+                        style={{
+                            width: size[0] + 'px',
+                        }}
+                        min={0}
+                        max={replay.state.steps.length - 1}
+                        type='range'
+                        value={controller.index}
+                        disabled={map.editMode}
+                        onChange={(e) =>
+                            controller.functions.stepTo(e.target.valueAsNumber)
+                        }
+                        className='slider'
+                    />
+                </div>
             </div>
         </div>
     );

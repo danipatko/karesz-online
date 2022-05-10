@@ -3,7 +3,7 @@ import useMap, { MapState } from './map';
 import { useEffect, useState } from 'react';
 import { SpawnState, useSpawn } from './spawn';
 import useReplay, { ReplayState } from './replay';
-import { GameMap, SingleResult } from '../../shared/types';
+import { SingleResult } from '../../shared/types';
 import { CommandResult } from '../../karesz/types';
 
 export type SingleState = {
@@ -17,13 +17,13 @@ export const useSingleplayer = (socket: Socket, code: string): SingleState => {
     const [result, setResult] = useState<SingleResult | null>(null);
     const map: MapState = useMap();
     const spawn: SpawnState = useSpawn({
-        height: map.current.height,
         width: map.current.width,
+        height: map.current.height,
     });
     const replay: ReplayState = useReplay({
-        objects: map.viewMap.objects,
         walls: map.functions.getWalls(),
         result,
+        objects: map.viewMap.objects,
     });
 
     useEffect(
