@@ -1,11 +1,10 @@
 import { Socket } from 'socket.io';
 import { Runner } from './run/runner';
-import { GameMap } from '../shared/types';
+import IPlayer from './player/player';
+import { PlayerStart } from './types';
+import { MapCreator } from './map/map';
 import { Template } from './run/template';
 import { GamePhase } from '../shared/types';
-import { GamePlayer, PlayerStart } from './types';
-import { MapCreator } from './map/map';
-import IPlayer from './player/player';
 
 export default class Session {
     protected map: MapCreator;
@@ -32,6 +31,8 @@ export default class Session {
             // size change
             (width: number, height: number) =>
                 this.announce('map_update_size', { width, height }),
+            // clear map
+            () => this.announce('map_update_clear'),
             // object change
             (position: [number, number], field: number) =>
                 this.announce('map_update_object', { position, field })

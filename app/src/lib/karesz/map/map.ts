@@ -16,6 +16,7 @@ export class MapCreator implements GameMap {
     private loadChange: ((mapName: string) => void) | null = null;
     private typeChange: ((type: 'load' | 'parse') => void) | null = null;
     private sizeChange: ((width: number, height: number) => void) | null = null;
+    private clearChange: (() => void) | null = null;
 
     public static create(): MapCreator {
         const map = new MapCreator();
@@ -34,11 +35,13 @@ export class MapCreator implements GameMap {
         typeChange: (type: 'load' | 'parse') => void,
         loadChange: (mapName: string) => void,
         sizeChange: (width: number, height: number) => void,
+        clearChange: () => void,
         objectChange: (position: [number, number], field: number) => void
     ): MapCreator {
         this.typeChange = typeChange;
         this.sizeChange = sizeChange;
         this.loadChange = loadChange;
+        this.clearChange = clearChange;
         this.objectChange = objectChange;
         return this;
     }

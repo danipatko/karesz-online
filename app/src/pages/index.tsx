@@ -11,7 +11,7 @@ import { Playground } from '../components/playground/Playground';
 
 const Index: NextPage = () => {
     const code = useCode();
-    const socket = useSocket();
+    const { socket, bind, bindAll } = useSocket();
     const singlePlayer = useSingleplayer(socket as any, code.code);
     const [view, setView] = useState<View>(View.Edit);
 

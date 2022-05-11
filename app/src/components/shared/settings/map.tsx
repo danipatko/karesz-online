@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapState } from '../../../lib/hooks/singleplayer/map';
+import { MapState } from '../../../lib/hooks/shared/map';
 import { InlineOption, Switch, Option } from '../Util';
 
 const ObjectTypes = [

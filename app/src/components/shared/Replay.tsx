@@ -2,7 +2,7 @@ import { Karesz } from './Karesz';
 import { GameObject } from './Objects';
 import { stringToPoint } from '../../lib/shared/util';
 import React, { useEffect, useRef, useState } from 'react';
-import { MapState } from '../../lib/hooks/singleplayer/map';
+import { MapState } from '../../lib/hooks/shared/map';
 import useController from '../../lib/hooks/shared/controller';
 import { ReplayState } from '../../lib/hooks/singleplayer/replay';
 import { NumberSlider } from './Util';

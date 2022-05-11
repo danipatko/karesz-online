@@ -1,7 +1,7 @@
 import { Switch } from './Util';
 import { MapSettings } from './settings/map';
 import { SpawnSettings } from './settings/spawn';
-import { MapState } from '../../lib/hooks/singleplayer/map';
+import { MapState } from '../../lib/hooks/shared/map';
 import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
 
 export const GameSettings = ({

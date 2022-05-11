@@ -32,7 +32,7 @@ export type MapState = {
         setSize: (width: number, height: number) => void;
         loadMap: (mapName: string) => void;
         clearAll: () => void;
-        setField: (position: [number, number]) => void;
+        setField: (position: [number, number], field?: number) => void;
         setCurrent: (field: number) => void;
         setViewMap: (map: GameMap) => void;
     };
@@ -69,10 +69,15 @@ const useMap = (): MapState => {
         setEditorMap((m) => ({ ...m, mapName, type: 'load' }));
 
     // set a field of the map
-    const setField = (position: [number, number]) => {
-        console.log(`set field at ${position} to ${current}`, defaultMap);
+    const setField = (position: [number, number], field?: number) => {
+        console.log(
+            `set field at ${position} to ${field ?? current}`,
+            defaultMap
+        );
+        const placement = field ?? current;
         setEditorMap((map) => {
-            if (current > 0) map.objects.set(pointToString(position), current);
+            if (placement > 0)
+                map.objects.set(pointToString(position), placement);
             else map.objects.delete(pointToString(position));
             return { ...map };
         });

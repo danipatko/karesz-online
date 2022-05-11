@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import useMap, { MapState } from './map';
+import useMap, { MapState } from '../shared/map';
 import { useEffect, useState } from 'react';
 import { SpawnState, useSpawn } from './spawn';
 import useReplay, { ReplayState } from './replay';

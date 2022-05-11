@@ -6,7 +6,7 @@ import { GameMap } from '../lib/shared/types';
 import { Runner } from '../lib/karesz/run/runner';
 import { Template } from '../lib/karesz/run/template';
 import { Spawn } from '../lib/hooks/singleplayer/spawn';
-import { GameMapEntries } from '../lib/hooks/singleplayer/map';
+import { GameMapEntries } from '../lib/hooks/shared/map';
 
 const randCode = () => Math.floor(1000 + Math.random() * 9000);
 
