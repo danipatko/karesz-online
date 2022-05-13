@@ -1,11 +1,11 @@
 import fs from 'fs';
 import {
+    CRUCIAL_IMPORTS,
     RUNNER_DIRECTORY,
     COMPILER_LOCATION,
     LIBRARY_LOCATIONS,
     MULITPLAYER_IMPORTS,
     SINGLEPLAYER_IMPORTS,
-    CRUCIAL_IMPORTS,
 } from '../config';
 import path from 'path/posix';
 import cp from 'child_process';
@@ -54,7 +54,6 @@ const run = async (
 };
 
 export class Runner {
-    //
     private template: string;
     private rand: string = random();
 
@@ -78,9 +77,9 @@ export class Runner {
         if (runtimeResult.exitCode !== 0)
             return { ...runtimeResult, result: null };
 
-        console.log('output:', '\n', runtimeResult.stdout);
+        console.log('output:', '\n', runtimeResult.stdout); // DEBUG
 
-        // parse result
+        // parse result TODO: safe parse
         const result = JSON.parse(
             runtimeResult.stdout.trim().split('\n').pop() ?? '{}'
         );

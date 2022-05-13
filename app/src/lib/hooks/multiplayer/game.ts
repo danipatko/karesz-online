@@ -1,11 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SocketState } from '../shared/socket';
 import { MapState } from '../shared/map';
+import { GamePhase } from '../../shared/types';
+
+export type Player = {
+    name: string;
+    wins: number;
+};
+
+export type SessionState = {
+    host: string;
+    code: number;
+    phase: GamePhase;
+    connected: boolean;
+};
 
 export const useMultiplayer = (socket: SocketState, map: MapState) => {
-    useEffect(() => {
-        // assign events to the client socket
+    const [session, setSession] = useState<SessionState>(null as any);
 
+    // assign events to the client socket
+    useEffect(() => {
         // map events
         socket.bind('map_update_type', ({ type }) =>
             map.functions.setType(type)

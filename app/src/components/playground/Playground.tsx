@@ -1,7 +1,7 @@
 import { Replay } from '../shared/Replay';
+import { Karesz } from '../shared/Karesz';
 import { GameSettings } from '../shared/GameSettings';
 import { SingleState } from '../../lib/hooks/singleplayer/game';
-import { Karesz } from '../shared/Karesz';
 
 export const Playground = ({
     game,

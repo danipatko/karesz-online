@@ -26,9 +26,9 @@ export default class IPlayer implements Player {
     public error: boolean = false;
     public warning: boolean = false;
     public isReady: boolean = false;
-    private announce: ((event: string, data: any) => void) | null = null;
-    private onReady: () => void;
     private onExit: (id: string) => void;
+    private onReady: () => void;
+    private announce: ((event: string, data: any) => void) | null = null;
 
     private setEvents() {
         // when a player submits their code

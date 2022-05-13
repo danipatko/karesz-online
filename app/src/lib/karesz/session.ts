@@ -1,10 +1,10 @@
 import { Socket } from 'socket.io';
 import { Runner } from './run/runner';
 import IPlayer from './player/player';
-import { PlayerStart } from './types';
+import { CommandResult, PlayerStart } from './types';
 import { MapCreator } from './map/map';
 import { Template } from './run/template';
-import { GamePhase } from '../shared/types';
+import { GamePhase, MultiResult } from '../shared/types';
 
 export default class Session {
     protected map: MapCreator;
@@ -67,11 +67,11 @@ export default class Session {
         socket.on(
             'map_update_object',
             ({
-                position,
                 field,
+                position,
             }: {
-                position: [number, number];
                 field: number;
+                position: [number, number];
             }) => this.map.addObject(position, field)
         );
     }
@@ -203,10 +203,13 @@ export default class Session {
             })
             .generate();
 
-        const result = await Runner.run(template.code, 'multi');
+        const result = (await Runner.run(
+            template.code,
+            'multi'
+        )) as CommandResult<null | MultiResult>;
 
-        if (result.exitCode !== 0) {
-            // TODO: find user who caused the error
+        if (!result || result.exitCode !== 0) {
+            // try to find player who caused the error
             // const trace = result.stderr
             //     .split('\n')
             //     .filter((x) => x.match(/^\s*at\s/))[0];

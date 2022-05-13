@@ -131,7 +131,10 @@ class Program
         RocksPlaced${rand}++;
         Color = Math.Clamp(Color, 2, 100);
         Steps${rand}.Add(20 + Color);
-        Map${rand}.Add(Position${rand}, (uint)Color);
+        if(!Map${rand}.ContainsKey(Position${rand}))
+            Map${rand}.Add(Position${rand}, (uint)Color);
+        else 
+            Map${rand}[Position${rand}] = (uint)Color;
     }
 
     static int WhatIsUnder${rand}() {
