@@ -56,20 +56,32 @@ export interface SingleResult {
     };
 }
 
+export interface PlayerResult {
+    name: string;
+    death: string;
+    alive: number;
+    steps: number[];
+    rocks: { placed: number; picked_up: number };
+    started: { x: number; y: number; rotation: number };
+    survived: boolean;
+    placement: number;
+}
+
 // game -> "{{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {{ {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }} }}");
 // player -> "\"{ID}\": {{ \"placement\":{Placement}, \"name\":\"{Name}\", \"started\": {{ \"x\":{StartState.x}, \"y\":{StartState.y}, \"rotation\":{StartState.rotation} }}, \"survived\":{(Survived ? "true" : "false")}, \"death\":\"{Death}\",  \"alive\":{RoundsAlive}, \"rocks\":{{ \"placed\":{RocksPlaced}, \"picked_up\":{RocksPickedUp} }}, \"steps\":[{string.Join(',', Steps)}] }}"
 export interface MultiResult {
     rounds: number;
     players: {
-        [key: string]: {
-            name: string;
-            death: string;
-            alive: number;
-            steps: number[];
-            rocks: { placed: number; picked_up: number };
-            started: { x: number; y: number; rotation: number };
-            survived: boolean;
-            placement: number;
-        };
+        [key: string]: PlayerResult; // key is the ID of the player
     };
+}
+
+// base player object
+export interface Spieler {
+    id: string;
+    wins: number;
+    name: string;
+    error: boolean;
+    warning: boolean;
+    isReady: boolean;
 }

@@ -25,6 +25,7 @@ export type MapState = {
     selected: number;
     functions: {
         get: () => GameMapEntries;
+        set: (map: GameMap) => void;
         edit: () => void;
         switchView: () => void;
         getWalls: () => [number, number][];
@@ -112,6 +113,9 @@ const useMap = (): MapState => {
         objects: Array.from(editorMap.objects),
     });
 
+    // set the entire map
+    const set = (map: GameMap) => setEditorMap(map);
+
     return {
         current: editMode ? editorMap : viewMap,
         viewMap,
@@ -119,6 +123,7 @@ const useMap = (): MapState => {
         selected: current,
         functions: {
             get,
+            set,
             edit,
             loadMap,
             setType,

@@ -40,7 +40,6 @@ io.on('connection', (socket) => {
         socket.emit('info', {
             found: true,
             playerCount: game.playerCount,
-            code,
         });
     });
 

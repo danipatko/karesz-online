@@ -76,4 +76,10 @@ export class MapCreator implements GameMap {
         this.objects.delete(pointToString(position));
         this.objectChange && this.objectChange(position, -1);
     }
+
+    // clear the map
+    public clear(): void {
+        this.objects.clear();
+        this.clearChange && this.clearChange();
+    }
 }

@@ -1,22 +1,105 @@
 import { useEffect, useState } from 'react';
 import { SocketState } from '../shared/socket';
 import { MapState } from '../shared/map';
-import { GamePhase } from '../../shared/types';
+import { GameMap, GamePhase, PlayerResult, Spieler } from '../../shared/types';
 
-export type Player = {
-    name: string;
-    wins: number;
-};
+export interface Player extends Spieler {
+    result: null | PlayerResult;
+}
 
 export type SessionState = {
     host: string;
     code: number;
     phase: GamePhase;
-    connected: boolean;
+    waiting: number;
+    players: Map<string, Player>;
 };
 
 export const useMultiplayer = (socket: SocketState, map: MapState) => {
-    const [session, setSession] = useState<SessionState>(null as any);
+    const [session, setSession] = useState<SessionState>({
+        code: -1,
+        host: '',
+        waiting: 0,
+        phase: GamePhase.disconnected,
+        players: new Map(),
+    });
+
+    // wrapper function for modifiying player data
+    const changePlayer = (id: string, callback: (player: Player) => Player) => {
+        setSession((s) => {
+            let player = s.players.get(id);
+            if (player) {
+                player = callback(player);
+                s.players.set(id, player);
+            }
+            return { ...s };
+        });
+    };
+
+    // phase change
+    const changePhase = ({ phase }: { phase: GamePhase }) =>
+        setSession((s) => ({ ...s, phase }));
+
+    // host change
+    const onHostChange = ({ host }: { host: string }) =>
+        setSession((s) => ({ ...s, host }));
+
+    // waiting status (when a player is ready)
+    const onWaitingChange = ({ waiting }: { waiting: number }) =>
+        setSession((s) => ({ ...s, waiting }));
+
+    // when a player joins
+    const onPlayerJoin = (player: Spieler) =>
+        setSession((s) => {
+            s.players.set(player.id, { ...player, result: null });
+            return { ...s };
+        });
+
+    // when a player leaves
+    const onPlayerLeave = ({ id }: { id: string }) =>
+        setSession((s) => {
+            s.players.delete(id);
+            return { ...s };
+        });
+
+    // when the code fails to execute
+    const onError = ({
+        stderr,
+        stdout,
+    }: {
+        stderr: string;
+        stdout: string;
+    }) => {
+        console.log(stdout);
+        console.error(stderr);
+    };
+
+    // player is ready (or not)
+    const onPlayerReady = ({ id, ready }: { id: string; ready: boolean }) =>
+        changePlayer(id, (p) => ({ ...p, isReady: ready }));
+
+    // on join
+    const onFetch = ({
+        map: _map,
+        players,
+        ...data
+    }: {
+        map: GameMap;
+        code: number;
+        host: string;
+        phase: GamePhase;
+        players: Spieler[];
+    }) => {
+        setSession((s) => ({
+            ...s,
+            ...data,
+            // initialize players
+            players: new Map(
+                players.map((p) => [p.id, { ...p, result: null }])
+            ),
+        }));
+        map.functions.set(_map);
+    };
 
     // assign events to the client socket
     useEffect(() => {
@@ -39,19 +122,3 @@ export const useMultiplayer = (socket: SocketState, map: MapState) => {
 
     return 0;
 };
-
-/* 
-this.map = MapCreator.create().onChange(
-            // type change
-            (type: 'load' | 'parse') =>
-                this.announce('map_update_type', { type }),
-            // loaded map change
-            (mapName: string) => this.announce('map_update_load', { mapName }),
-            // size change
-            (width: number, height: number) =>
-                this.announce('map_update_size', { width, height }),
-            // object change
-            (position: [number, number], field: number) =>
-                this.announce('map_update_object', { position, field })
-        );
-*/

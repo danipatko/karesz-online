@@ -1,15 +1,5 @@
 import { Socket } from 'socket.io';
-import { GameMap, GamePhase } from '../../shared/types';
-
-// on client side
-export interface Spieler {
-    id: string;
-    wins: number;
-    name: string;
-    error: boolean;
-    warning: boolean;
-    isReady: boolean;
-}
+import { GameMap, GamePhase, Spieler } from '../../shared/types';
 
 // on server side
 export interface Player extends Spieler {
@@ -18,12 +8,12 @@ export interface Player extends Spieler {
 }
 
 export default class IPlayer implements Player {
-    public socket: Socket;
     public id: string;
     public name: string;
     public wins: number = 0;
     public code: string = '';
     public error: boolean = false;
+    public socket: Socket;
     public warning: boolean = false;
     public isReady: boolean = false;
     private onExit: (id: string) => void;
@@ -39,7 +29,7 @@ export default class IPlayer implements Player {
             this.error = false;
 
             this.announce && // TODO: automatically clear warnings and errors client-side
-                this.announce('player_ready', { id: this.id, ready: true });
+                this.announce('player_ready', { id: this.id, isReady: true });
             this.onReady();
         });
 
@@ -47,7 +37,10 @@ export default class IPlayer implements Player {
         this.socket.on('player_unready', () => {
             this.isReady = false;
             this.announce &&
-                this.announce('player_unready', { id: this.id, ready: false });
+                this.announce('player_unready', {
+                    id: this.id,
+                    isReady: false,
+                });
         });
 
         // when a player sends something to chat

@@ -74,6 +74,8 @@ export default class Session {
                 position: [number, number];
             }) => this.map.addObject(position, field)
         );
+        // clear map
+        socket.on('map_update_clear', () => this.map.clear());
     }
 
     // set the host of the game
