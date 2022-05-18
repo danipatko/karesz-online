@@ -32,6 +32,7 @@ export type MultiplayerState = {
         setName: (name: string) => void;
         setCode: (code: string) => void;
         promtName: () => void;
+        handleSubmit: () => void;
     };
 };
 
@@ -199,11 +200,15 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
 
     // join a session
     const join = () => {
+        console.log('joining to ', code);
         if (code > 9999 || code < 1000 || isNaN(code))
             return void console.error('invalid code');
 
+        const x = name.replaceAll(/[^a-zA-Z\d\-\.\_]/gm, '').substring(0, 50);
+        if (!x.length) return void console.error('invalid name');
+
         socket.socket?.emit('join', {
-            name: name,
+            name: x,
             code,
         });
     };
@@ -219,6 +224,12 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
     const leave = () => {
         socket.socket?.emit('exit');
         exit();
+    };
+
+    // start a session
+    const handleSubmit = () => {
+        if (code == 0) create();
+        else join();
     };
 
     // parse code from input
@@ -242,6 +253,7 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
             setCode: onCodeChange,
             setName,
             promtName,
+            handleSubmit,
         },
     };
 };
