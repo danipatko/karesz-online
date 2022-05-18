@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { GameMap } from '../../shared/types';
 import { pointToString, stringToPoint } from '../../shared/util';
 
@@ -34,6 +34,7 @@ export type MapState = {
         loadMap: (mapName: string) => void;
         clearAll: () => void;
         setField: (position: [number, number], field?: number) => void;
+        setToView: () => void;
         setCurrent: (field: number) => void;
         setViewMap: (map: GameMap) => void;
     };
@@ -116,6 +117,9 @@ const useMap = (): MapState => {
     // set the entire map
     const set = (map: GameMap) => setEditorMap(map);
 
+    // sets the view map to the editor map
+    const setToView = () => setViewMap(editorMap);
+
     return {
         current: editMode ? editorMap : viewMap,
         viewMap,
@@ -131,6 +135,7 @@ const useMap = (): MapState => {
             getWalls,
             setField,
             clearAll,
+            setToView,
             switchView,
             setCurrent,
             setViewMap,

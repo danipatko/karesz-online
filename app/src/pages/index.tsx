@@ -6,13 +6,16 @@ import Home from '../components/subpages/Home';
 import { useCode } from '../lib/hooks/shared/code';
 import { useSocket } from '../lib/hooks/shared/socket';
 import { CodeEditor } from '../components/shared/Editor';
-import { useSingleplayer } from '../lib/hooks/singleplayer/game';
+import { Multiplayer } from '../components/multiplayer/Multi';
+import { useMultiplayer } from '../lib/hooks/multiplayer/game';
 import { Playground } from '../components/playground/Playground';
+import { useSingleplayer } from '../lib/hooks/singleplayer/game';
 
 const Index: NextPage = () => {
     const code = useCode();
-    const { socket, bind, bindAll } = useSocket();
-    const singlePlayer = useSingleplayer(socket as any, code.code);
+    const socket = useSocket();
+    const multiplayer = useMultiplayer(socket);
+    const singlePlayer = useSingleplayer(socket.socket as any, code.code);
     const [view, setView] = useState<View>(View.Edit);
 
     return (
@@ -24,6 +27,10 @@ const Index: NextPage = () => {
                 <Playground
                     game={singlePlayer}
                     visible={view === View.Playground}
+                />
+                <Multiplayer
+                    state={multiplayer}
+                    visible={view === View.Multiplayer}
                 />
             </div>
         </div>

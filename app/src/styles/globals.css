@@ -240,7 +240,11 @@
     }
 
     .lightbutton {
-        @apply uppercase text-sm text-karesz bg-white hover:text-white hover:bg-karesz font-bold p-2 rounded-md transition-colors;
+        @apply uppercase text-sm text-karesz bg-white hover:text-white hover:bg-karesz font-bold rounded-md transition-colors;
+    }
+
+    .bluebutton {
+        @apply uppercase text-sm bg-karesz text-white hover:bg-white hover:text-karesz font-bold rounded-md transition-colors;
     }
 
     .button {

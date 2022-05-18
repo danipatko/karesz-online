@@ -21,6 +21,12 @@ export const Nav = ({
             >
                 <i className='fa fa-play'></i>
             </Item>
+            <Item
+                click={() => setView(View.Multiplayer)}
+                current={view === View.Multiplayer}
+            >
+                <i className='fa fa-network-wired'></i>
+            </Item>
             <Item click={() => setView(View.Docs)} current={view === View.Docs}>
                 <i className='fa fa-book'></i>
             </Item>

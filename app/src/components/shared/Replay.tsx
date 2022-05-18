@@ -68,6 +68,7 @@ export const Replay = ({
     return (
         <div
             ref={rightSide}
+            style={{ display: visible ? 'block' : 'none' }}
             className='text-white flex-1 h-screen w-full overflow-hidden'
         >
             <style jsx>{`

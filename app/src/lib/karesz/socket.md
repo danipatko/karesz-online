@@ -32,6 +32,8 @@
 -   map_update_object: { position, field }
 -   map_update_clear: { }
 
+-   info: { found, playerCount? }
+
 -   game_host_change: { host }
 -   game_phase_change: { phase }
 -   game_info_waiting: { waiting }
