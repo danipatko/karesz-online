@@ -16,7 +16,7 @@ export const PreJoin = ({
     playerCount: number;
 }) => {
     return (
-        <div className='flex justify-center items-center h-[80vh]'>
+        <div className='flex justify-center items-center h-screen w-full'>
             <div className='bg-main rounded-md p-10 text-center'>
                 <h1 className='text-white font-semibold text-2xl mb-5'>
                     {create ? 'Creating new game' : `Join #${code}`}
@@ -33,7 +33,7 @@ export const PreJoin = ({
                         type='text'
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className='p-2 text-white text-xl outline-none border-[3px] bg-main border-main-highlight rounded-md transition-colors focus:border-karesz'
+                        className='p-2 text-white text-xl outline-none border-[2px] bg-main border-zinc-500 rounded-md transition-colors focus:border-karesz'
                         placeholder='Display name'
                     />
                 </div>

@@ -34,9 +34,10 @@ io.on('connection', (socket) => {
     // fetch minimal game data / check if exists
     socket.on('info', ({ code }: { code: number }) => {
         const game = gameManager.get(code);
-        if (game === undefined)
+        if (game === undefined) {
+            console.log('sending response'); // DEBUG
             return void socket.emit('info', { found: false });
-
+        }
         socket.emit('info', {
             found: true,
             playerCount: game.playerCount,

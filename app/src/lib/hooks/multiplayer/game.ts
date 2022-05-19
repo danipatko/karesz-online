@@ -1,9 +1,8 @@
-import { clamp } from '../shared/replay';
-import useMap, { MapState } from '../shared/map';
 import { useEffect, useState } from 'react';
-import { SocketState } from '../shared/socket';
-import { GameMap, GamePhase, PlayerResult, Spieler } from '../../shared/types';
+import useMap, { MapState } from '../shared/map';
 import useReplay, { ReplayState } from '../singleplayer/replay';
+import { GameMap, GamePhase, PlayerResult, Spieler } from '../../shared/types';
+import { Socket } from 'socket.io-client';
 
 export interface Player extends Spieler {
     result: null | PlayerResult;
@@ -23,12 +22,14 @@ export type MultiplayerState = {
     code: number;
     replay: ReplayState;
     session: SessionState;
+    creating: boolean;
     playerCount: number;
     functions: {
         info: () => void;
         join: () => void;
         leave: () => void;
         create: () => void;
+        preJoin: () => void;
         setName: (name: string) => void;
         setCode: (code: string) => void;
         promtName: () => void;
@@ -44,7 +45,10 @@ export const defaultSession: SessionState = {
     players: new Map(),
 };
 
-export const useMultiplayer = (socket: SocketState): MultiplayerState => {
+export const useMultiplayer = (
+    socket: Socket | null,
+    bind: (events: { [event: string]: (...args: any[]) => void }) => void
+): MultiplayerState => {
     const map = useMap();
     const replay = useReplay({
         result: null,
@@ -54,6 +58,7 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
 
     const [name, setName] = useState<string>('');
     const [code, setCode] = useState<number>(0);
+    const [creating, setCreating] = useState<boolean>(false);
     const [session, setSession] = useState<SessionState>(defaultSession);
     const [playerCount, setPlayerCount] = useState<number>(0);
 
@@ -123,6 +128,7 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
         phase: GamePhase;
         players: Spieler[];
     }) => {
+        console.log(`Fetch called `, players);
         setSession((s) => ({
             ...s,
             ...data,
@@ -136,42 +142,32 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
 
     // assign events to the client socket
     useEffect(() => {
-        // map events (changes are made in the editor map)
-        socket.bind('map_update_type', ({ type }) =>
-            map.functions.setType(type)
-        );
-        socket.bind('map_update_size', ({ width, height }) =>
-            map.functions.setSize(width, height)
-        );
-        socket.bind('map_update_load', ({ mapName }) =>
-            map.functions.loadMap(mapName)
-        );
-        socket.bind('map_update_object', ({ position, field }) =>
-            map.functions.setField(position, field)
-        );
-        socket.bind('map_update_clear', () => map.functions.clearAll());
+        bind({
+            map_update_type: ({ type }) => map.functions.setType(type),
+            map_update_size: ({ width, height }) =>
+                map.functions.setSize(width, height),
+            map_update_load: ({ mapName }) => map.functions.loadMap(mapName),
+            map_update_object: ({ position, field }) =>
+                map.functions.setField(position, field),
+            map_update_clear: map.functions.clearAll,
 
-        // game state events
-        socket.bind('game_host_change', onHostChange);
-        socket.bind('game_phase_chage', changePhase);
-        socket.bind('game_info_waiting', onWaitingChange);
-        socket.bind('fetch', onFetch);
+            // game state events
+            game_host_change: onHostChange,
+            game_phase_chage: changePhase,
+            game_info_waiting: onWaitingChange,
+            fetch: onFetch,
 
-        // player events
-        socket.bind('player_join', onPlayerJoin);
-        socket.bind('player_leave', onPlayerLeave);
-        socket.bind('player_ready', onPlayerReady);
+            // player events
+            player_join: onPlayerJoin,
+            player_leave: onPlayerLeave,
+            player_ready: onPlayerReady,
 
-        // game run events
-        socket.bind('game_error', onError);
-        socket.bind('game_end', (data: any) => {
-            console.log(data);
-            map.functions.setToView();
+            // game run events
+            game_error: onError,
+            game_end: () => {},
+            info: onInfo,
         });
-
-        // other
-        socket.bind('info', onInfo);
-    }, [socket]);
+    }, []);
 
     // handle info fetch
     const onInfo = ({
@@ -181,8 +177,10 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
         found: boolean;
         playerCount?: number;
     }) => {
-        if (!found || playerCount === undefined)
+        if (!found || playerCount === undefined) {
+            setCode(0);
             return void console.error('game not found');
+        }
         setPlayerCount(playerCount);
         promtName();
     };
@@ -196,7 +194,10 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
     };
 
     // get information about a session (does it exist, player count)
-    const info = () => socket.socket?.emit('info', { code });
+    const info = () => {
+        setCreating(false);
+        socket?.emit('info', { code });
+    };
 
     // join a session
     const join = () => {
@@ -207,10 +208,15 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
         const x = name.replaceAll(/[^a-zA-Z\d\-\.\_]/gm, '').substring(0, 50);
         if (!x.length) return void console.error('invalid name');
 
-        socket.socket?.emit('join', {
+        socket?.emit('join', {
             name: x,
             code,
         });
+    };
+
+    const preJoin = () => {
+        setCreating(true);
+        promtName();
     };
 
     // prejoin screen
@@ -218,11 +224,11 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
         setSession((s) => ({ ...s, phase: GamePhase.prejoin }));
 
     // create new session
-    const create = () => socket.socket?.emit('create', { name });
+    const create = () => socket?.emit('create', { name });
 
     // leave a session
     const leave = () => {
-        socket.socket?.emit('exit');
+        socket?.emit('exit');
         exit();
     };
 
@@ -243,6 +249,7 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
         code,
         name,
         replay,
+        creating,
         playerCount,
         session,
         functions: {
@@ -250,6 +257,7 @@ export const useMultiplayer = (socket: SocketState): MultiplayerState => {
             join,
             leave,
             create,
+            preJoin,
             setCode: onCodeChange,
             setName,
             promtName,

@@ -103,14 +103,15 @@ export default class IPlayer implements Player {
         phase: GamePhase,
         players: Map<string, IPlayer>
     ): IPlayer {
+        const playerArray: Spieler[] = [];
+        for (const player of players.values()) playerArray.push(player.json());
+
         this.socket.emit('fetch', {
             map,
             code,
             host,
             phase,
-            players: Object.values(players.values()).map((player) =>
-                player.json()
-            ),
+            players: playerArray,
         });
         return this;
     }

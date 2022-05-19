@@ -18,12 +18,20 @@ export const Multiplayer = ({
         >
             <div className='p-4 h-full w-1/4 flex flex-col justify-between bg-lback abg-slate-800'>
                 {JSON.stringify(state)}
+
+                <div>
+                    {Array.from(state.session.players.entries()).map(
+                        ([id, player]) => (
+                            <div>{JSON.stringify(player)}</div>
+                        )
+                    )}
+                </div>
             </div>
             {state.session.phase === GamePhase.disconnected ? (
                 <Join
                     code={state.code}
                     join={state.functions.info}
-                    create={state.functions.promtName}
+                    create={state.functions.preJoin}
                     setCode={state.functions.setCode}
                 />
             ) : state.session.phase === GamePhase.prejoin ? (
@@ -31,9 +39,9 @@ export const Multiplayer = ({
                     code={state.code}
                     name={state.name}
                     exit={state.functions.leave}
-                    create={state.code < 1000}
+                    create={state.creating}
                     submit={() =>
-                        state.code < 1000
+                        state.creating
                             ? state.functions.create()
                             : state.functions.join()
                     }

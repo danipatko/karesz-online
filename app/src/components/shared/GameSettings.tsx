@@ -1,6 +1,6 @@
 import { Switch } from './Util';
-import { MapSettings } from './settings/map';
-import { SpawnSettings } from './settings/spawn';
+import { MapSettings } from './settings/Map';
+import { SpawnSettings } from './settings/Spawn';
 import { MapState } from '../../lib/hooks/shared/map';
 import { SpawnState } from '../../lib/hooks/singleplayer/spawn';
 
@@ -32,7 +32,7 @@ export const GameSettings = ({
             </div>
             {run && (
                 <div>
-                    <button onClick={run} className='lightbutton w-full'>
+                    <button onClick={run} className='lightbutton w-full p-2'>
                         run
                     </button>
                 </div>

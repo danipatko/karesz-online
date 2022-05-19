@@ -1,32 +1,29 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-export type SocketState = {
-    socket: Socket | null;
-    bind: (event: string, callback: (...args: any[]) => void) => void;
-    bindAll: (
-        events: { event: string; callback: (...args: any[]) => void }[]
-    ) => void;
-};
-
-export const useSocket = (): SocketState => {
+export const useSocket = (): [
+    Socket | null,
+    (events: { [event: string]: (...args: any[]) => void }) => void
+] => {
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
         const s = io();
         setSocket(s);
-    }, [setSocket]);
+    }, []);
 
-    // bind a listener to the socket
-    const bind = (event: string, callback: (...args: any[]) => void) =>
-        socket?.on(event, callback);
-
-    // bind a series of events to the socket
-    const bindAll = (
-        events: { event: string; callback: (...args: any[]) => void }[]
-    ) => {
-        for (const { event, callback } of events) bind(event, callback);
+    // bind listeners only once
+    const bind = (events: { [event: string]: (...args: any[]) => void }) => {
+        console.log('Called');
+        setSocket((s) => {
+            if (!s) return null;
+            for (const [event, callback] of Object.entries(events)) {
+                s.off(event); // make sure an event has only one listener
+                s.on(event, callback);
+            }
+            return s;
+        });
     };
 
-    return { socket, bind, bindAll };
+    return [socket, bind];
 };

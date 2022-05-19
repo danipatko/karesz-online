@@ -118,19 +118,22 @@ export default class Session {
             // bind events
             .ready(this.checkCanStart)
             .leave(this.removePlayer)
-            .onEvent(this.announce)
-            // send player data about the game
-            .fetch(
-                this.map.fetch(),
-                this.code,
-                this.host,
-                this.phase,
-                this.players
-            );
+            .onEvent(this.announce);
 
         this.players.set(socket.id, player);
-        this.announce('player_join', player.json());
 
+        console.log(Object.entries(this.players), this.players.size);
+
+        // send player data about the game
+        player.fetch(
+            this.map.fetch(),
+            this.code,
+            this.host,
+            this.phase,
+            this.players
+        );
+
+        this.announce('player_join', player.json());
         return this;
     }
 
@@ -239,6 +242,7 @@ export default class Session {
     }
 
     public get playerCount(): number {
+        console.log(this.players);
         return this.players.size;
     }
 }

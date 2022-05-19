@@ -49,7 +49,7 @@ const Objects = ({
                 ))}
             </div>
             <div className='py-2 text-center'>
-                <button onClick={onClear} className='lightbutton'>
+                <button onClick={onClear} className='lightbutton p-2'>
                     clear all
                 </button>
             </div>

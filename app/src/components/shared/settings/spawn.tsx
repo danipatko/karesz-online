@@ -21,7 +21,7 @@ export const SpawnSettings = ({ spawn }: { spawn: SpawnState }) => {
                 </Number>
                 <div
                     onClick={() => spawn.functions.setChoosing((x) => !x)}
-                    className='lightbutton col-span-2 text-center cursor-pointer'
+                    className='lightbutton p-2 col-span-2 text-center cursor-pointer'
                 >
                     {spawn.choosing ? 'click to place' : 'choose on map'}
                 </div>

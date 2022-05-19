@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io';
+import { Socket } from 'socket.io-client';
 import useMap, { MapState } from '../shared/map';
 import { useEffect, useState } from 'react';
 import { SpawnState, useSpawn } from './spawn';
@@ -13,7 +13,10 @@ export type SingleState = {
     replay: ReplayState;
 };
 
-export const useSingleplayer = (socket: Socket, code: string): SingleState => {
+export const useSingleplayer = (
+    socket: Socket | null,
+    code: string
+): SingleState => {
     const [result, setResult] = useState<SingleResult | null>(null);
     const map: MapState = useMap();
     const spawn: SpawnState = useSpawn({
