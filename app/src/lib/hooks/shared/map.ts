@@ -89,14 +89,7 @@ const useMap = (
     // set a field of the map
     const setField = (position: [number, number], field?: number) => {
         setEditorMap((m) => {
-            console.log(
-                `set field at ${pointToString(position)} to ${
-                    field ?? current
-                }`,
-                m.objects,
-                position
-            ); // DEBUG
-
+            // copy objects
             const o = new Map(m.objects);
             if ((field ?? current) > 0)
                 o.set(pointToString(position), field ?? current);

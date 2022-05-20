@@ -22,25 +22,19 @@ export default class IPlayer implements Player {
 
     private setEvents() {
         // when a player submits their code
-        this.socket.on('player_ready', ({ code }: { code: string }) => {
-            this.isReady = true;
-            this.code = code;
+        this.socket.on('player_ready', ({ code }: { code?: string }) => {
+            this.isReady = !this.isReady;
+            this.code = this.isReady && code ? code : '';
             this.warning = false;
             this.error = false;
 
-            this.announce && // TODO: automatically clear warnings and errors client-side
-                this.announce('player_ready', { id: this.id, isReady: true });
-            this.onReady();
-        });
-
-        // when a player unsubmits their code
-        this.socket.on('player_unready', () => {
-            this.isReady = false;
             this.announce &&
-                this.announce('player_unready', {
+                this.announce('player_ready', {
                     id: this.id,
-                    isReady: false,
+                    isReady: true,
                 });
+
+            this.onReady();
         });
 
         // when a player sends something to chat

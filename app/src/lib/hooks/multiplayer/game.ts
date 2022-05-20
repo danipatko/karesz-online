@@ -1,15 +1,9 @@
+import { clamp } from '../shared/replay';
+import { Socket } from 'socket.io-client';
 import { useEffect, useState } from 'react';
 import useMap, { MapState } from '../shared/map';
 import useReplay, { ReplayState } from '../singleplayer/replay';
-import { Socket } from 'socket.io-client';
-import {
-    GameMap,
-    GamePhase,
-    IGameMap,
-    PlayerResult,
-    Spieler,
-} from '../../shared/types';
-import { clamp } from '../shared/replay';
+import { GamePhase, IGameMap, PlayerResult, Spieler } from '../../shared/types';
 
 export interface Player extends Spieler {
     result: null | PlayerResult;
@@ -20,6 +14,7 @@ export type SessionState = {
     code: number;
     phase: GamePhase;
     waiting: number;
+    isReady: boolean;
     players: Map<string, Player>;
 };
 
@@ -27,6 +22,7 @@ export type MultiplayerState = {
     map: MapState;
     name: string;
     code: number;
+    isHost: boolean;
     replay: ReplayState;
     session: SessionState;
     players: [string, Player][];
@@ -35,6 +31,7 @@ export type MultiplayerState = {
     functions: {
         info: () => void;
         join: () => void;
+        ready: () => void;
         leave: () => void;
         create: () => void;
         preJoin: () => void;
@@ -49,13 +46,15 @@ export const defaultSession: SessionState = {
     code: -1,
     host: '',
     waiting: 0,
+    isReady: false,
     phase: GamePhase.disconnected,
     players: new Map(),
 };
 
 export const useMultiplayer = (
-    socket: Socket | null,
-    bind: (events: { [event: string]: (...args: any[]) => void }) => void
+    socket: Socket,
+    bind: (events: { [event: string]: (...args: any[]) => void }) => void,
+    editor: string
 ): MultiplayerState => {
     const map = useMap((ev, data) => socket?.emit(ev, data));
 
@@ -122,8 +121,18 @@ export const useMultiplayer = (
     };
 
     // player is ready (or not)
-    const onPlayerReady = ({ id, isReady }: { id: string; isReady: boolean }) =>
+    const onPlayerReady = ({
+        id,
+        isReady,
+    }: {
+        id: string;
+        isReady: boolean;
+    }) => {
+        console.log('recevied player ready', socket.id, id);
+        // set own status
+        if (id === socket.id) setSession((s) => ({ ...s, isReady }));
         changePlayer(id, (p) => ({ ...p, isReady }));
+    };
 
     // on join
     const onFetch = ({
@@ -137,7 +146,6 @@ export const useMultiplayer = (
         phase: GamePhase;
         players: Spieler[];
     }) => {
-        console.log(_map);
         setSession((s) => ({
             ...s,
             ...data,
@@ -264,10 +272,16 @@ export const useMultiplayer = (
         );
     };
 
+    // ready up
+    const ready = () => {
+        socket?.emit('player_ready', { code: editor });
+    };
+
     return {
         map,
         code,
         name,
+        isHost: session.host === socket?.id,
         replay,
         session,
         players: getScoreboard(),
@@ -276,6 +290,7 @@ export const useMultiplayer = (
         functions: {
             info,
             join,
+            ready,
             leave,
             create,
             preJoin,

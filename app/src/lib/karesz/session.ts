@@ -1,11 +1,11 @@
 import { Socket } from 'socket.io';
 import { Runner } from './run/runner';
 import IPlayer from './player/player';
-import { CommandResult, PlayerStart } from './types';
 import { MapCreator } from './map/map';
 import { Template } from './run/template';
-import { GameMap, GamePhase, MultiResult } from '../shared/types';
 import { pointToString } from '../shared/util';
+import { CommandResult, PlayerStart } from './types';
+import { GamePhase, MultiResult } from '../shared/types';
 
 export default class Session {
     protected map: MapCreator;
@@ -45,7 +45,7 @@ export default class Session {
 
     // emit an event for every player
     private announce(ev: string, params?: object): void {
-        console.log(`Announce '${ev}' to ${this.players.size} player(s)`); // DEBUG
+        console.log(`Announce '${ev}' to ${this.players?.size} player(s)`); // DEBUG
         for (const { socket } of this.players.values())
             socket.emit(ev, { ...params });
     }
@@ -101,6 +101,7 @@ export default class Session {
 
     // check if everyone is ready
     private checkCanStart(): void {
+        console.log('checking can start'); // DEBUG
         let readyPeople = 0;
         for (const { isReady } of this.players.values())
             if (isReady) readyPeople++;
@@ -124,13 +125,11 @@ export default class Session {
 
         const player = IPlayer.create(name, socket)
             // bind events
-            .ready(this.checkCanStart)
-            .leave(this.removePlayer)
-            .onEvent(this.announce);
+            .ready(() => this.checkCanStart())
+            .leave((id) => this.removePlayer(id))
+            .onEvent((ev, data) => this.announce(ev, data));
 
         this.players.set(socket.id, player);
-
-        console.log(Object.entries(this.players), this.players.size);
 
         // send player data about the game
         player.fetch(
@@ -196,6 +195,7 @@ export default class Session {
 
     // start the game
     public async startGame(): Promise<void> {
+        console.log('STARTING GAME ---'); // DEBUG
         this.setPhase(GamePhase.running);
         const startState = this.getPlayerStartingPostions();
 

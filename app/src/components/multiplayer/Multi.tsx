@@ -41,11 +41,11 @@ export const Multiplayer = ({
                     playerCount={game.playerCount}
                 />
             ) : (
-                <div className='p-4 h-full w-1/4  bg-lback abg-slate-800'>
-                    <div>
-                        <div className='mb-5 flex justify-between items-center'>
+                <div className='p-4 h-full w-1/4 flex flex-col bg-lback abg-slate-800'>
+                    <div className='flex-1'>
+                        <div className='mb-5 px-2 flex justify-between items-center'>
                             <div className='text-2xl font-bold'>
-                                #{game.session.code}
+                                Game #{game.session.code}
                             </div>
                             <div>
                                 <Switch
@@ -56,10 +56,20 @@ export const Multiplayer = ({
                                 />
                             </div>
                         </div>
-                        <div>{JSON.stringify(game.map)}</div>
-                        <MultiMapSettings map={game.map} />
+                        {!game.isHost || !game.map.editMode ? (
+                            <div>{<Scoreboard game={game} />}</div>
+                        ) : (
+                            <MultiMapSettings map={game.map} />
+                        )}
                     </div>
-                    <div>{<Scoreboard game={game} />}</div>
+                    <div>
+                        <button
+                            onClick={game.functions.ready}
+                            className='w-full lightbutton p-2'
+                        >
+                            {game.session.isReady ? 'unready' : 'ready'}
+                        </button>
+                    </div>
                 </div>
             )}
             <Replay

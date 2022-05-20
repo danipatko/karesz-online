@@ -14,7 +14,7 @@ import { useSingleplayer } from '../lib/hooks/singleplayer/game';
 const Index: NextPage = () => {
     const code = useCode();
     const [socket, bind] = useSocket();
-    const multiplayer = useMultiplayer(socket, bind);
+    const multiplayer = useMultiplayer(socket, bind, code.code);
     const singlePlayer = useSingleplayer(socket, code.code);
     const [view, setView] = useState<View>(View.Edit);
 
