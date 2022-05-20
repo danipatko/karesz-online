@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io';
-import { GameMap, GamePhase, Spieler } from '../../shared/types';
+import { GameMap, GamePhase, IGameMap, Spieler } from '../../shared/types';
 
 // on server side
 export interface Player extends Spieler {
@@ -97,7 +97,7 @@ export default class IPlayer implements Player {
 
     // emit info about the game when joining for the first time
     public fetch(
-        map: GameMap,
+        map: IGameMap,
         code: number,
         host: string,
         phase: GamePhase,

@@ -41,6 +41,14 @@ export interface GameMap {
     objects: Map<string, number>;
 }
 
+export interface IGameMap {
+    type: 'load' | 'parse';
+    width: number;
+    height: number;
+    mapName: string;
+    objects: [string, number][];
+}
+
 // "{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":0, \\"y\\":0, \\"rotation\\":0 }} }}");
 export interface SingleResult {
     ended: string;

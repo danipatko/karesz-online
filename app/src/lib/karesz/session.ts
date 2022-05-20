@@ -4,7 +4,8 @@ import IPlayer from './player/player';
 import { CommandResult, PlayerStart } from './types';
 import { MapCreator } from './map/map';
 import { Template } from './run/template';
-import { GamePhase, MultiResult } from '../shared/types';
+import { GameMap, GamePhase, MultiResult } from '../shared/types';
+import { pointToString } from '../shared/util';
 
 export default class Session {
     protected map: MapCreator;
@@ -52,16 +53,18 @@ export default class Session {
     // bind map events to the host's socket
     private setMapEvents(socket: Socket): void {
         // type change
-        socket.on('map_update_type', (type: 'load' | 'parse') =>
+        socket.on('map_update_type', ({ type }: { type: 'load' | 'parse' }) =>
             this.map.setType(type)
         );
         // loaded map change
-        socket.on('map_update_load', (mapName: string) =>
+        socket.on('map_update_load', ({ mapName }: { mapName: string }) =>
             this.map.loadMap(mapName)
         );
         // size change
-        socket.on('map_update_size', (width: number, height: number) =>
-            this.map.setSize(width, height)
+        socket.on(
+            'map_update_size',
+            ({ width, height }: { width: number; height: number }) =>
+                this.map.setSize(width, height)
         );
         // object update
         socket.on(
@@ -72,7 +75,12 @@ export default class Session {
             }: {
                 field: number;
                 position: [number, number];
-            }) => this.map.addObject(position, field)
+            }) => {
+                console.log(
+                    'adding field ' + field + ' at ' + pointToString(position)
+                ); // DEBUG
+                this.map.addObject(position, field);
+            }
         );
         // clear map
         socket.on('map_update_clear', () => this.map.clear());

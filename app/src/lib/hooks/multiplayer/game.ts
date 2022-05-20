@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import useMap, { MapState } from '../shared/map';
 import useReplay, { ReplayState } from '../singleplayer/replay';
-import { GameMap, GamePhase, PlayerResult, Spieler } from '../../shared/types';
 import { Socket } from 'socket.io-client';
+import {
+    GameMap,
+    GamePhase,
+    IGameMap,
+    PlayerResult,
+    Spieler,
+} from '../../shared/types';
+import { clamp } from '../shared/replay';
 
 export interface Player extends Spieler {
     result: null | PlayerResult;
@@ -22,6 +29,7 @@ export type MultiplayerState = {
     code: number;
     replay: ReplayState;
     session: SessionState;
+    players: [string, Player][];
     creating: boolean;
     playerCount: number;
     functions: {
@@ -49,7 +57,8 @@ export const useMultiplayer = (
     socket: Socket | null,
     bind: (events: { [event: string]: (...args: any[]) => void }) => void
 ): MultiplayerState => {
-    const map = useMap();
+    const map = useMap((ev, data) => socket?.emit(ev, data));
+
     const replay = useReplay({
         result: null,
         objects: map.viewMap.objects,
@@ -122,13 +131,13 @@ export const useMultiplayer = (
         players,
         ...data
     }: {
-        map: GameMap;
+        map: IGameMap;
         code: number;
         host: string;
         phase: GamePhase;
         players: Spieler[];
     }) => {
-        console.log(`Fetch called `, players);
+        console.log(_map);
         setSession((s) => ({
             ...s,
             ...data,
@@ -137,7 +146,7 @@ export const useMultiplayer = (
                 players.map((p) => [p.id, { ...p, result: null }])
             ),
         }));
-        map.functions.set(_map);
+        map.functions.set({ ..._map, objects: new Map(_map.objects) });
     };
 
     // assign events to the client socket
@@ -244,14 +253,26 @@ export const useMultiplayer = (
         setCode(Number(x));
     };
 
+    // get sorted scoreboard
+    const getScoreboard = (): [string, Player][] => {
+        return Array.from(session.players.entries()).sort((a, b) =>
+            // no results yet
+            !(a[1].result && b[1].result)
+                ? 1
+                : // sort by placement
+                  clamp(a[1].result.placement - b[1].result.placement, -1, 1)
+        );
+    };
+
     return {
         map,
         code,
         name,
         replay,
+        session,
+        players: getScoreboard(),
         creating,
         playerCount,
-        session,
         functions: {
             info,
             join,

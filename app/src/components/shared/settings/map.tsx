@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { InlineOption, Option } from '../Util';
 import { MapState } from '../../../lib/hooks/shared/map';
-import { InlineOption, Switch, Option } from '../Util';
 
 const ObjectTypes = [
     'empty',
@@ -125,20 +125,79 @@ export const MapSettings = ({ map }: { map: MapState }) => {
                         onClear={map.functions.clearAll}
                     />
                 </div>
-                {/* <div className='p-2 flex gap-4'>
-                    <div
-                        onClick={map.functions.cancel}
-                        className='flex-1 text-center hover:bg-opacity-20 bg-zinc-300 bg-opacity-0 button text-red-600'
-                    >
-                        cancel
+            </div>
+        </>
+    );
+};
+
+export const MultiMapSettings = ({ map }: { map: MapState }) => {
+    const [mapSize, setSize] = useState<string>('2');
+
+    const set = (size: string) => {
+        if (size == mapSize) return;
+        setSize(size);
+        switch (size) {
+            case '1':
+                map.functions.emitSize(10, 10);
+                break;
+            case '2':
+                map.functions.emitSize(20, 20);
+                break;
+            case '3':
+                map.functions.emitSize(30, 30);
+                break;
+            case '4':
+                map.functions.emitSize(40, 40);
+                break;
+            default:
+                map.functions.emitSize(40, 30);
+                break;
+        }
+    };
+
+    return (
+        <>
+            <div className='flex justify-between items-center'>
+                <div className='font-bold text-lg'>Map settings</div>
+            </div>
+            <div className='relative'>
+                <div className='py-2'>
+                    <div className='py-1'>
+                        <div className='s-text'>Map size</div>
+                        <div className='py-2'>
+                            <InlineOption
+                                select={set}
+                                current={mapSize}
+                                options={{
+                                    '1': <>10x10</>,
+                                    '2': <>20x20</>,
+                                    '3': <>30x30</>,
+                                    '4': <>40x40</>,
+                                    '5': <>40x30</>,
+                                }}
+                            />
+                        </div>
                     </div>
-                    <div
-                        onClick={map.functions.save}
-                        className='flex-1 text-center hover:bg-green-500 button text-white bg-green-600'
-                    >
-                        save
+                    <div className='py-1'>
+                        <div className='s-text'>Load map</div>
+                        <div className='py-2'>
+                            <Option
+                                current={map.current.mapName}
+                                select={map.functions.emitLoadMap}
+                                options={{
+                                    1: 'palya1',
+                                    2: 'palya2',
+                                    3: 'palya3',
+                                }}
+                            />
+                        </div>
                     </div>
-                </div> */}
+                    <Objects
+                        select={map.functions.setCurrent}
+                        current={map.selected}
+                        onClear={map.functions.emitClearAll}
+                    />
+                </div>
             </div>
         </>
     );

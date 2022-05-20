@@ -1,8 +1,5 @@
-import { GameMap } from '../../shared/types';
+import { GameMap, IGameMap } from '../../shared/types';
 import { pointToString } from '../../shared/util';
-
-export default 0;
-
 export class MapCreator implements GameMap {
     public type: 'load' | 'parse' = 'load';
     public width: number = 20;
@@ -24,9 +21,13 @@ export class MapCreator implements GameMap {
     }
 
     // fetch all data about the map (for new players)
-    public fetch(): GameMap {
+    public fetch(): IGameMap {
         return {
-            ...(this as GameMap),
+            type: this.type,
+            width: this.width,
+            height: this.height,
+            mapName: this.mapName,
+            objects: Array.from(this.objects.entries()),
         };
     }
 
@@ -67,14 +68,9 @@ export class MapCreator implements GameMap {
 
     // set a tile
     public addObject(position: [number, number], field: number): void {
-        this.objects.set(pointToString(position), field);
-        this.objectChange && this.objectChange(position, 0);
-    }
-
-    // remove a tile
-    public removeObject(position: [number, number]): void {
-        this.objects.delete(pointToString(position));
-        this.objectChange && this.objectChange(position, -1);
+        if (field < 1) this.objects.delete(pointToString(position));
+        else this.objects.set(pointToString(position), field);
+        this.objectChange && this.objectChange(position, field);
     }
 
     // clear the map

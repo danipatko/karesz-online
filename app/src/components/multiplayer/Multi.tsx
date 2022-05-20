@@ -1,14 +1,17 @@
-import { MultiplayerState } from '../../lib/hooks/multiplayer/game';
-import { GamePhase } from '../../lib/shared/types';
-import { Replay } from '../shared/Replay';
 import { Join } from './Join';
 import { PreJoin } from './PreJoin';
+import { Switch } from '../shared/Util';
+import { Replay } from '../shared/Replay';
+import { Scoreboard } from './Scoreboard';
+import { GamePhase } from '../../lib/shared/types';
+import { MultiMapSettings } from '../shared/settings/Map';
+import { MultiplayerState } from '../../lib/hooks/multiplayer/game';
 
 export const Multiplayer = ({
-    state,
+    game,
     visible,
 }: {
-    state: MultiplayerState;
+    game: MultiplayerState;
     visible: boolean;
 }) => {
     return (
@@ -16,45 +19,56 @@ export const Multiplayer = ({
             style={{ display: visible ? 'flex' : 'none' }}
             className='flex w-full h-screen fadein'
         >
-            <div className='p-4 h-full w-1/4 flex flex-col justify-between bg-lback abg-slate-800'>
-                {JSON.stringify(state)}
-
-                <div>
-                    {Array.from(state.session.players.entries()).map(
-                        ([id, player]) => (
-                            <div>{JSON.stringify(player)}</div>
-                        )
-                    )}
-                </div>
-            </div>
-            {state.session.phase === GamePhase.disconnected ? (
+            {game.session.phase === GamePhase.disconnected ? (
                 <Join
-                    code={state.code}
-                    join={state.functions.info}
-                    create={state.functions.preJoin}
-                    setCode={state.functions.setCode}
+                    code={game.code}
+                    join={game.functions.info}
+                    create={game.functions.preJoin}
+                    setCode={game.functions.setCode}
                 />
-            ) : state.session.phase === GamePhase.prejoin ? (
+            ) : game.session.phase === GamePhase.prejoin ? (
                 <PreJoin
-                    code={state.code}
-                    name={state.name}
-                    exit={state.functions.leave}
-                    create={state.creating}
+                    code={game.code}
+                    name={game.name}
+                    exit={game.functions.leave}
+                    create={game.creating}
                     submit={() =>
-                        state.creating
-                            ? state.functions.create()
-                            : state.functions.join()
+                        game.creating
+                            ? game.functions.create()
+                            : game.functions.join()
                     }
-                    setName={state.functions.setName}
-                    playerCount={state.playerCount}
+                    setName={game.functions.setName}
+                    playerCount={game.playerCount}
                 />
-            ) : null}
-
+            ) : (
+                <div className='p-4 h-full w-1/4  bg-lback abg-slate-800'>
+                    <div>
+                        <div className='mb-5 flex justify-between items-center'>
+                            <div className='text-2xl font-bold'>
+                                #{game.session.code}
+                            </div>
+                            <div>
+                                <Switch
+                                    value={game.map.editMode}
+                                    option1='edit'
+                                    option2='view'
+                                    onClick={game.map.functions.switchView}
+                                />
+                            </div>
+                        </div>
+                        <div>{JSON.stringify(game.map)}</div>
+                        <MultiMapSettings map={game.map} />
+                    </div>
+                    <div>{<Scoreboard game={game} />}</div>
+                </div>
+            )}
             <Replay
-                map={state.map}
-                replay={state.replay}
-                visible={false}
-                onClick={(data: any) => console.log(data)}
+                map={game.map}
+                replay={game.replay}
+                visible={game.session.phase > 1}
+                onClick={(x: number, y: number) =>
+                    game.map.functions.emitField([x, y])
+                }
             ></Replay>
         </div>
     );

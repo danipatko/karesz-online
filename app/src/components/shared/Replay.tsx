@@ -1,11 +1,11 @@
 import { Karesz } from './Karesz';
+import { NumberSlider } from './Util';
 import { GameObject } from './Objects';
+import { MapState } from '../../lib/hooks/shared/map';
 import { stringToPoint } from '../../lib/shared/util';
 import React, { useEffect, useRef, useState } from 'react';
-import { MapState } from '../../lib/hooks/shared/map';
 import useController from '../../lib/hooks/shared/controller';
 import { ReplayState } from '../../lib/hooks/singleplayer/replay';
-import { NumberSlider } from './Util';
 
 export const Replay = ({
     map,

@@ -29,7 +29,7 @@ const Index: NextPage = () => {
                     visible={view === View.Playground}
                 />
                 <Multiplayer
-                    state={multiplayer}
+                    game={multiplayer}
                     visible={view === View.Multiplayer}
                 />
             </div>

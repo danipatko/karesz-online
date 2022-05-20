@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import { useState } from 'react';
 import { GameMap } from '../../shared/types';
 import { pointToString, stringToPoint } from '../../shared/util';
 
@@ -30,31 +30,41 @@ export type MapState = {
         switchView: () => void;
         getWalls: () => [number, number][];
         setType: (type: 'parse' | 'load') => void;
+        emitType: (type: 'parse' | 'load') => void;
         setSize: (width: number, height: number) => void;
+        emitSize: (width: number, height: number) => void;
         loadMap: (mapName: string) => void;
+        emitLoadMap: (mapName: string) => void;
         clearAll: () => void;
+        emitClearAll: () => void;
         setField: (position: [number, number], field?: number) => void;
+        emitField: (position: [number, number], field?: number) => void;
         setToView: () => void;
         setCurrent: (field: number) => void;
         setViewMap: (map: GameMap) => void;
     };
 };
 
-const useMap = (): MapState => {
+const useMap = (
+    emit?: ((ev: string, ...args: any[]) => void) | null
+): MapState => {
     const [viewMap, setViewMap] = useState<GameMap>({
         ...defaultMap,
-        objects: new Map(),
+        objects: new Map<string, number>(),
     });
     const [current, setCurrent] = useState<number>(0);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editorMap, setEditorMap] = useState<GameMap>({
         ...defaultMap,
-        objects: new Map(),
+        objects: new Map<string, number>(),
     });
 
     // set the type of the map
     const setType = (type: 'parse' | 'load') =>
         setEditorMap((m) => ({ ...m, type, mapName: '' }));
+
+    const emitType = (type: 'parse' | 'load') =>
+        emit && emit('map_update_type', { type });
 
     // set the size of the map
     const setSize = (width: number, height: number) =>
@@ -66,24 +76,39 @@ const useMap = (): MapState => {
             mapName: '',
         }));
 
+    const emitSize = (width: number, height: number) =>
+        emit && emit('map_update_size', { width, height });
+
     // TODO: load a map
     const loadMap = (mapName: string) =>
         setEditorMap((m) => ({ ...m, mapName, type: 'load' }));
 
+    const emitMap = (mapName: string) =>
+        emit && emit('map_update_load', { mapName });
+
     // set a field of the map
     const setField = (position: [number, number], field?: number) => {
-        console.log(
-            `set field at ${position} to ${field ?? current}`,
-            defaultMap
-        );
-        const placement = field ?? current;
-        setEditorMap((map) => {
-            if (placement > 0)
-                map.objects.set(pointToString(position), placement);
-            else map.objects.delete(pointToString(position));
-            return { ...map };
+        setEditorMap((m) => {
+            console.log(
+                `set field at ${pointToString(position)} to ${
+                    field ?? current
+                }`,
+                m.objects,
+                position
+            ); // DEBUG
+
+            const o = new Map(m.objects);
+            if ((field ?? current) > 0)
+                o.set(pointToString(position), field ?? current);
+            else o.delete(pointToString(position));
+
+            return { ...m, objects: o };
         });
     };
+
+    // set a field of the map
+    const emitField = (position: [number, number]) =>
+        emit && emit('map_update_object', { position, field: current });
 
     // clear all
     const clearAll = () =>
@@ -93,6 +118,8 @@ const useMap = (): MapState => {
             objects: new Map(),
             mapName: '',
         }));
+
+    const emitClearAll = () => emit && emit('map_update_clear');
 
     // enable editing
     const edit = () => setEditMode(true);
@@ -130,11 +157,16 @@ const useMap = (): MapState => {
             set,
             edit,
             loadMap,
+            emitLoadMap: emitMap,
             setType,
+            emitType,
             setSize,
+            emitSize,
             getWalls,
             setField,
+            emitField,
             clearAll,
+            emitClearAll,
             setToView,
             switchView,
             setCurrent,
