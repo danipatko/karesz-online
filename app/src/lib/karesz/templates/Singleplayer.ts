@@ -48,10 +48,10 @@ class Program
 
     static void FinishGame${rand}(string Reason)
     {
-        Console.WriteLine($"{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":${
+        System.Console.WriteLine($"{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":${
     player.x
 }, \\"y\\":${player.y}, \\"rotation\\":${player.rotation} }} }}");
-        Environment.Exit(0);
+        System.Environment.Exit(0);
     }
 
     // get the point one step forward
@@ -131,7 +131,7 @@ class Program
     static void PlaceRock${rand}(int Color)
     {
         RocksPlaced${rand}++;
-        Color = Math.Clamp(Color, 2, 100);
+        Color = System.Math.Clamp(Color, 2, 100);
         Steps${rand}.Add(20 + Color);
         if(!Map${rand}.ContainsKey(Position${rand}))
             Map${rand}.Add(Position${rand}, (uint)Color);

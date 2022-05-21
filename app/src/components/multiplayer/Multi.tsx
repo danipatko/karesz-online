@@ -6,17 +6,19 @@ import { Scoreboard } from './Scoreboard';
 import { GamePhase } from '../../lib/shared/types';
 import { MultiMapSettings } from '../shared/settings/Map';
 import { MultiplayerState } from '../../lib/hooks/multiplayer/game';
+import { Output } from '../shared/Output';
+import { useState } from 'react';
 
 const StateIndicator = ({
-    waiting,
     phase,
+    waiting,
 }: {
-    waiting: number;
     phase: GamePhase;
+    waiting: number;
 }) => {
     return (
         <div
-            className='p-3'
+            className='py-1 px-3 text-center transition-colors'
             style={{
                 backgroundColor: ['', '', 'transparent', '#227fff', 'orange'][
                     phase
@@ -30,6 +32,15 @@ const StateIndicator = ({
     );
 };
 
+const getWaiting = (phase: GamePhase, waiting: number) =>
+    phase === GamePhase.running
+        ? 'Running'
+        : waiting < 1
+        ? 'Waiting for players'
+        : waiting > 1
+        ? `Waiting for ${waiting} more players`
+        : 'Waiting for 1 player';
+
 export const Multiplayer = ({
     game,
     visible,
@@ -37,11 +48,14 @@ export const Multiplayer = ({
     game: MultiplayerState;
     visible: boolean;
 }) => {
+    const [output, showOutput] = useState<boolean>(false);
+
     return (
         <div
             style={{ display: visible ? 'flex' : 'none' }}
             className='flex w-full h-screen fadein'
         >
+            <Output setVisible={showOutput} visible={output} {...game.output} />
             {game.session.phase === GamePhase.disconnected ? (
                 <Join
                     code={game.code}
@@ -64,32 +78,65 @@ export const Multiplayer = ({
                     playerCount={game.playerCount}
                 />
             ) : (
-                <div className='p-4 h-full w-1/4 flex flex-col bg-lback abg-slate-800'>
+                <div className='h-full w-1/4 flex flex-col bg-lback abg-slate-800'>
                     <div className='flex-1'>
-                        <StateIndicator
-                            phase={game.session.phase}
-                            waiting={game.session.waiting}
-                        />
-                        <div className='mb-5 px-2 flex justify-between items-center'>
-                            <div className='text-2xl font-bold'>
-                                Game #{game.session.code}
+                        <div>
+                            <div
+                                style={{
+                                    backgroundColor:
+                                        game.session.phase === GamePhase.running
+                                            ? 'orange'
+                                            : 'transparent',
+                                }}
+                                className='flex transition-colors justify-between px-4 py-2'
+                            >
+                                <div>
+                                    <div className='text-2xl font-bold'>
+                                        In Game #{game.session.code}
+                                    </div>
+                                    <div className='text-zinc-300'>
+                                        {getWaiting(
+                                            game.session.phase,
+                                            game.session.waiting
+                                        )}
+                                    </div>
+                                </div>
+                                <span>
+                                    <Switch
+                                        value={game.map.editMode}
+                                        option1='edit'
+                                        option2='view'
+                                        onClick={game.map.functions.switchView}
+                                    />
+                                </span>
                             </div>
-                            <div>
-                                <Switch
-                                    value={game.map.editMode}
-                                    option1='edit'
-                                    option2='view'
-                                    onClick={game.map.functions.switchView}
-                                />
+                            <div
+                                style={{
+                                    display:
+                                        game.session.waiting > 0
+                                            ? 'block'
+                                            : 'none',
+                                }}
+                                className='relative overflow-hidden h-[2px]'
+                            >
+                                <div className='absolute bg-karesz w-40 h-[2px] loading'></div>
                             </div>
                         </div>
-                        {!game.isHost || !game.map.editMode ? (
-                            <div>{<Scoreboard game={game} />}</div>
-                        ) : (
-                            <MultiMapSettings map={game.map} />
-                        )}
+                        <div className='p-4'>
+                            {!game.isHost || !game.map.editMode ? (
+                                <div>{<Scoreboard game={game} />}</div>
+                            ) : (
+                                <MultiMapSettings map={game.map} />
+                            )}
+                        </div>
                     </div>
-                    <div>
+                    <div
+                        onClick={() => showOutput(true)}
+                        className='text-zinc-300 text-sm hover:underline hover:text-karesz cursor-pointer'
+                    >
+                        Show logs
+                    </div>
+                    <div className='p-4'>
                         <button
                             onClick={game.functions.ready}
                             className='w-full lightbutton p-2'

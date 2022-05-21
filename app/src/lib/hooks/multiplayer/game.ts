@@ -27,6 +27,7 @@ export type MultiplayerState = {
     session: SessionState;
     players: [string, Player][];
     creating: boolean;
+    output: { stdout: string; stderr: string };
     playerCount: number;
     functions: {
         info: () => void;
@@ -63,8 +64,12 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
 
     const [name, setName] = useState<string>('');
     const [code, setCode] = useState<number>(0);
-    const [creating, setCreating] = useState<boolean>(false);
+    const [output, setOutput] = useState<{ stderr: string; stdout: string }>({
+        stderr: '',
+        stdout: '',
+    });
     const [session, setSession] = useState<SessionState>(defaultSession);
+    const [creating, setCreating] = useState<boolean>(false);
     const [playerCount, setPlayerCount] = useState<number>(0);
 
     // wrapper function for modifiying player data
@@ -106,15 +111,11 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         });
 
     // when the code fails to execute
-    const onError = ({
-        stderr,
-        stdout,
-    }: {
-        stderr: string;
-        stdout: string;
-    }) => {
-        console.log(stdout);
-        console.error(stderr);
+    const onError = (out: { stderr: string; stdout: string }) => {
+        resetSession();
+        setOutput(out);
+        console.log(out.stdout);
+        console.error(out.stderr);
     };
 
     // player is ready (or not)
@@ -154,8 +155,8 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         map.functions.set({ ..._map, objects: new Map(_map.objects) });
     };
 
-    const onGameEnd = (data: any) => {
-        console.log(data);
+    // remove player warnings, errors, etc. and set phase to idle
+    const resetSession = () =>
         setSession((s) => {
             for (let [id, player] of s.players.entries()) {
                 player.isReady = false;
@@ -166,6 +167,10 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
             }
             return { ...s, phase: GamePhase.idle, isReady: false };
         });
+
+    const onGameEnd = (data: any) => {
+        resetSession();
+        console.log(data);
     };
 
     // assign events to the client socket
@@ -299,6 +304,7 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         name,
         isHost: session.host === socket.id,
         replay,
+        output,
         session,
         players: getScoreboard(),
         creating,

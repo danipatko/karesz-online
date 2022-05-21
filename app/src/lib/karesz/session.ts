@@ -239,7 +239,6 @@ export default class Session {
     }
 
     public get playerCount(): number {
-        console.log(this.players);
         return this.players.size;
     }
 }
