@@ -1,9 +1,9 @@
 import { clamp } from '../shared/replay';
-import { Socket } from 'socket.io-client';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import useMap, { MapState } from '../shared/map';
 import useReplay, { ReplayState } from '../singleplayer/replay';
 import { GamePhase, IGameMap, PlayerResult, Spieler } from '../../shared/types';
+import { useSocket } from '../shared/socket';
 
 export interface Player extends Spieler {
     result: null | PlayerResult;
@@ -51,12 +51,9 @@ export const defaultSession: SessionState = {
     players: new Map(),
 };
 
-export const useMultiplayer = (
-    socket: Socket,
-    bind: (events: { [event: string]: (...args: any[]) => void }) => void,
-    editor: string
-): MultiplayerState => {
-    const map = useMap((ev, data) => socket?.emit(ev, data));
+export const useMultiplayer = (editor: string): MultiplayerState => {
+    const socket = useSocket();
+    const map = useMap((ev, data) => socket.emit(ev, data));
 
     const replay = useReplay({
         result: null,
@@ -157,33 +154,52 @@ export const useMultiplayer = (
         map.functions.set({ ..._map, objects: new Map(_map.objects) });
     };
 
+    const onGameEnd = (data: any) => {
+        console.log(data);
+        setSession((s) => {
+            for (let [id, player] of s.players.entries()) {
+                player.isReady = false;
+                player.error = false;
+                player.warning = false;
+                player.result = null; // get from result
+                s.players.set(id, player);
+            }
+            return { ...s, phase: GamePhase.idle, isReady: false };
+        });
+    };
+
     // assign events to the client socket
     useEffect(() => {
-        bind({
-            map_update_type: ({ type }) => map.functions.setType(type),
-            map_update_size: ({ width, height }) =>
-                map.functions.setSize(width, height),
-            map_update_load: ({ mapName }) => map.functions.loadMap(mapName),
-            map_update_object: ({ position, field }) =>
-                map.functions.setField(position, field),
-            map_update_clear: map.functions.clearAll,
+        // bind map events
+        socket.on('map_update_type', ({ type }) => map.functions.setType(type));
+        socket.on('map_update_size', ({ width, height }) =>
+            map.functions.setSize(width, height)
+        );
+        socket.on('map_update_load', ({ mapName }) =>
+            map.functions.loadMap(mapName)
+        );
+        socket.on('map_update_object', ({ position, field }) =>
+            map.functions.setField(position, field)
+        );
+        socket.on('map_update_clear', map.functions.clearAll);
 
-            // game state events
-            game_host_change: onHostChange,
-            game_phase_chage: changePhase,
-            game_info_waiting: onWaitingChange,
-            fetch: onFetch,
+        // game state events
+        socket.on('game_host_change', onHostChange);
+        socket.on('game_phase_change', changePhase);
+        socket.on('game_info_waiting', onWaitingChange);
+        socket.on('fetch', onFetch);
 
-            // player events
-            player_join: onPlayerJoin,
-            player_leave: onPlayerLeave,
-            player_ready: onPlayerReady,
+        // player events
+        socket.on('player_join', onPlayerJoin);
+        socket.on('player_leave', onPlayerLeave);
+        socket.on('player_ready', onPlayerReady);
 
-            // game run events
-            game_error: onError,
-            game_end: () => {},
-            info: onInfo,
-        });
+        // game run events
+        socket.on('game_error', onError);
+        socket.on('game_end', onGameEnd);
+
+        // other
+        socket.on('info', onInfo);
     }, []);
 
     // handle info fetch
@@ -213,7 +229,7 @@ export const useMultiplayer = (
     // get information about a session (does it exist, player count)
     const info = () => {
         setCreating(false);
-        socket?.emit('info', { code });
+        socket.emit('info', { code });
     };
 
     // join a session
@@ -225,7 +241,7 @@ export const useMultiplayer = (
         const x = name.replaceAll(/[^a-zA-Z\d\-\.\_]/gm, '').substring(0, 50);
         if (!x.length) return void console.error('invalid name');
 
-        socket?.emit('join', {
+        socket.emit('join', {
             name: x,
             code,
         });
@@ -241,11 +257,11 @@ export const useMultiplayer = (
         setSession((s) => ({ ...s, phase: GamePhase.prejoin }));
 
     // create new session
-    const create = () => socket?.emit('create', { name });
+    const create = () => socket.emit('create', { name });
 
     // leave a session
     const leave = () => {
-        socket?.emit('exit');
+        socket.emit('exit');
         exit();
     };
 
@@ -274,14 +290,14 @@ export const useMultiplayer = (
 
     // ready up
     const ready = () => {
-        socket?.emit('player_ready', { code: editor });
+        socket.emit('player_ready', { code: editor });
     };
 
     return {
         map,
         code,
         name,
-        isHost: session.host === socket?.id,
+        isHost: session.host === socket.id,
         replay,
         session,
         players: getScoreboard(),

@@ -101,7 +101,6 @@ export default class Session {
 
     // check if everyone is ready
     private checkCanStart(): void {
-        console.log('checking can start'); // DEBUG
         let readyPeople = 0;
         for (const { isReady } of this.players.values())
             if (isReady) readyPeople++;
@@ -221,7 +220,7 @@ export default class Session {
             'multi'
         )) as CommandResult<null | MultiResult>;
 
-        if (!result || result.exitCode !== 0) {
+        if (!(result.result && result.exitCode !== 0)) {
             // try to find player who caused the error
             // const trace = result.stderr
             //     .split('\n')
@@ -236,17 +235,7 @@ export default class Session {
         }
 
         console.log(result);
-
-        // this.announce('game_end', {
-        //     draw: result.draw,
-        //     rounds: result.rounds,
-        //     winner: result.winner,
-        //     players: result.scoreboard,
-        // });
-
-        this.announce('game_end', {
-            draw: false,
-        });
+        this.announce('game_end', { ...result });
     }
 
     public get playerCount(): number {

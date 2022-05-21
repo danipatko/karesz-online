@@ -20,8 +20,9 @@ export const RUNNER_DIRECTORY: string =
         ? 'C:/Users/Dani/home/Projects/karesz-online/testing'
         : '/home/dapa/Projects/karesz-online/app/test';
 
-// necessary for the template to work
+// necessary, loaded from cmd
 export const CRUCIAL_IMPORTS: string[] = [
+    'System',
     'System.Console',
     'System.Runtime',
     'System.Threading',
@@ -33,18 +34,23 @@ export const CRUCIAL_IMPORTS: string[] = [
 ];
 
 export const MULITPLAYER_IMPORTS: string[] = [
-    'System',
     'System.Linq',
     'System.Threading',
+    'System.Collections',
+    'System.Threading.Tasks',
     'System.Collections.Concurrent',
     'System.Threading.Tasks.Parallel',
     // ^^^^ necessary for multithreading
 ];
 
 export const SINGLEPLAYER_IMPORTS: string[] = [
-    'System',
     'System.Linq',
-    'System.Threading',
-    'System.Collections.Generic',
-    // 'System.Collections.Concurrent',
+    'System.Threading', // for timeout
+    'System.Collections',
 ];
+
+// some of the dll names don't match the name called with 'using'
+export const IMPORT_ALIASES: { [key: string]: string } = {
+    'System.Collections': 'System.Collections.Generic',
+    'System.Threading.Tasks.Parallel': 'System.Threading.Tasks',
+};

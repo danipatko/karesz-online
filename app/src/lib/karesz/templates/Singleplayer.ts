@@ -1,6 +1,8 @@
 import { TemplateSettings } from '../types';
-import { SINGLEPLAYER_IMPORTS } from '../config';
 import { stringToPoint } from '../../shared/util';
+import { IMPORT_ALIASES, SINGLEPLAYER_IMPORTS } from '../config';
+
+const getAlias = (lib: string): string => IMPORT_ALIASES[lib] ?? lib;
 
 const getSinglePlayerTemplate = (
     rand: string,
@@ -12,7 +14,7 @@ const getSinglePlayerTemplate = (
         code: string;
     }
 ) => `// allowed imports
-${SINGLEPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
+${SINGLEPLAYER_IMPORTS.map((x) => `using ${getAlias(x)};`).join('\n')}
 
 class Program
 {

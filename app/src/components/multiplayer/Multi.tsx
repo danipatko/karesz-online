@@ -7,6 +7,29 @@ import { GamePhase } from '../../lib/shared/types';
 import { MultiMapSettings } from '../shared/settings/Map';
 import { MultiplayerState } from '../../lib/hooks/multiplayer/game';
 
+const StateIndicator = ({
+    waiting,
+    phase,
+}: {
+    waiting: number;
+    phase: GamePhase;
+}) => {
+    return (
+        <div
+            className='p-3'
+            style={{
+                backgroundColor: ['', '', 'transparent', '#227fff', 'orange'][
+                    phase
+                ],
+            }}
+        >
+            {phase === GamePhase.running
+                ? 'Running'
+                : `Waiting for ${waiting} player${waiting > 1 ? 's' : ''}`}
+        </div>
+    );
+};
+
 export const Multiplayer = ({
     game,
     visible,
@@ -43,6 +66,10 @@ export const Multiplayer = ({
             ) : (
                 <div className='p-4 h-full w-1/4 flex flex-col bg-lback abg-slate-800'>
                     <div className='flex-1'>
+                        <StateIndicator
+                            phase={game.session.phase}
+                            waiting={game.session.waiting}
+                        />
                         <div className='mb-5 px-2 flex justify-between items-center'>
                             <div className='text-2xl font-bold'>
                                 Game #{game.session.code}

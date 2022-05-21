@@ -31,7 +31,7 @@ export default class IPlayer implements Player {
             this.announce &&
                 this.announce('player_ready', {
                     id: this.id,
-                    isReady: true,
+                    isReady: this.isReady,
                 });
 
             this.onReady();

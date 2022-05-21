@@ -6,6 +6,7 @@ import {
     LIBRARY_LOCATIONS,
     MULITPLAYER_IMPORTS,
     SINGLEPLAYER_IMPORTS,
+    IMPORT_ALIASES,
 } from '../config';
 import path from 'path/posix';
 import cp from 'child_process';
@@ -141,7 +142,6 @@ export class Runner {
             ...CRUCIAL_IMPORTS,
             ...(type == 'multi' ? MULITPLAYER_IMPORTS : SINGLEPLAYER_IMPORTS),
         ]
-            .filter((x) => x != 'System.Collections.Generic')
             .map((lib) => `-r:"${path.join(LIBRARY_LOCATIONS, `${lib}.dll`)}"`)
             .join(' ');
     }

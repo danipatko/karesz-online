@@ -1,12 +1,14 @@
 import { PlayerStartState, TemplateSettings } from '../types';
-import { MULITPLAYER_IMPORTS } from '../config';
+import { IMPORT_ALIASES, MULITPLAYER_IMPORTS } from '../config';
+
+const getAlias = (lib: string): string => IMPORT_ALIASES[lib] ?? lib;
 
 const getMultiPlayerTemplate = (
     rand: string,
     settings: TemplateSettings,
     players: PlayerStartState[]
 ) => `// allowed imports
-${MULITPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
+${MULITPLAYER_IMPORTS.map((x) => `using ${getAlias(x)};`).join('\n')}
 
 class Program
 {
@@ -34,8 +36,8 @@ class Program
     static void FinishGame${rand}()
     {
         foreach (IPlayer${rand} Player in Players${rand}.Values) KillPlayer${rand}(1, ROUND${rand}, true, Player, "");
-        Console.WriteLine($"{{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {{ {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }} }}");
-        Environment.Exit(0);
+        System.Console.WriteLine($"{{ \\"rounds\\":{ROUND${rand}}, \\"players\\": {{ {string.Join(',', ScoreBoard${rand}.Values.Select(x => x.ToJson()).ToArray())} }} }}");
+        System.Environment.Exit(0);
     }
 
     // get the point one step forward
@@ -393,7 +395,7 @@ class Program
     }
     static void PlaceRock${rand}(int P, int Color)
     {
-        if (SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player)) Player.PlaceRock((uint)Math.Clamp(Color, 2, 100));
+        if (SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player)) Player.PlaceRock((uint)System.Math.Clamp(Color, 2, 100));
     }
 
     static int WhatIsUnder${rand}(int P) => SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player) ? Player.WhatIsUnder() : -1;
@@ -414,7 +416,7 @@ class Program
     static void Main()
     {
         new Thread(() => { Thread.Sleep(TIMEOUT); FinishGame${rand}(); }).Start();
-        Parallel.Invoke(${Object.keys(players).map(
+        System.Threading.Tasks.Parallel.Invoke(${Object.keys(players).map(
             (_, i) => `Thread${i}${rand}`
         )});
     }
