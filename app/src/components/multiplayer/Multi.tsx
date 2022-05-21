@@ -88,7 +88,7 @@ export const Multiplayer = ({
                                             ? 'orange'
                                             : 'transparent',
                                 }}
-                                className='flex transition-colors justify-between px-4 py-2'
+                                className='flex transition-colors justify-between m-2 rounded-md px-4 py-2'
                             >
                                 <div>
                                     <div className='text-2xl font-bold'>
