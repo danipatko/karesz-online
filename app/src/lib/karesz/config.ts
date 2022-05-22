@@ -37,7 +37,6 @@ export const MULITPLAYER_IMPORTS: string[] = [
     'System.Linq',
     'System.Threading',
     'System.Collections',
-    'System.Threading.Tasks',
     'System.Collections.Concurrent',
     'System.Threading.Tasks.Parallel',
     // ^^^^ necessary for multithreading

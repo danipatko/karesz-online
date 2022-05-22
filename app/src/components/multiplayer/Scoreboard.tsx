@@ -36,24 +36,33 @@ export const PlayerCard = ({
                     )}
                 </div>
                 {extended && (
-                    <div className='px-2 py-1 bg-back rounded-br-md'>
+                    <div className='px-2 py-1 bg-back rounded-br-md text-zinc-500 text-sm'>
                         {player.result ? (
                             <>
                                 <div>
-                                    Rounds survived: {player.result.alive}
-                                </div>
-                                <div>
-                                    Rocks: {player.result.rocks.placed} placed,{' '}
-                                    {player.result.rocks.picked_up} picked up
-                                </div>
-                                <div>
+                                    Survived{' '}
+                                    <span className='text-karesz font-bold'>
+                                        {player.result.alive}
+                                    </span>{' '}
+                                    rounds
                                     {player.result.survived
-                                        ? 'Survived'
-                                        : player.result.death}
+                                        ? '.'
+                                        : ` (${player.result.death}).`}
+                                </div>
+                                <div>
+                                    Placed{' '}
+                                    <span className='text-karesz font-bold'>
+                                        {player.result.rocks.placed}
+                                    </span>{' '}
+                                    rocks and picked up{' '}
+                                    <span className='text-karesz font-bold'>
+                                        {player.result.rocks.picked_up}
+                                    </span>
+                                    .
                                 </div>
                             </>
                         ) : (
-                            <div className='text-center text-zinc-400'>N/A</div>
+                            <div className='text-center'>N/A</div>
                         )}
                     </div>
                 )}

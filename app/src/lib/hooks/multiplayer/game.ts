@@ -2,8 +2,15 @@ import { clamp } from '../shared/replay';
 import { useContext, useEffect, useState } from 'react';
 import useMap, { MapState } from '../shared/map';
 import useReplay, { ReplayState } from '../singleplayer/replay';
-import { GamePhase, IGameMap, PlayerResult, Spieler } from '../../shared/types';
+import {
+    GamePhase,
+    IGameMap,
+    MultiResult,
+    PlayerResult,
+    Spieler,
+} from '../../shared/types';
 import { useSocket } from '../shared/socket';
+import { CommandResult } from '../../karesz/types';
 
 export interface Player extends Spieler {
     result: null | PlayerResult;
@@ -168,9 +175,20 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
             return { ...s, phase: GamePhase.idle, isReady: false };
         });
 
-    const onGameEnd = (data: any) => {
+    const onGameEnd = (data: CommandResult<MultiResult>) => {
         resetSession();
-        console.log(data);
+
+        // update results of players
+        for (const id in data.result.players) {
+            changePlayer(id, (p) => ({
+                ...p,
+                result: data.result.players[id],
+            }));
+        }
+
+        // TODO: do something with replays
+
+        console.log('RECEIVED GAME END', data);
     };
 
     // assign events to the client socket
