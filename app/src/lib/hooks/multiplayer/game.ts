@@ -1,7 +1,6 @@
 import { clamp } from '../shared/replay';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import useMap, { MapState } from '../shared/map';
-import useReplay, { ReplayState } from '../singleplayer/replay';
 import {
     GamePhase,
     IGameMap,
@@ -11,6 +10,7 @@ import {
 } from '../../shared/types';
 import { useSocket } from '../shared/socket';
 import { CommandResult } from '../../karesz/types';
+import useMultiReplay, { MultiReplayState } from './replay';
 
 export interface Player extends Spieler {
     result: null | PlayerResult;
@@ -30,7 +30,7 @@ export type MultiplayerState = {
     name: string;
     code: number;
     isHost: boolean;
-    replay: ReplayState;
+    replay: MultiReplayState;
     session: SessionState;
     players: [string, Player][];
     creating: boolean;
@@ -63,7 +63,7 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
     const socket = useSocket();
     const map = useMap((ev, data) => socket.emit(ev, data));
 
-    const replay = useReplay({
+    const replay = useMultiReplay({
         result: null,
         objects: map.viewMap.objects,
         walls: map.functions.getWalls(),

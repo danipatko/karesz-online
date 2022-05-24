@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { stringToPoint } from '../../shared/util';
-import { ReplayState } from '../singleplayer/replay';
-import { clamp, ObjectStates, Step } from './replay';
+import { MultiReplayState } from '../multiplayer/replay';
+import { ReplayState } from './replay';
+import { clamp, ObjectStates, Step } from '../shared/replay';
 
 export type ControllerState = {
     state: { players: Step; objects: [string, number][] };

@@ -1,11 +1,10 @@
-import { Karesz } from './Karesz';
-import { NumberSlider } from './Util';
-import { GameObject } from './Objects';
+import { Karesz } from '../shared/Karesz';
+import { NumberSlider } from '../shared/Util';
+import { GameObject } from '../shared/Objects';
 import { MapState } from '../../lib/hooks/shared/map';
 import { stringToPoint } from '../../lib/shared/util';
 import React, { useEffect, useRef, useState } from 'react';
-import useController from '../../lib/hooks/singleplayer/controller';
-import { ReplayState } from '../../lib/hooks/singleplayer/replay';
+import useController from '../../lib/hooks/multiplayer/controller';
 import { MultiReplayState } from '../../lib/hooks/multiplayer/replay';
 
 export const Replay = ({
@@ -16,7 +15,7 @@ export const Replay = ({
     children,
 }: {
     map: MapState;
-    replay: ReplayState;
+    replay: MultiReplayState;
     onClick: (x: number, y: number) => void;
     visible: boolean;
     children?: React.ReactNode;
@@ -123,9 +122,12 @@ export const Replay = ({
                     {children}
 
                     {/* player */}
-                    {!map.editMode && (
-                        <Karesz state={controller.state.players} />
-                    )}
+                    {!map.editMode &&
+                        Object.entries(controller.state.players).map(
+                            ([_, player], index) => {
+                                return <Karesz key={index} state={player} />;
+                            }
+                        )}
 
                     {/* replay objects */}
                     {!map.editMode &&

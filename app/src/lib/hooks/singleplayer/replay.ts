@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { SingleResult } from '../../shared/types';
-import { pointToString, stringToPoint } from '../../shared/util';
+import { pointToString } from '../../shared/util';
 import {
-    getObjectStates,
+    Step,
     nextState,
     ObjectStates,
-    Step,
+    getObjectStates,
 } from '../shared/replay';
 
 export type ReplayState = {
@@ -28,14 +28,12 @@ const getSteps = (
 
     // get the states for the steps
     for (const [index, step] of result.steps.entries()) {
-        steps.push(nextState(step, steps[steps.length - 1]));
+        const nx = nextState(step, steps[steps.length - 1]);
+        steps.push(nx);
         objects = getObjectStates(
             step,
             index,
-            pointToString([
-                steps[steps.length - 1].x,
-                steps[steps.length - 1].y,
-            ]),
+            pointToString([nx.x, nx.y]),
             objects
         );
     }
