@@ -138,7 +138,10 @@ const useMap = (
     const set = (map: GameMap) => setEditorMap(map);
 
     // sets the view map to the editor map
-    const setToView = () => setViewMap(editorMap);
+    const setToView = () => {
+        setViewMap({ ...editorMap, objects: new Map(editorMap.objects) });
+        setEditMode(false);
+    };
 
     return {
         current: editMode ? editorMap : viewMap,

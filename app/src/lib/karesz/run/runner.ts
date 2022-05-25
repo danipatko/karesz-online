@@ -4,9 +4,8 @@ import {
     RUNNER_DIRECTORY,
     COMPILER_LOCATION,
     LIBRARY_LOCATIONS,
-    MULITPLAYER_IMPORTS,
-    SINGLEPLAYER_IMPORTS,
-    IMPORT_ALIASES,
+    MULITPLAYER_DLL,
+    SINGLEPLAYER_DLL,
 } from '../config';
 import path from 'path/posix';
 import cp from 'child_process';
@@ -140,7 +139,7 @@ export class Runner {
     private getImports(type: 'single' | 'multi'): string {
         return [
             ...CRUCIAL_IMPORTS,
-            ...(type == 'multi' ? MULITPLAYER_IMPORTS : SINGLEPLAYER_IMPORTS),
+            ...(type == 'multi' ? MULITPLAYER_DLL : SINGLEPLAYER_DLL),
         ]
             .map((lib) => `-r:"${path.join(LIBRARY_LOCATIONS, `${lib}.dll`)}"`)
             .join(' ');

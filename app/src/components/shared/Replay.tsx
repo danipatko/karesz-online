@@ -4,9 +4,8 @@ import { GameObject } from './Objects';
 import { MapState } from '../../lib/hooks/shared/map';
 import { stringToPoint } from '../../lib/shared/util';
 import React, { useEffect, useRef, useState } from 'react';
-import useController from '../../lib/hooks/singleplayer/controller';
 import { ReplayState } from '../../lib/hooks/singleplayer/replay';
-import { MultiReplayState } from '../../lib/hooks/multiplayer/replay';
+import useController from '../../lib/hooks/singleplayer/controller';
 
 export const Replay = ({
     map,

@@ -34,10 +34,7 @@ const getSteps = (
     // iter all steps
     for (let i = 0; i < result.rounds; i++) {
         for (const id in result.players) {
-            const step = nextState(
-                result.players[id].steps[i],
-                players[id][i - 1]
-            );
+            const step = nextState(result.players[id].steps[i], players[id][i]);
             players[id].push(step);
             objects = getObjectStates(
                 result.players[id].steps[i],
@@ -47,6 +44,8 @@ const getSteps = (
             );
         }
     }
+
+    // console.log(players[Object.keys(players)[0]]); // DEBUG
 
     return { players, objects };
 };

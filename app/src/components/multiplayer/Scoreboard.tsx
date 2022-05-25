@@ -75,13 +75,13 @@ export const Scoreboard = ({ game }: { game: MultiplayerState }) => {
     const [s, select] = useState<number>(-1);
     return (
         <ul>
-            {game.players.map(([_, player], index) => (
+            {game.players.map(([_, player], i) => (
                 <PlayerCard
-                    key={index}
-                    place={index + 1}
+                    key={i}
+                    place={i + 1}
                     player={player}
-                    extended={s == index}
-                    onClick={() => select((s) => (s == index ? -1 : index))}
+                    extended={s == i}
+                    onClick={() => select((s) => (s == i ? -1 : i))}
                 />
             ))}
         </ul>

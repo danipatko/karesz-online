@@ -84,9 +84,9 @@ class MultiplayerTemplate extends ProcessCode {
             reason: string
         ) => void
     ): MultiplayerTemplate {
-        let start: number = 404;
-
-        for (const [index, player] of players.entries()) {
+        let start: number = 411;
+        let index: number = 0;
+        for (const player of players.values()) {
             const scResult = this.safetyCheck(player.code);
 
             if (scResult && scResult.severity === 'error') {
@@ -110,6 +110,7 @@ class MultiplayerTemplate extends ProcessCode {
             });
 
             start += length;
+            index++;
         }
 
         return this;
@@ -117,6 +118,7 @@ class MultiplayerTemplate extends ProcessCode {
 
     // set the correct template
     public generate(): { code: string; rand: string } {
+        console.log('creating map', this.settings.MAP_OBJECTS);
         this.code = getMultiPlayerTemplate(
             this.rand,
             this.settings,

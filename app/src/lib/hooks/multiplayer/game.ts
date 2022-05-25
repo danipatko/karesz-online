@@ -62,9 +62,9 @@ export const defaultSession: SessionState = {
 export const useMultiplayer = (editor: string): MultiplayerState => {
     const socket = useSocket();
     const map = useMap((ev, data) => socket.emit(ev, data));
-
+    const [result, setResult] = useState<MultiResult | null>(null);
     const replay = useMultiReplay({
-        result: null,
+        result,
         objects: map.viewMap.objects,
         walls: map.functions.getWalls(),
     });
@@ -91,9 +91,22 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         });
     };
 
+    const resetWarnings = () =>
+        setSession((s) => {
+            for (let [id, player] of s.players.entries()) {
+                player.warning = false;
+                player.error = false;
+                s.players.set(id, player);
+            }
+            return { ...s };
+        });
+
     // phase change
     const changePhase = ({ phase }: { phase: GamePhase }) =>
-        setSession((s) => ({ ...s, phase }));
+        setSession((s) => {
+            if (phase === GamePhase.running) resetWarnings();
+            return { ...s, phase };
+        });
 
     // host change
     const onHostChange = ({ host }: { host: string }) =>
@@ -139,6 +152,14 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         changePlayer(id, (p) => ({ ...p, isReady }));
     };
 
+    const onPlayerWarn = ({ id }: { id: string }) => {
+        changePlayer(id, (p) => ({ ...p, warning: true }));
+    };
+
+    const onPlayerError = ({ id }: { id: string }) => {
+        changePlayer(id, (p) => ({ ...p, error: true }));
+    };
+
     // on join
     const onFetch = ({
         map: _map,
@@ -167,8 +188,6 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         setSession((s) => {
             for (let [id, player] of s.players.entries()) {
                 player.isReady = false;
-                player.error = false;
-                player.warning = false;
                 player.result = null; // get from result
                 s.players.set(id, player);
             }
@@ -187,7 +206,9 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         }
 
         // TODO: do something with replays
-
+        map.functions.setToView();
+        setResult(data.result);
+        setOutput({ stdout: data.stdout, stderr: data.stderr });
         console.log('RECEIVED GAME END', data);
     };
 
@@ -216,6 +237,8 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         socket.on('player_join', onPlayerJoin);
         socket.on('player_leave', onPlayerLeave);
         socket.on('player_ready', onPlayerReady);
+        socket.on('player_warn', onPlayerWarn);
+        socket.on('player_error', onPlayerError);
 
         // game run events
         socket.on('game_error', onError);
@@ -223,6 +246,12 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
 
         // other
         socket.on('info', onInfo);
+        socket.on('error', ({ message }: { message: string }) =>
+            console.error(message)
+        );
+        socket.on('warn', ({ message }: { message: string }) =>
+            console.warn(message)
+        );
     }, []);
 
     // handle info fetch

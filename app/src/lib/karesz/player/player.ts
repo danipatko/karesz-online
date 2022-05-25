@@ -112,13 +112,13 @@ export default class IPlayer implements Player {
 
     // show a warning to the player and display an icon to the others
     public warn(message: string): void {
-        this.socket.emit('warn', message);
+        this.socket.emit('warn', { message });
         this.announce && this.announce('player_warn', { id: this.id });
     }
 
     // show an error to the player and display an icon to the others
     public err(message: string): void {
-        this.socket.emit('error', message);
+        this.socket.emit('error', { message });
         this.announce && this.announce('player_error', { id: this.id });
     }
 

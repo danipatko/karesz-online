@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { stringToPoint } from '../../shared/util';
+import { useEffect, useState } from 'react';
+import { clamp, Step } from '../shared/replay';
 import { MultiReplayState } from '../multiplayer/replay';
-import { clamp, ObjectStates, Step } from '../shared/replay';
 
 export type ControllerState = {
     state: { players: { [key: string]: Step }; objects: [string, number][] };
@@ -18,9 +17,9 @@ export type ControllerState = {
 };
 
 const useController = (replay: MultiReplayState): ControllerState => {
-    const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
     const [index, setIndex] = useState<number>(0);
     const [speed, setSpeed] = useState<number>(50);
+    const [timer, setTimer] = useState<NodeJS.Timeout>(null as any);
     const [isPlaying, setPlaying] = useState<boolean>(false);
 
     // filter out the objects that are not at the current step
@@ -43,6 +42,7 @@ const useController = (replay: MultiReplayState): ControllerState => {
 
     // get a step of players
     const getStep = (index: number) => {
+        // console.log('getStep', index, 'out of', replay.rounds); // DEBUG
         const res: { [key: string]: Step } = {};
         for (const id in replay.state.players)
             res[id] = replay.state.players[id][index];
@@ -54,9 +54,17 @@ const useController = (replay: MultiReplayState): ControllerState => {
         players: { [key: string]: Step };
         objects: [string, number][];
     }>({
-        players: getStep(0),
-        objects: getObjectsAtStep(0),
+        players: {},
+        objects: [],
     });
+
+    useEffect(() => {
+        // set the initial state
+        setState({
+            players: getStep(0),
+            objects: getObjectsAtStep(0),
+        });
+    }, []);
 
     // increment the index, stop if reached the end othervise update the state
     const round = () => {
@@ -73,7 +81,7 @@ const useController = (replay: MultiReplayState): ControllerState => {
     // go to a step
     const stepTo = (step: number) => {
         if (isPlaying) stop();
-        step = clamp(step, 0, replay.rounds - 1);
+        step = clamp(step, 0, replay.rounds);
         setIndex(step);
 
         setState({

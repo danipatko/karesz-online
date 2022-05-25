@@ -1,14 +1,13 @@
 import { PlayerStartState, TemplateSettings } from '../types';
-import { IMPORT_ALIASES, MULITPLAYER_IMPORTS } from '../config';
-
-const getAlias = (lib: string): string => IMPORT_ALIASES[lib] ?? lib;
+import { MULITPLAYER_IMPORTS } from '../config';
+import { stringToPoint } from '../../shared/util';
 
 const getMultiPlayerTemplate = (
     rand: string,
     settings: TemplateSettings,
     players: PlayerStartState[]
 ) => `// allowed imports
-${MULITPLAYER_IMPORTS.map((x) => `using ${getAlias(x)};`).join('\n')}
+${MULITPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
 
 class Program
 {
@@ -26,7 +25,10 @@ class Program
     {
         // Assign map points from template here
         ${Array.from(settings.MAP_OBJECTS.entries())
-            .map(([key, value]) => `[(${key[0]},${key[1]})]=${value}`)
+            .map(([key, value]) => {
+                const [x, y] = stringToPoint(key);
+                return `[(${x},${y})]=${value}`;
+            })
             .join(',')}
     };
 

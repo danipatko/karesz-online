@@ -1,36 +1,13 @@
 import { Join } from './Join';
+import { useState } from 'react';
 import { PreJoin } from './PreJoin';
 import { Switch } from '../shared/Util';
-import { Replay } from '../shared/Replay';
+import { Output } from '../shared/Output';
+import { Replay } from '../multiplayer/Replay';
 import { Scoreboard } from './Scoreboard';
 import { GamePhase } from '../../lib/shared/types';
 import { MultiMapSettings } from '../shared/settings/Map';
 import { MultiplayerState } from '../../lib/hooks/multiplayer/game';
-import { Output } from '../shared/Output';
-import { useState } from 'react';
-
-const StateIndicator = ({
-    phase,
-    waiting,
-}: {
-    phase: GamePhase;
-    waiting: number;
-}) => {
-    return (
-        <div
-            className='py-1 px-3 text-center transition-colors'
-            style={{
-                backgroundColor: ['', '', 'transparent', '#227fff', 'orange'][
-                    phase
-                ],
-            }}
-        >
-            {phase === GamePhase.running
-                ? 'Running'
-                : `Waiting for ${waiting} player${waiting > 1 ? 's' : ''}`}
-        </div>
-    );
-};
 
 const getWaiting = (phase: GamePhase, waiting: number) =>
     phase === GamePhase.running

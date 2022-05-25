@@ -10,14 +10,14 @@ import { MultiReplayState } from '../../lib/hooks/multiplayer/replay';
 export const Replay = ({
     map,
     replay,
-    onClick,
     visible,
+    onClick,
     children,
 }: {
     map: MapState;
     replay: MultiReplayState;
-    onClick: (x: number, y: number) => void;
     visible: boolean;
+    onClick: (x: number, y: number) => void;
     children?: React.ReactNode;
 }) => {
     const controller = useController(replay);
@@ -137,9 +137,9 @@ export const Replay = ({
                                 <GameObject
                                     x={x}
                                     y={y}
-                                    size={tileSize}
-                                    type={type}
                                     key={i}
+                                    type={type}
+                                    size={tileSize}
                                 />
                             );
                         })}
@@ -167,7 +167,7 @@ export const Replay = ({
                             width: size[0] + 'px',
                         }}
                         min={0}
-                        max={replay.state.steps.length - 1}
+                        max={replay.rounds}
                         type='range'
                         value={controller.index}
                         disabled={map.editMode}

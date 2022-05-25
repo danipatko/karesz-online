@@ -33,7 +33,8 @@ export const CRUCIAL_IMPORTS: string[] = [
     'System.Text.Encoding.Extensions',
 ];
 
-export const MULITPLAYER_IMPORTS: string[] = [
+// dll names
+export const MULITPLAYER_DLL: string[] = [
     'System.Linq',
     'System.Threading',
     'System.Collections',
@@ -42,14 +43,24 @@ export const MULITPLAYER_IMPORTS: string[] = [
     // ^^^^ necessary for multithreading
 ];
 
-export const SINGLEPLAYER_IMPORTS: string[] = [
+// imported with 'using'
+export const MULITPLAYER_IMPORTS: string[] = [
+    'System',
     'System.Linq',
-    'System.Threading', // for timeout
+    'System.Threading.Tasks',
+    'System.Collections.Generic',
+    'System.Collections.Concurrent',
+];
+
+export const SINGLEPLAYER_DLL: string[] = [
+    'System.Linq',
+    'System.Threading',
     'System.Collections',
 ];
 
-// some of the dll names don't match the name called with 'using'
-export const IMPORT_ALIASES: { [key: string]: string } = {
-    'System.Collections': 'System.Collections.Generic',
-    'System.Threading.Tasks.Parallel': 'System.Threading.Tasks',
-};
+export const SINGLEPLAYER_IMPORTS: string[] = [
+    'System',
+    'System.Linq',
+    'System.Threading.Tasks',
+    'System.Collections.Generic',
+];
