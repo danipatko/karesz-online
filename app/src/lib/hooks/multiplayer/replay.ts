@@ -26,14 +26,17 @@ const getSteps = (
     for (const id in result.players)
         players[id] = [{ step: -1, ...result.players[id].started }];
 
-    // initialize the objects with the starting objects
+    // initialize objects
     let objects: ObjectStates = new Map();
     for (const [position, value] of startingObjects.entries())
-        objects.set(position, [[0, value]]);
+        objects.set(position, [[-1, value]]);
 
     // iter all steps
     for (let i = 0; i < result.rounds; i++) {
         for (const id in result.players) {
+            // omit dead player
+            if (result.players[id].steps.length <= i) continue;
+
             const step = nextState(result.players[id].steps[i], players[id][i]);
             players[id].push(step);
             objects = getObjectStates(

@@ -47,6 +47,7 @@ export const MULITPLAYER_DLL: string[] = [
 export const MULITPLAYER_IMPORTS: string[] = [
     'System',
     'System.Linq',
+    'System.Threading',
     'System.Threading.Tasks',
     'System.Collections.Generic',
     'System.Collections.Concurrent',
@@ -61,6 +62,6 @@ export const SINGLEPLAYER_DLL: string[] = [
 export const SINGLEPLAYER_IMPORTS: string[] = [
     'System',
     'System.Linq',
-    'System.Threading.Tasks',
+    'System.Threading',
     'System.Collections.Generic',
 ];

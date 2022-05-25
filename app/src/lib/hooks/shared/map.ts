@@ -52,12 +52,12 @@ const useMap = (
         ...defaultMap,
         objects: new Map<string, number>(),
     });
-    const [current, setCurrent] = useState<number>(0);
-    const [editMode, setEditMode] = useState<boolean>(false);
     const [editorMap, setEditorMap] = useState<GameMap>({
         ...defaultMap,
         objects: new Map<string, number>(),
     });
+    const [current, setCurrent] = useState<number>(0);
+    const [editMode, setEditMode] = useState<boolean>(false);
 
     // set the type of the map
     const setType = (type: 'parse' | 'load') =>
@@ -139,8 +139,17 @@ const useMap = (
 
     // sets the view map to the editor map
     const setToView = () => {
-        setViewMap({ ...editorMap, objects: new Map(editorMap.objects) });
+        console.log('SETVIEW CALLED');
         setEditMode(false);
+        // for some reason, accessing the value of editorMap directly returns the default value
+        // TOFIX: hacky workaround
+        setEditorMap((m) => {
+            setViewMap(() => ({
+                ...m,
+                objects: new Map(m.objects),
+            }));
+            return { ...m };
+        });
     };
 
     return {
@@ -162,11 +171,11 @@ const useMap = (
             setField,
             emitField,
             clearAll,
-            emitClearAll,
             setToView,
             switchView,
             setCurrent,
             setViewMap,
+            emitClearAll,
         },
     };
 };

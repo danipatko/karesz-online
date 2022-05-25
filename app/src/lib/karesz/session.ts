@@ -220,6 +220,8 @@ export default class Session {
             'multi'
         )) as CommandResult<null | MultiResult>;
 
+        this.setPhase(GamePhase.idle);
+
         if (!result.result || result.exitCode !== 0) {
             // try to find player who caused the error
             // const trace = result.stderr
