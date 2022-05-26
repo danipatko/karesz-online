@@ -4,13 +4,6 @@ services:
             context: ./app
         ports:
             - 3000:3000
-    runner:
-        build:
-            context: ./runner
-        ports:
-            - '8000:8000'
-        expose:
-            - 8000
     nginx:
         build:
             context: ./nginx
