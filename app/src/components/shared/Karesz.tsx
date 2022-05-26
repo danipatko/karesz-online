@@ -1,4 +1,4 @@
-const COMMANDS = {
+const COMMANDS: { [key: number]: string } = {
     0: 'Lépj',
     1: 'Fordulj balra',
     2: 'Fordulj balra',
@@ -28,6 +28,7 @@ export const Karesz = ({
         x: number;
         y: number;
         rotation: number;
+        step: number;
     };
     tileSize?: number;
     className?: string;
@@ -37,16 +38,24 @@ export const Karesz = ({
             {data && tileSize && (
                 <div
                     style={{
-                        transform: `translate(${tileSize * state.x}px,${
-                            tileSize * state.y - tileSize
-                        }px)`,
+                        transform: `translate(${
+                            tileSize * state.x + tileSize
+                        }px,${tileSize * state.y - tileSize * 1.4}px)`,
                     }}
                     className='p-2 text-xs absolute z-40 bg-black bg-opacity-60 rounded-tl-md rounded-br-md'
                 >
-                    <span className='font-bold text-white'>{data.name}</span> at{' '}
-                    <span className='font-bold text-karesz'>
-                        {state.x}:{state.y}
-                    </span>
+                    <div>
+                        <span className='font-bold text-white'>
+                            {data.name}
+                        </span>{' '}
+                        at{' '}
+                        <span className='font-bold text-karesz'>
+                            {state.x}:{state.y}
+                        </span>
+                    </div>
+                    <div className='text-karesz'>
+                        {COMMANDS[state.step] ?? 'Tegyél le egy kavicsot'}
+                    </div>
                 </div>
             )}
             <div
