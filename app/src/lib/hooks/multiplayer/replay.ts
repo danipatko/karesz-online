@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MultiResult, SingleResult } from '../../shared/types';
+import { MultiResult } from '../../shared/types';
 import { pointToString } from '../../shared/util';
 import {
     Step,

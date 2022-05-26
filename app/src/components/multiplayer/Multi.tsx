@@ -126,6 +126,7 @@ export const Multiplayer = ({
             <Replay
                 map={game.map}
                 replay={game.replay}
+                players={game.session.players}
                 visible={game.session.phase > 1}
                 onClick={(x: number, y: number) =>
                     game.map.functions.emitField([x, y])

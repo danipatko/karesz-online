@@ -146,7 +146,6 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         id: string;
         isReady: boolean;
     }) => {
-        console.log('recevied player ready', socket.id, id);
         // set own status
         if (id === socket.id) setSession((s) => ({ ...s, isReady }));
         changePlayer(id, (p) => ({ ...p, isReady }));
@@ -209,7 +208,6 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
         map.functions.setToView();
         setResult(data.result);
         setOutput({ stdout: data.stdout, stderr: data.stderr });
-        console.log('RECEIVED GAME END', data);
     };
 
     // assign events to the client socket
@@ -286,7 +284,6 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
 
     // join a session
     const join = () => {
-        console.log('joining to ', code);
         if (code > 9999 || code < 1000 || isNaN(code))
             return void console.error('invalid code');
 

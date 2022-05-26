@@ -6,16 +6,19 @@ import { stringToPoint } from '../../lib/shared/util';
 import React, { useEffect, useRef, useState } from 'react';
 import useController from '../../lib/hooks/multiplayer/controller';
 import { MultiReplayState } from '../../lib/hooks/multiplayer/replay';
+import { Spieler } from '../../lib/shared/types';
 
 export const Replay = ({
     map,
     replay,
     visible,
+    players,
     onClick,
     children,
 }: {
     map: MapState;
     replay: MultiReplayState;
+    players: Map<string, Spieler>;
     visible: boolean;
     onClick: (x: number, y: number) => void;
     children?: React.ReactNode;
@@ -124,8 +127,20 @@ export const Replay = ({
                     {/* player */}
                     {!map.editMode &&
                         Object.entries(controller.state.players).map(
-                            ([_, player], index) => {
-                                return <Karesz key={index} state={player} />;
+                            ([id, player], index) => {
+                                return (
+                                    <Karesz
+                                        key={index}
+                                        data={{
+                                            step: player.step,
+                                            name:
+                                                players.get(id)?.name ??
+                                                'unknown',
+                                        }}
+                                        tileSize={tileSize}
+                                        state={player}
+                                    />
+                                );
                             }
                         )}
 

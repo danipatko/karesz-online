@@ -24,7 +24,7 @@ const getSteps = (
     // initialize the objects with the starting objects
     let objects: ObjectStates = new Map();
     for (const [position, value] of startingObjects.entries())
-        objects.set(position, [[0, value]]);
+        objects.set(position, [[-1, value]]);
 
     // get the states for the steps
     for (const [index, step] of result.steps.entries()) {

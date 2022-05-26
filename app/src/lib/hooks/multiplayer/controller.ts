@@ -3,7 +3,10 @@ import { clamp, Step } from '../shared/replay';
 import { MultiReplayState } from '../multiplayer/replay';
 
 export type ControllerState = {
-    state: { players: { [key: string]: Step }; objects: [string, number][] };
+    state: {
+        players: { [key: string]: Step };
+        objects: [string, number][];
+    };
     isPlaying: boolean;
     index: number;
     speed: number;

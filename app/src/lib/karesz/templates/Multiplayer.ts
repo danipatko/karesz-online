@@ -315,7 +315,9 @@ class Program
     }
 
     static int ROUND${rand} = 0;
-    static readonly Barrier Bar${rand} = new Barrier(/* Number of threads here */2, (b) =>
+    static readonly Barrier Bar${rand} = new Barrier(/* Number of threads here */${
+    players.length
+}, (b) =>
     {
         // iteration is over -> actually make steps
         List<int> ToRemove = new List<int>();
