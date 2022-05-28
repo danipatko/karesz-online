@@ -1,7 +1,7 @@
 // <...>/dotnet/shared/Microsoft.NETCore.App/VERSION
 export const FRAMEWORK_VERSION =
-    process.platform === 'win32' ? '6.0.3' : '6.0.2';
-export const SDK_VERSION = process.platform === 'win32' ? '5.0.407' : '6.0.200';
+    process.platform === 'win32' ? '6.0.3' : '6.0.3';
+export const SDK_VERSION = process.platform === 'win32' ? '5.0.407' : '6.0.201';
 
 // location of dll libraries loaded as commandline arguments
 export const LIBRARY_LOCATIONS: string =
@@ -13,12 +13,12 @@ export const LIBRARY_LOCATIONS: string =
 export const COMPILER_LOCATION: string =
     process.platform === 'win32'
         ? `"C:/Program Files/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll"`
-        : `/usr/share/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc`;
+        : `/usr/share/dotnet/sdk/${SDK_VERSION}/Roslyn/bincore/csc.dll`;
 
 export const RUNNER_DIRECTORY: string =
     process.platform === 'win32'
         ? 'C:/Users/Dani/home/Projects/karesz-online/testing'
-        : '/home/dapa/Projects/karesz-online/app/test';
+        : '/home/testing';
 
 // necessary, loaded from cmd
 export const CRUCIAL_IMPORTS: string[] = [

@@ -4,6 +4,9 @@ services:
             context: ./app
         ports:
             - 3000:3000
+        volumes:
+            - '/home/testing:/home/dapa/testing'
+
     nginx:
         build:
             context: ./nginx
@@ -11,6 +14,7 @@ services:
             - '80:80'
         depends_on:
             - 'app'
-            - 'runner'
         extra_hosts:
             - 'host.docker.internal:host-gateway'
+
+
