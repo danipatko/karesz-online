@@ -75,6 +75,7 @@ const useMap = (
             height,
             type: 'parse',
             mapName: '',
+            objects: new Map(),
         }));
 
     const emitSize = (width: number, height: number) =>
@@ -85,6 +86,8 @@ const useMap = (
             ...m,
             mapName,
             type: 'load',
+            width: 41,
+            height: 31,
             objects: new Map(maps[mapName]),
         }));
 
