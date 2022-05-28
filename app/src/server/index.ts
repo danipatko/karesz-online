@@ -86,7 +86,8 @@ io.on('connection', (socket) => {
             const template = Template.create()
                 .setMap({ x: map.width, y: map.height })
                 .addObjects(map.objects)
-                .setTimeout(2)
+                .setTimeout(2000)
+                .setIterations(500_000)
                 .singlePlayer()
                 .generate(
                     { code, id: '0', name: 'default', ...spawn },
@@ -97,7 +98,7 @@ io.on('connection', (socket) => {
             if (!template) return;
 
             const result = await Runner.run(template.code, 'single');
-            console.log(result); // DEBUG
+            // console.log(result); // DEBUG
 
             if (result.exitCode !== 0)
                 return void socket.emit('game_error_single', {

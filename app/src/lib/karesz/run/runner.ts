@@ -82,25 +82,22 @@ export class Runner {
 
         if (runtimeResult.exitCode !== 0)
             return { ...runtimeResult, result: null };
+        // console.log('output:', '\n', runtimeResult.stdout); // DEBUG
 
-        console.log('output:', '\n', runtimeResult.stdout); // DEBUG
-
-        // parse result TODO: safe parse
-        const result = JSON.parse(
-            runtimeResult.stdout.trim().split('\n').pop() ?? '{}'
-        );
+        const lines = runtimeResult.stdout.trim().split('\n');
+        const result = JSON.parse(lines.pop() ?? '{}');
 
         // cannot find or parse result
         if (!Object.keys(result).length)
             return {
-                ...runtimeResult,
-                exitCode: 1,
-                stderr: runtimeResult.stderr + '\nUnable to find results',
                 result: null,
+                stdout: runtimeResult.stdout,
+                stderr: runtimeResult.stderr + '\nUnable to find results',
+                exitCode: 1,
             };
 
         // evalute
-        return { ...runtimeResult, result };
+        return { ...runtimeResult, result, stdout: lines.join('\n') };
     }
 
     private constructor(template: string) {

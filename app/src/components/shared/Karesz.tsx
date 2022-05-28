@@ -1,4 +1,5 @@
 const COMMANDS: { [key: number]: string } = {
+    '-1': 'Start',
     0: 'Lépj',
     1: 'Fordulj balra',
     2: 'Fordulj jobbra',
