@@ -10,7 +10,8 @@ const getSinglePlayerTemplate = (
         y: number;
         rotation: number;
         code: string;
-    }
+    },
+    map?: string
 ) => `// allowed imports
 ${SINGLEPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
 
@@ -25,12 +26,16 @@ class Program
     static readonly Dictionary<(int x, int y), uint> Map${rand} = new Dictionary<(int x, int y), uint>()
     {
         // Assign map points from template here
-        ${Array.from(settings.MAP_OBJECTS.entries())
-            .map(([key, value]) => {
-                const [x, y] = stringToPoint(key);
-                return `[(${x},${y})]=${value}`;
-            })
-            .join(',')}
+        ${
+            map
+                ? map
+                : Array.from(settings.MAP_OBJECTS.entries())
+                      .map(([key, value]) => {
+                          const [x, y] = stringToPoint(key);
+                          return `[(${x},${y})]=${value}`;
+                      })
+                      .join(',')
+        }
     };
 
     static readonly int RadarRange = 10;

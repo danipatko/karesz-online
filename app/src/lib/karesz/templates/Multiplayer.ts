@@ -5,7 +5,8 @@ import { stringToPoint } from '../../shared/util';
 const getMultiPlayerTemplate = (
     rand: string,
     settings: TemplateSettings,
-    players: PlayerStartState[]
+    players: PlayerStartState[],
+    map?: string // if defined, use this instead of the one defined settings
 ) => `// allowed imports
 ${MULITPLAYER_IMPORTS.map((x) => `using ${x};`).join('\n')}
 
@@ -24,12 +25,16 @@ class Program
     static readonly ConcurrentDictionary<(int x, int y), uint> Map${rand} = new ConcurrentDictionary<(int x, int y), uint>()
     {
         // Assign map points from template here
-        ${Array.from(settings.MAP_OBJECTS.entries())
-            .map(([key, value]) => {
-                const [x, y] = stringToPoint(key);
-                return `[(${x},${y})]=${value}`;
-            })
-            .join(',')}
+        ${
+            map
+                ? map
+                : Array.from(settings.MAP_OBJECTS.entries())
+                      .map(([key, value]) => {
+                          const [x, y] = stringToPoint(key);
+                          return `[(${x},${y})]=${value}`;
+                      })
+                      .join(',')
+        }
     };
 
     static readonly int RadarRange = 10;

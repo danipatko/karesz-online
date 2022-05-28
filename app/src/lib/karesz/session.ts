@@ -213,7 +213,7 @@ export default class Session {
                     ? this.players.get(id)?.err(reason)
                     : this.players.get(id)?.warn(reason);
             })
-            .generate();
+            .generate(this.map.mapName);
 
         const result = (await Runner.run(
             template.code,

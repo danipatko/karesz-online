@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { maps } from '../../shared/maps';
 import { GameMap } from '../../shared/types';
 import { pointToString, stringToPoint } from '../../shared/util';
 
@@ -79,9 +80,13 @@ const useMap = (
     const emitSize = (width: number, height: number) =>
         emit && emit('map_update_size', { width, height });
 
-    // TODO: load a map
     const loadMap = (mapName: string) =>
-        setEditorMap((m) => ({ ...m, mapName, type: 'load' }));
+        setEditorMap((m) => ({
+            ...m,
+            mapName,
+            type: 'load',
+            objects: new Map(maps[mapName]),
+        }));
 
     const emitMap = (mapName: string) =>
         emit && emit('map_update_load', { mapName });

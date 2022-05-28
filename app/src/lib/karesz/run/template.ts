@@ -7,6 +7,7 @@ import {
     PlayerStartState,
     TemplateSettings,
 } from '../types';
+import { maps } from '../../shared/dotmaps';
 
 export class Template {
     // settings
@@ -117,12 +118,13 @@ class MultiplayerTemplate extends ProcessCode {
     }
 
     // set the correct template
-    public generate(): { code: string; rand: string } {
+    public generate(mapName: string): { code: string; rand: string } {
         console.log('creating map', this.settings.MAP_OBJECTS);
         this.code = getMultiPlayerTemplate(
             this.rand,
             this.settings,
-            this.players
+            this.players,
+            mapName.length ? maps[mapName] : undefined
         );
         return this;
     }
@@ -153,7 +155,8 @@ class SingleplayerTemplate extends ProcessCode {
     // create the template
     public generate(
         player: PlayerStart,
-        onFail: (a: { severity: string; error: string }) => void
+        onFail: (a: { severity: string; error: string }) => void,
+        mapName: string
     ): SingleplayerTemplate | null {
         const scResult = this.safetyCheck(player.code);
 
@@ -170,10 +173,15 @@ class SingleplayerTemplate extends ProcessCode {
             'single'
         );
 
-        this.code = getSinglePlayerTemplate(this.rand, this.settings, {
-            ...player,
-            code,
-        });
+        this.code = getSinglePlayerTemplate(
+            this.rand,
+            this.settings,
+            {
+                ...player,
+                code,
+            },
+            mapName.length ? maps[mapName] : undefined
+        );
 
         return this;
     }

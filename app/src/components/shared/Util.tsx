@@ -101,9 +101,9 @@ const Option = ({
             </div>
             <div className='overflow-hidden absolute w-full'>
                 {expanded && (
-                    <div className='drop overflow-hidden rounded-md shadow-sm'>
+                    <ul className='drop max-h-[50vh] overflow-scroll noscroll rounded-md shadow-sm'>
                         {Object.entries(options).map(([key, val], i) => (
-                            <div
+                            <li
                                 key={i}
                                 className={`px-2 cursor-pointer py-[2px] bg-back text-center font-semibold hover:bg-zinc-700`}
                                 onClick={() => {
@@ -112,9 +112,9 @@ const Option = ({
                                 }}
                             >
                                 {val}
-                            </div>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 )}
             </div>
         </div>
