@@ -2,12 +2,15 @@ import { useState } from 'react';
 
 // the default value of the editor hook
 const example: string = `// start here
-void FELADAT() {
+void FELADAT()
+{
     while(true) {
+        if(Van_e_előttem_fal() || Kilépek_e_a_pályáról()) Fordulj(jobbra);
         Lépj();
-        Tegyél_le_egy_kavicsot(zöld);
     }
 }
+
+
 
 
 `;

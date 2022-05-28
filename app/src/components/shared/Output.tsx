@@ -22,7 +22,7 @@ export const Output = ({
         >
             <div className='p-10 w-full lg:w-3/4'>
                 <div className='text-xl font-bold pb-4'>Output of last run</div>
-                <div className='overflow-scroll noscroll'>
+                <div className='overflow-scroll max-h-[80vh] noscroll'>
                     <code className='p-3 whitespace-pre'>{stdout}</code>
                     <code className='p-3 whitespace-pre'>{stderr}</code>
                 </div>

@@ -204,7 +204,7 @@ class Program
         public void Turn(int Direction)
         {
             Rotation = Modulus${rand}(Rotation + Direction, 4);
-            Steps.Add(Direction == -1 ? 2 : 3);
+            Steps.Add(Direction == -1 ? 1 : 2);
             Save();
         }
 
@@ -402,7 +402,7 @@ class Program
     {
         if (SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player)) Player.PickUpRock();
     }
-    static void PlaceRock${rand}(int P, int Color)
+    static void PlaceRock${rand}(int P, int Color = 2)
     {
         if (SIGNAL${rand}() && Players${rand}.TryGetValue(P, out IPlayer${rand} Player)) Player.PlaceRock((uint)System.Math.Clamp(Color, 2, 100));
     }

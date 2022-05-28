@@ -147,7 +147,6 @@ const useMap = (
 
     // sets the view map to the editor map
     const setToView = () => {
-        console.log('SETVIEW CALLED');
         setEditMode(false);
         // for some reason, accessing the value of editorMap directly returns the default value
         // TOFIX: hacky workaround

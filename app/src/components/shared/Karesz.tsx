@@ -1,7 +1,7 @@
 const COMMANDS: { [key: number]: string } = {
     0: 'Lépj',
     1: 'Fordulj balra',
-    2: 'Fordulj balra',
+    2: 'Fordulj jobbra',
     3: 'Van e előttem fal',
     4: 'Kilépek e a pályáról',
     20: 'Tegyél le egy kavicsot',

@@ -204,7 +204,6 @@ export const useMultiplayer = (editor: string): MultiplayerState => {
             }));
         }
 
-        // TOFIX: setView won't work
         map.functions.setToView();
         setResult(data.result);
         setOutput({ stdout: data.stdout, stderr: data.stderr });

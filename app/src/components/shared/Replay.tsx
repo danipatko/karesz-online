@@ -123,7 +123,14 @@ export const Replay = ({
 
                     {/* player */}
                     {!map.editMode && (
-                        <Karesz state={controller.state.players} />
+                        <Karesz
+                            data={{
+                                name: 'karesz',
+                                step: controller.state.players?.step ?? -1,
+                            }}
+                            state={controller.state.players}
+                            tileSize={tileSize}
+                        />
                     )}
 
                     {/* replay objects */}

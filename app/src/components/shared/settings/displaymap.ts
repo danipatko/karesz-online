@@ -1,6 +1,5 @@
 // god awful
 export const maps = {
-    palya0: 'palya0',
     palya1: 'palya1',
     palya2: 'palya2',
     palya3: 'palya3',

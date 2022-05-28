@@ -22,6 +22,16 @@ class Program
     // add map dimensions from template here
     static readonly int MAP_WIDTH = ${settings.MAP_WIDTH};
     static readonly int MAP_HEIGHT = ${settings.MAP_HEIGHT};
+    static int ROUNDS${rand} = 0;
+
+    static bool _i${rand}() {
+        ROUNDS${rand}++;
+        if(ROUNDS${rand} > ${
+    settings.MAX_ITERATIONS
+}) FinishGame${rand}("Reached maximum number of rounds");
+        return true;
+    }
+
     // to look up map objects
     static readonly Dictionary<(int x, int y), uint> Map${rand} = new Dictionary<(int x, int y), uint>()
     {
@@ -51,7 +61,7 @@ class Program
 
     static void FinishGame${rand}(string Reason)
     {
-        System.Console.WriteLine($"{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand})}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":${
+        System.Console.WriteLine($"{{ \\"ended\\":\\"{Reason}\\", \\"steps\\":[{string.Join(',', Steps${rand}.ToArray())}], \\"rocks\\": {{ \\"placed\\":{RocksPlaced${rand}}, \\"picked_up\\":{RocksPickedUp${rand}} }}, \\"start\\": {{ \\"x\\":${
     player.x
 }, \\"y\\":${player.y}, \\"rotation\\":${player.rotation} }} }}");
         System.Environment.Exit(0);
@@ -72,10 +82,10 @@ class Program
     }
 
     // check if position is inside the map
-    static bool IsOutOfBounds${rand}((int x, int y) Position) => !(Position.x >= 0 && Position.x < MAP_WIDTH && Position.y >= 0 && Position.y < MAP_HEIGHT);
+    static bool IsOutOfBounds${rand}((int x, int y) Position) => _i${rand}() && !(Position.x >= 0 && Position.x < MAP_WIDTH && Position.y >= 0 && Position.y < MAP_HEIGHT);
 
     // check if the position is a map
-    static bool IsWall${rand}((int x, int y) Position) => Map${rand}.TryGetValue(Position, out uint Value) && Value == 1;
+    static bool IsWall${rand}((int x, int y) Position) => _i${rand}() && Map${rand}.TryGetValue(Position, out uint Value) && Value == 1;
     
     // mod operator (for negative values)
     static int Modulus${rand}(int a, int b) => ((a % b) + b) % b;
@@ -83,6 +93,7 @@ class Program
     // wrapper functions called by players' codes
     static void Step${rand}()
     {
+        _i${rand}();
         (int x, int y) OneStepForward = GetForward${rand}(Position${rand}, Rotation${rand});
         // check if position is valid
         if (IsWall${rand}(OneStepForward)) FinishGame${rand}("ran into a wall");
@@ -95,44 +106,52 @@ class Program
 
     static void Turn${rand}(int Direction)
     {
-        Steps${rand}.Add(Direction < 0 ? 2 : 3);
+        _i${rand}();
+        Steps${rand}.Add(Direction < 0 ? 1 : 2);
         Rotation${rand} = Modulus${rand}(Rotation${rand} + Direction, 4);
     }
 
     static bool AmISteppingOut${rand}() {
+        _i${rand}();
         Steps${rand}.Add(4);
         return IsOutOfBounds${rand}(GetForward${rand}(Position${rand}, Rotation${rand}));
     }
 
     static (int x, int y) WhereAmI${rand}() {
+        _i${rand}();
         Steps${rand}.Add(12);
         return Position${rand};
     }
 
     static int WhereAmILooking${rand}() {
+        _i${rand}();
         Steps${rand}.Add(6);
         return Rotation${rand};
     }
 
     static bool AmILookingAt${rand}(int Direction) {
+        _i${rand}();
         Steps${rand}.Add(6);
         return Rotation${rand} == Direction;
     }
 
     static bool IsThereAWall${rand}() {
+        _i${rand}();
         Steps${rand}.Add(3);
         return IsWall${rand}(GetForward${rand}(Position${rand}, Rotation${rand}));
     }  
 
     static void PickUpRock${rand}()
     {
+        _i${rand}();
         RocksPickedUp${rand}++;
         Steps${rand}.Add(7);
         Map${rand}.Remove(Position${rand});
     }
 
-    static void PlaceRock${rand}(int Color)
+    static void PlaceRock${rand}(int Color = 2)
     {
+        _i${rand}();
         RocksPlaced${rand}++;
         Color = System.Math.Clamp(Color, 2, 100);
         Steps${rand}.Add(20 + Color);
@@ -143,18 +162,21 @@ class Program
     }
 
     static int WhatIsUnder${rand}() {
+        _i${rand}();
         Steps${rand}.Add(8);
         return Map${rand}.TryGetValue(Position${rand}, out uint Value) ? (int)Value : 0;
     }
 
     static bool IsAnyThingUnder${rand}() 
     {
+        _i${rand}();
         Steps${rand}.Add(9);
         return Map${rand}.ContainsKey(Position${rand});
     }
 
     static int Radar${rand}() 
     {
+        _i${rand}();
         Steps${rand}.Add(10);
         (int x, int y) P = GetForward${rand}(Position${rand}, Rotation${rand});
         int Steps = 0;
@@ -167,7 +189,10 @@ class Program
         return Steps;
     }
 
-    static void Omit${rand}() => Steps${rand}.Add(-1);         
+    static void Omit${rand}() { 
+        Steps${rand}.Add(-1); 
+        _i${rand}(); 
+    }     
 
     /* Player code here */
     ${player.code}

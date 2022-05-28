@@ -12,7 +12,7 @@ import { maps } from '../../shared/dotmaps';
 export class Template {
     // settings
     private settings: TemplateSettings = {
-        TIMEOUT: 5000,
+        TIMEOUT: 2000,
         MAP_WIDTH: 20,
         MAP_HEIGHT: 20,
         MAP_OBJECTS: new Map<string, number>(),

@@ -81,15 +81,17 @@ io.on('connection', (socket) => {
             code: string;
             spawn: Spawn;
         }) => {
-            console.log(map, '\n', code, '\n', spawn);
+            // console.log(map, '\n', code, '\n', spawn); // DEBUG
 
             const template = Template.create()
                 .setMap({ x: map.width, y: map.height })
                 .addObjects(map.objects)
+                .setTimeout(2)
                 .singlePlayer()
                 .generate(
                     { code, id: '0', name: 'default', ...spawn },
-                    (result) => socket.emit('game_error', { error: result })
+                    (result) => socket.emit('game_error', { error: result }),
+                    map.mapName
                 );
 
             if (!template) return;
@@ -98,7 +100,7 @@ io.on('connection', (socket) => {
             console.log(result); // DEBUG
 
             if (result.exitCode !== 0)
-                return void socket.emit('game_error_logs', {
+                return void socket.emit('game_error_single', {
                     stderr: result.stderr,
                     stdout: result.stdout,
                 });

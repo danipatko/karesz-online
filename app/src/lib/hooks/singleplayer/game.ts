@@ -1,17 +1,17 @@
-import { Socket } from 'socket.io-client';
-import useMap, { MapState } from '../shared/map';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSocket } from '../shared/socket';
 import { SpawnState, useSpawn } from './spawn';
+import useMap, { MapState } from '../shared/map';
 import useReplay, { ReplayState } from './replay';
 import { SingleResult } from '../../shared/types';
 import { CommandResult } from '../../karesz/types';
-import { useSocket } from '../shared/socket';
 
 export type SingleState = {
     map: MapState;
     run: () => void;
     spawn: SpawnState;
     replay: ReplayState;
+    output: { stderr: string; stdout: string };
 };
 
 export const useSingleplayer = (code: string): SingleState => {
@@ -27,19 +27,25 @@ export const useSingleplayer = (code: string): SingleState => {
         result,
         objects: map.viewMap.objects,
     });
+    const [output, setOutput] = useState<{ stderr: string; stdout: string }>({
+        stderr: '',
+        stdout: '',
+    });
 
-    useEffect(
-        () =>
-            void socket.on(
-                'game_result_single',
-                (result: CommandResult<null | SingleResult>) => {
-                    console.log(result);
-                    // TODO: do something with stdin/stderr
-                    setResult(result.result);
-                }
-            ),
-        [socket]
-    );
+    useEffect(() => {
+        socket.on(
+            'game_result_single',
+            (result: CommandResult<null | SingleResult>) => {
+                setResult(result.result);
+                setOutput({ stderr: result.stderr, stdout: result.stdout });
+                map.functions.setToView();
+            }
+        );
+        socket.on(
+            'game_error_single',
+            (_output: { stderr: string; stdout: string }) => setOutput(_output)
+        );
+    }, [socket]);
 
     const run = () => {
         // set edited map as viewer map for replay
@@ -52,5 +58,5 @@ export const useSingleplayer = (code: string): SingleState => {
         });
     };
 
-    return { map, run, spawn, replay };
+    return { map, run, spawn, replay, output };
 };

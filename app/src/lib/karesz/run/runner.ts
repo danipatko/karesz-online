@@ -74,6 +74,12 @@ export class Runner {
         // run
         const runtimeResult = await self.run();
         self.rmDll();
+
+        fs.writeFileSync(
+            'C:/Users/Dani/home/Projects/karesz-online/test.txt',
+            runtimeResult.stdout
+        );
+
         if (runtimeResult.exitCode !== 0)
             return { ...runtimeResult, result: null };
 
@@ -133,6 +139,7 @@ export class Runner {
     // remove the .dll file
     private rmDll = () =>
         process.env.NODE_ENV !== 'production' &&
+        process.platform !== 'win32' && // windows won't let you remove any dll files
         fs.unlinkSync(path.join(RUNNER_DIRECTORY, `${this.rand}.dll`));
 
     // the imports as command line arguments

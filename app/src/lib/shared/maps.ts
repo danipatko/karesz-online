@@ -1,6 +1,6 @@
 export const maps: { [key: string]: [string, number][] } = {
     // palya01.txt
-    palya0: [
+    palya1: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -143,7 +143,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya02.txt
-    palya1: [
+    palya2: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -285,7 +285,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya03.txt
-    palya2: [
+    palya3: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -427,7 +427,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya04.txt
-    palya3: [
+    palya4: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -569,7 +569,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya05.txt
-    palya4: [
+    palya5: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -711,7 +711,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya06.txt
-    palya5: [
+    palya6: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -853,7 +853,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya07.txt
-    palya6: [
+    palya7: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -995,7 +995,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya08.txt
-    palya7: [
+    palya8: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -1217,7 +1217,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya09.txt
-    palya8: [
+    palya9: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -1476,7 +1476,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya10.txt
-    palya9: [
+    palya10: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -1820,7 +1820,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya11.txt
-    palya10: [
+    palya11: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -2185,7 +2185,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya12.txt
-    palya11: [
+    palya12: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -2730,7 +2730,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya13.txt
-    palya12: [
+    palya13: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -3273,7 +3273,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya14.txt
-    palya13: [
+    palya14: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -3466,7 +3466,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya15.txt
-    palya14: [
+    palya15: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -3823,7 +3823,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya16.txt
-    palya15: [
+    palya16: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -4260,7 +4260,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya17.txt
-    palya16: [
+    palya17: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -4436,7 +4436,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya18.txt
-    palya17: [
+    palya18: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -4724,7 +4724,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya19.txt
-    palya18: [
+    palya19: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -5104,7 +5104,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya20.txt
-    palya19: [
+    palya20: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -5477,7 +5477,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya21.txt
-    palya20: [
+    palya21: [
         ['3_0', 1],
         ['4_0', 1],
         ['5_0', 1],
@@ -5802,7 +5802,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['32_30', 2],
     ],
     // palya22.txt
-    palya21: [
+    palya22: [
         ['3_0', 1],
         ['4_0', 1],
         ['5_0', 1],
@@ -6289,7 +6289,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 2],
     ],
     // palya23.txt
-    palya22: [
+    palya23: [
         ['14_3', 1],
         ['33_3', 1],
         ['34_3', 1],
@@ -6547,7 +6547,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['20_28', 1],
     ],
     // palya24.txt
-    palya23: [
+    palya24: [
         ['14_1', 1],
         ['15_1', 1],
         ['16_1', 1],
@@ -6772,7 +6772,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['14_30', 1],
     ],
     // palya25.txt
-    palya24: [
+    palya25: [
         ['5_25', 1],
         ['6_25', 1],
         ['7_25', 1],
@@ -6837,7 +6837,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['30_27', 1],
     ],
     // palya26.txt
-    palya25: [
+    palya26: [
         ['5_0', 2],
         ['18_0', 2],
         ['40_0', 2],
@@ -6873,7 +6873,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 2],
     ],
     // palya27.txt
-    palya26: [
+    palya27: [
         ['1_0', 2],
         ['5_0', 2],
         ['8_0', 2],
@@ -7185,7 +7185,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 2],
     ],
     // palya28.txt
-    palya27: [
+    palya28: [
         ['1_1', 5],
         ['4_1', 5],
         ['25_1', 5],
@@ -7223,7 +7223,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['39_29', 5],
     ],
     // palya29.txt
-    palya28: [
+    palya29: [
         ['10_0', 4],
         ['22_0', 4],
         ['35_0', 3],
@@ -7302,7 +7302,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['30_30', 3],
     ],
     // palya30.txt
-    palya29: [
+    palya30: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -8285,7 +8285,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya31.txt
-    palya30: [
+    palya31: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -9268,7 +9268,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya32.txt
-    palya31: [
+    palya32: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -10212,7 +10212,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya33.txt
-    palya32: [
+    palya33: [
         ['5_0', 2],
         ['18_0', 2],
         ['40_0', 2],
@@ -10379,7 +10379,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 2],
     ],
     // palya34.txt
-    palya33: [
+    palya34: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -10541,7 +10541,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya35.txt
-    palya34: [
+    palya35: [
         ['0_0', 2],
         ['1_0', 2],
         ['2_0', 2],
@@ -10684,7 +10684,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 2],
     ],
     // palya36.txt
-    palya35: [
+    palya36: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -11178,7 +11178,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya37.txt
-    palya36: [
+    palya37: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -11633,7 +11633,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya38.txt
-    palya37: [
+    palya38: [
         ['27_0', 2],
         ['28_0', 2],
         ['29_0', 2],
@@ -11997,7 +11997,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 2],
     ],
     // palya39.txt
-    palya38: [
+    palya39: [
         ['4_14', 1],
         ['5_14', 1],
         ['6_14', 1],
@@ -12048,7 +12048,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['7_29', 1],
     ],
     // palya40.txt
-    palya39: [
+    palya40: [
         ['18_5', 5],
         ['12_6', 4],
         ['14_6', 5],
@@ -12121,7 +12121,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['21_27', 5],
     ],
     // palya41.txt
-    palya40: [
+    palya41: [
         ['3_2', 1],
         ['4_2', 1],
         ['5_2', 1],
@@ -12297,7 +12297,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['28_27', 1],
     ],
     // palya42.txt
-    palya41: [
+    palya42: [
         ['3_2', 1],
         ['4_2', 1],
         ['5_2', 1],
@@ -12490,7 +12490,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['28_27', 1],
     ],
     // palya43.txt
-    palya42: [
+    palya43: [
         ['0_0', 5],
         ['10_0', 4],
         ['13_0', 4],
@@ -12593,7 +12593,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 5],
     ],
     // palya44.txt
-    palya43: [
+    palya44: [
         ['0_0', 1],
         ['1_0', 1],
         ['2_0', 1],
@@ -13030,7 +13030,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['40_30', 1],
     ],
     // palya45.txt
-    palya44: [
+    palya45: [
         ['2_4', 1],
         ['3_4', 1],
         ['4_4', 1],
@@ -13408,7 +13408,7 @@ export const maps: { [key: string]: [string, number][] } = {
         ['16_29', 1],
     ],
     // palya46.txt
-    palya45: [
+    palya46: [
         ['2_4', 1],
         ['3_4', 1],
         ['4_4', 1],
